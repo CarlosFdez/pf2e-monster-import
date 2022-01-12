@@ -1,0 +1,22 @@
+{
+    "name": "pf2e-monster-import",
+    "title": "PF2E Monster Import",
+    "description": "Macros that create effects to handle persistent damage",
+    "author": "Supe",
+    "version": "0.1.0",
+    "compatibleCoreVersion": "0.8.9",
+    "minimumCoreVersion": "0.8.6",
+    "minimumSystemVersion": "2.10.1",
+    "type": "module",
+    "systems": ["pf2e"],
+    "esmodules": ["./index.js"],
+    "styles": ["./styles/styles.css"],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "lang/en.json"
+        }
+    ],
+    "url": "https://github.com/CarlosFdez/pf2e-monster-import"
+}
