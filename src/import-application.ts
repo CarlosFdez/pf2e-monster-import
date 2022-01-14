@@ -11,7 +11,7 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
             template: "./modules/pf2e-monster-import/templates/import-form.html",
             class: "pf2e-monster-import-form",
             resizable: true,
-            title: "Import Monster",
+            title: game.i18n.localize("PF2E-MI.Import.Title"),
             width: 550,
             height: 700,
             closeOnSubmit: true

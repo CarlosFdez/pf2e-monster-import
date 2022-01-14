@@ -9,7 +9,9 @@ Hooks.on("renderActorSheet", async (sheet: ActorSheet, $html: JQuery) => {
         return;
     }
 
-    const $button = $(`<a class="pf2e-monster-import" title="Monster Import"><i class="fas fa-file-upload"></i>Import</a>`);
+    const title = game.i18n.localize("PF2E-MI.Import.Title");
+    const label = game.i18n.localize("PF2E-MI.Import.Label")
+    const $button = $(`<a class="pf2e-monster-import" title="${title}"><i class="fas fa-file-upload"></i>${label}</a>`);
     $button.on("click", () => {
         new MonsterImportApplication({ actor }).render(true);
     });

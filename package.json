@@ -4,10 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npm run build:packs && webpack --mode production",
-    "build:dev": "npm run build:packs && webpack",
-    "build:packs": "ts-node -r tsconfig-paths/register build-packs.ts",
-    "extractPacks": "ts-node -r tsconfig-paths/register extract-packs.ts",
+    "build": "webpack --mode production",
+    "build:dev": "webpack",
     "lint": "eslint ./src --ext .ts",
     "lint:fix": "eslint ./src --ext .ts --fix"
   },

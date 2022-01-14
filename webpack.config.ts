@@ -85,7 +85,6 @@ const config: Configuration = {
         extensions: [".ts"],
     },
     output: {
-        clean: { keep: "packs" },
         path: outDir,
         filename: "index.js",
     },
