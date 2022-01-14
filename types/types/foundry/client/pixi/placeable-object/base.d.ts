@@ -6,24 +6,19 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
     constructor(document: TDocument);
 
     /** Retain a reference to the Scene within which this Placeable Object resides */
-    scene: TDocument['parent'];
+    scene: TDocument["parent"];
 
     /** A reference to the Scene embedded Document instance which this object represents */
     document: TDocument;
 
     /** The underlying data object which provides the basis for this placeable object */
-    data: TDocument['data'];
+    data: TDocument["data"];
 
     /**
      * Track the field of vision for the placeable object.
      * This is necessary to determine whether a player has line-of-sight towards a placeable object or vice-versa
      */
-    vision:
-        | {
-              fov: PIXI.Polygon | null;
-              los: PIXI.Polygon | null;
-          }
-        | PointSource<this>;
+    vision: { fov: unknown; los: unknown };
 
     /** A control icon for interacting with the object */
     controlIcon: ControlIcon;
@@ -41,7 +36,7 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
     static embeddedName: string;
 
     /* -------------------------------------------- */
-    /* Properties
+    /* Properties                                   */
     /* -------------------------------------------- */
 
     /**
@@ -60,7 +55,7 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
     get fov(): PIXI.Polygon;
 
     /** Provide a reference to the CanvasLayer which contains this PlaceableObject. */
-    get layer(): PIXI.Container;
+    get layer(): PlaceablesLayer<this>;
 
     /** The line-of-sight polygon for the object, if it has been computed */
     get los(): PIXI.Polygon | null;
@@ -69,7 +64,7 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
      * A Form Application which is used to configure the properties of this Placeable Object or the EmbeddedEntity
      * it represents.
      */
-    get sheet(): TDocument['sheet'];
+    get sheet(): TDocument["sheet"];
 
     /* -------------------------------------------- */
     /*  Permission Controls                         */
@@ -84,31 +79,31 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
     can(user: User, action: UserAction): boolean;
 
     /** Can the User access the HUD for this Placeable Object? */
-    protected _canHUD(user: User, event?: Event): boolean;
+    protected _canHUD(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /** Does the User have permission to configure the Placeable Object? */
-    protected _canConfigure(user: User, event?: Event): boolean;
+    protected _canConfigure(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /** Does the User have permission to control the Placeable Object? */
-    protected _canControl(user: User, event?: Event): boolean;
+    protected _canControl(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /** Does the User have permission to view details of the Placeable Object? */
-    protected _canView(user: User, event?: Event): boolean;
+    protected _canView(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /** Does the User have permission to create the underlying Embedded Entity? */
-    protected _canCreate(user: User, event?: Event): boolean;
+    protected _canCreate(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /** Does the User have permission to drag this Placeable Object? */
-    protected _canDrag(user: User, event?: Event): boolean;
+    protected _canDrag(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /** Does the User have permission to hover on this Placeable Object? */
-    protected _canHover(user: User, event?: Event): boolean;
+    protected _canHover(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /** Does the User have permission to update the underlying Embedded Entity? */
-    protected _canUpdate(user: User, event?: Event): boolean;
+    protected _canUpdate(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /** Does the User have permission to delete the underlying Embedded Entity? */
-    protected _canDelete(user: User, event?: Event): boolean;
+    protected _canDelete(user: User, event?: PIXI.InteractionEvent): boolean;
 
     /* -------------------------------------------- */
     /*  Rendering                                   */
@@ -129,34 +124,29 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
      */
     clone(): this;
 
-    /**
-     * Draw the placeable object into its parent container
-     */
-    draw(): Promise<this>;
+    override destroy(options?: boolean | PIXI.IDestroyOptions): void;
 
-    /**
-     * Draw the primary Sprite for the PlaceableObject
-     */
-    protected _drawPrimarySprite(texture?: PIXI.Sprite): PIXI.Sprite;
+    /** Draw the placeable object into its parent container */
+    abstract draw(): Promise<this>;
 
     /**
      * Refresh the current display state of the Placeable Object
      * @return The refreshed object
      */
-    refresh(): this;
+    abstract refresh(): this;
 
     /** Register pending canvas operations which should occur after a new PlaceableObject of this type is created */
     protected _onCreate(
-        data: this['document']['data']['_source'],
+        data: this["document"]["data"]["_source"],
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     /** Define additional steps taken when an existing placeable object of this type is updated with new data */
     protected _onUpdate(
-        changed: DocumentUpdateData<this['document']>,
+        changed: DocumentUpdateData<this["document"]>,
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     /** Define additional steps taken when an existing placeable object of this type is deleted */
@@ -190,7 +180,7 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
      * Additional events which trigger once control of the object is released
      * @param options   Options which modify the releasing workflow
      */
-    protected _onRelease(options?: Record<string, unknown>): void;
+    protected _onRelease(options?: object): void;
 
     /**
      * Rotate the PlaceableObject to a certain angle of facing
@@ -198,7 +188,7 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
      * @param snap  Snap the angle of rotation to a certain target degree increment
      * @return The rotated object
      */
-    rotate(angle: number, snap: number): Promise<this> | void;
+    rotate(angle: number, snap: number): Promise<this | TDocument | undefined>;
 
     /**
      * Determine a new angle of rotation for a PlaceableObject either from an explicit angle or from a delta offset.
@@ -242,6 +232,13 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
     /** Callback actions which occur on a single right-click event to configure properties of the object */
     protected _onClickRight(event: PIXI.InteractionEvent): void;
 
+    /**
+     * Handle mouse-wheel events at the PlaceableObjects layer level to rotate multiple objects at once.
+     * This handler will rotate all controlled objects by some incremental angle.
+     * @param event The mousewheel event which originated the request
+     */
+    protected _onMouseWheel(event: WheelEvent): void;
+
     /** Callback actions which occur on a double right-click event to configure properties of the object */
     protected _onClickRight2(event: PIXI.InteractionEvent): void;
 
@@ -252,7 +249,7 @@ declare abstract class PlaceableObject<TDocument extends CanvasDocument = Canvas
     protected _onDragLeftMove(event: PIXI.InteractionEvent): void;
 
     /** Callback actions which occur on a mouse-move operation. */
-    protected _onDragLeftDrop(event: PIXI.InteractionEvent): Promise<this['document'][]>;
+    protected _onDragLeftDrop(event: PIXI.InteractionEvent): Promise<this["document"][]>;
 
     /** Callback actions which occur on a mouse-move operation. */
     protected _onDragLeftCancel(event: PIXI.InteractionEvent): void;

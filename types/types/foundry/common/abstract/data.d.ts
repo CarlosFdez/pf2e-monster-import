@@ -18,8 +18,8 @@ declare global {
                 type: object;
                 required: boolean;
                 nullable?: boolean;
-                default?: ((value: any) => string | number | object | null) | string | number | object | null;
-                clean?: (data: unknown) => void;
+                default?: unknown;
+                clean?: Function;
                 validate?: (data: any) => boolean;
                 validationError?: string;
                 isCollection?: boolean;
@@ -59,7 +59,7 @@ declare global {
                 /** Define the data schema for documents of this type. */
                 static get schema(): DocumentSchema;
 
-                _schema?: DocumentSchema;
+                static _schema?: DocumentSchema;
 
                 /**
                  * Define the data schema for this document instance.
@@ -67,8 +67,12 @@ declare global {
                  */
                 get schema(): DocumentSchema;
 
+                /* ---------------------------------------- */
+                /*  Data Initialization and Validation      */
+                /* ---------------------------------------- */
+
                 /** Initialize the source data object in-place */
-                protected _initializeSource(data: object): DocumentSource;
+                protected _initializeSource(data: object): this["_source"];
 
                 /**
                  * Get the default value for a schema field, conditional on the provided data
@@ -133,7 +137,7 @@ declare global {
                  * @param options Options which determine how the new data is merged
                  * @returns The changed keys and values which are different than the previous data
                  */
-                update(data?: DocumentUpdateData, options?: MergeObjectOptions): DocumentSource;
+                update(data?: DocumentUpdateData, options?: DocumentModificationContext): DeepPartial<this["_source"]>;
 
                 /**
                  * Copy and transform the DocumentData into a plain object.
@@ -141,15 +145,15 @@ declare global {
                  * @param [source=true] Draw values from the underlying data source rather than transformed values
                  * @returns The extracted primitive object
                  */
-                toObject<D extends DocumentData, B extends true>(this: D, source?: B): D['_source'];
-                toObject<D extends DocumentData, B extends false>(this: D, source: B): RawObject<D>;
-                toObject<D extends DocumentData, B extends boolean>(source?: B): D['_source'] | RawObject<D>;
+                toObject<D extends DocumentData>(this: D, source?: true): D["_source"];
+                toObject<D extends DocumentData>(this: D, source: false): RawObject<D>;
+                toObject<D extends DocumentData>(source?: boolean): D["_source"] | RawObject<D>;
 
                 /**
                  * Extract the source data for the DocumentData into a simple object format that can be serialized.
                  * @returns The document source data expressed as a plain object
                  */
-                toJSON(): this['_source'];
+                toJSON(): this["_source"];
 
                 /**
                  * Create a DocumentData instance using a provided serialized JSON string.
@@ -162,8 +166,8 @@ declare global {
     }
 
     type RawObject<T extends foundry.abstract.DocumentData> = {
-        [P in keyof T['_source']]: T[P] extends foundry.abstract.EmbeddedCollection<infer U>
-            ? RawObject<U['data']>[]
+        [P in keyof T["_source"]]: T[P] extends foundry.abstract.EmbeddedCollection<infer U>
+            ? RawObject<U["data"]>[]
             : T[P] extends foundry.abstract.DocumentData
             ? RawObject<T[P]>
             : T[P] extends foundry.abstract.DocumentData[]

@@ -1,13 +1,15 @@
-import * as io from 'socket.io';
+import * as io from "socket.io";
 
 declare global {
     const socket: io.Socket | null;
     const keyboard: KeyboardManager;
     const ui: {
         actors: ActorDirectory;
-        combat: CombatTracker;
+        chat: ChatLog;
+        combat: CombatTracker<Combat>;
         compendium: CompendiumDirectory;
         controls: SceneControls;
+        items: ItemDirectory;
         notifications: Notifications;
         settings: Settings;
         tables: RollTableDirectory;
@@ -27,10 +29,11 @@ declare global {
         TActor extends Actor = Actor,
         TChatMessage extends ChatMessage<TActor> = ChatMessage<TActor>,
         TCombat extends Combat = Combat,
-        TItem extends Item = Item,
+        TFolder extends Folder = Folder,
+        TItem extends Item<TActor> = Item<TActor>,
         TMacro extends Macro = Macro,
         TScene extends Scene = Scene,
-        TUser extends User = User,
+        TUser extends User<TActor> = User<TActor>
     > {
         /**
          * The named view which is currently active.
@@ -40,8 +43,8 @@ declare global {
 
         /** The object of world data passed from the server */
         data: {
-            actors: TActor['data']['_source'][];
-            items: TItem['data']['_source'][];
+            actors: TActor["data"]["_source"][];
+            items: TItem["data"]["_source"][];
             macros: foundry.data.MacroSource[];
             messages: foundry.data.ChatMessageSource[];
             packs: CompendiumMetadata[];
@@ -57,7 +60,15 @@ declare global {
         keyboard: KeyboardManager;
 
         /** A mapping of installed modules */
-        modules: Map<string, { active: boolean }>;
+        modules: Map<
+            string,
+            {
+                active: boolean;
+                data: {
+                    flags?: Record<string, Record<string, unknown>>;
+                };
+            }
+        >;
 
         /** The user role permissions setting */
         permissions: Record<string, number[]>;
@@ -97,8 +108,8 @@ declare global {
         ready: boolean;
 
         /* -------------------------------------------- */
-        /*  Entities
-    /* -------------------------------------------- */
+        /*  Entities                                    */
+        /* -------------------------------------------- */
 
         users: Users<TUser>;
         messages: Messages<TChatMessage>;
@@ -110,10 +121,13 @@ declare global {
         playlists: Playlists;
         combats: CombatEncounters<TCombat>;
         tables: RollTables;
-        folders: Folders;
+        folders: Folders<TFolder>;
         packs: Collection<CompendiumCollection<TActor | TItem | JournalEntry | TMacro | Playlist | RollTable | TScene>>;
 
         constructor(view: string, worldData: {}, sessionId: string, socket: io.Socket);
+
+        /** Returns the current version of the Release, usable for comparisons using isNewerVersion */
+        get version(): string;
 
         /**
          * Fetch World data and return a Game instance
@@ -179,7 +193,7 @@ declare global {
         /**
          * The currently connected User
          */
-        get user(): TUser;
+        get user(): Active<TUser>;
 
         /**
          * Metadata regarding the current game World
@@ -233,18 +247,22 @@ declare global {
                 url: string;
                 version: string;
             };
-            entityTypes: {
+            documentTypes: {
                 Actor: string[];
                 ChatMessage: string[];
                 Combat: string[];
                 Folder: string[];
                 Item: string[];
                 JournalEntry: string[];
-                Macro: string[];
+                Macro: ["chat", "script"];
                 Playlist: string[];
                 RollTable: string[];
                 Scene: string[];
                 User: string[];
+            };
+            model: {
+                Actor: Record<string, object>;
+                Item: Record<string, object>;
             };
         };
 

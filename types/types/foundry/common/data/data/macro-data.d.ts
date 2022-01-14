@@ -3,8 +3,8 @@ declare module foundry {
         interface MacroSource extends abstract.DocumentSource {
             _id: string;
             name: string;
-            type: 'chat' | 'script';
-            img: string;
+            type: "chat" | "script";
+            img: ImagePath;
             actorIds: string[];
             author: string;
             command: string;
@@ -16,7 +16,7 @@ declare module foundry {
         }
 
         class MacroData<
-            TDocument extends documents.BaseMacro = documents.BaseMacro,
+            TDocument extends documents.BaseMacro = documents.BaseMacro
         > extends abstract.DocumentData<TDocument> {
             static override defineSchema(): abstract.DocumentSchema;
         }

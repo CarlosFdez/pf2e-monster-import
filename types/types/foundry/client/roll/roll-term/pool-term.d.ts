@@ -30,24 +30,24 @@ declare global {
 
         /** Define the modifiers that can be used for this particular DiceTerm type. */
         static MODIFIERS: {
-            k: 'keep';
-            kh: 'keep';
-            kl: 'keep';
-            d: 'drop';
-            dh: 'drop';
-            dl: 'drop';
-            cs: 'countSuccess';
-            cf: 'countFailures';
+            k: "keep";
+            kh: "keep";
+            kl: "keep";
+            d: "drop";
+            dh: "drop";
+            dl: "drop";
+            cs: "countSuccess";
+            cf: "countFailures";
         };
 
-        /**The regular expression pattern used to identify the opening of a dice pool expression. */
+        /** The regular expression pattern used to identify the opening of a dice pool expression. */
         static OPEN_REGEXP: RegExp;
 
         /** A regular expression pattern used to identify the closing of a dice pool expression. */
         static CLOSE_REGEXP: RegExp;
 
         /** @override */
-        static SERIALIZE_ATTRIBUTES: ['terms', 'modifiers', 'rolls', 'results'];
+        static SERIALIZE_ATTRIBUTES: ["terms", "modifiers", "rolls", "results"];
 
         /* -------------------------------------------- */
         /*  Dice Pool Attributes                        */

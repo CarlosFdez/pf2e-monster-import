@@ -17,7 +17,7 @@ declare type ClientDocumentMixin<T extends typeof foundry.abstract.Document> = {
      */
     createDialog(
         data?: { folder?: string },
-        options?: FormApplicationOptions,
+        options?: Partial<FormApplicationOptions>
     ): Promise<ClientDocument<InstanceType<T>> | undefined>;
 
     /**
@@ -35,8 +35,8 @@ declare type ClientDocumentMixin<T extends typeof foundry.abstract.Document> = {
      */
     fromDropData<T extends typeof foundry.abstract.Document>(
         this: T,
-        data: object,
-        { importWorld }?: { importWorld?: boolean },
+        data: DropCanvasData,
+        { importWorld }?: { importWorld?: boolean }
     ): Promise<InstanceType<T> | undefined>;
 } & T;
 
@@ -51,7 +51,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     override apps: Record<string, Application>;
 
     /** A cached reference to the FormApplication instance used to configure this Document. */
-    _sheet: FormApplication | null;
+    protected _sheet: FormApplication | null;
 
     protected override _initialize(): void;
 
@@ -103,7 +103,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     get permission(): PermissionLevel;
 
     /** Lazily obtain a FormApplication instance used to configure this Document, or null if no sheet is available. */
-    get sheet(): NonNullable<this['_sheet']>;
+    get sheet(): FormApplication;
 
     /** A Universally Unique Identifier (uuid) for this Document instance. */
     get uuid(): string;
@@ -119,7 +119,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     /* -------------------------------------------- */
 
     /** Obtain the FormApplication class constructor which should be used to configure this Document. */
-    protected _getSheetClass(): ConstructorOf<NonNullable<this['_sheet']>>;
+    protected _getSheetClass(): ConstructorOf<FormApplication>;
 
     /**
      * Prepare data for the Document.
@@ -132,7 +132,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     prepareBaseData(): void;
 
     /** Prepare all embedded Document instances which exist within this primary Document. */
-    prepareEmbeddedEntities(): void;
+    prepareEmbeddedDocuments(): void;
 
     /**
      * Apply transformations or derivations to the values of the source data object.
@@ -173,15 +173,15 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     /* -------------------------------------------- */
 
     protected override _onCreate(
-        data: this['data']['_source'],
+        data: this["data"]["_source"],
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     protected override _onUpdate(
-        changed: DeepPartial<this['data']['_source']>,
+        changed: DeepPartial<this["data"]["_source"]>,
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     protected override _onDelete(options: DocumentModificationContext, userId: string): void;
@@ -195,9 +195,9 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
      */
     protected _preCreateEmbeddedDocuments(
         embeddedName: string,
-        result: ClientDocument['data']['_source'][],
+        result: ClientDocument["data"]["_source"][],
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     /**
@@ -211,9 +211,9 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     protected _onCreateEmbeddedDocuments(
         embeddedName: string,
         documents: ClientDocument[],
-        result: ClientDocument['data']['_source'][],
+        result: ClientDocument["data"]["_source"][],
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     /**
@@ -225,9 +225,9 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
      */
     protected _preUpdateEmbeddedDocuments(
         embeddedName: string,
-        result: ClientDocument['data']['_source'][],
+        result: ClientDocument["data"]["_source"][],
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     /**
@@ -241,9 +241,9 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     protected _onUpdateEmbeddedDocuments(
         embeddedName: string,
         documents: ClientDocument[],
-        result: ClientDocument['data']['_source'][],
+        result: ClientDocument["data"]["_source"][],
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     /**
@@ -255,9 +255,9 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
      */
     protected _preDeleteEmbeddedDocuments(
         embeddedName: string,
-        result: ClientDocument['data']['_source'][],
+        result: ClientDocument["data"]["_source"][],
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     /**
@@ -271,9 +271,9 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     protected _onDeleteEmbeddedDocuments(
         embeddedName: string,
         documents: ClientDocument[],
-        result: ClientDocument['data']['_source'][],
+        result: ClientDocument["data"]["_source"][],
         options: DocumentModificationContext,
-        userId: string,
+        userId: string
     ): void;
 
     /**
@@ -303,5 +303,5 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
      * @param [pack] A specific pack being exported to
      * @return A data object of cleaned data suitable for compendium import
      */
-    toCompendium(pack: CompendiumCollection<any>): this['data']['_source'];
+    toCompendium(pack: CompendiumCollection<any>): this["data"]["_source"];
 }

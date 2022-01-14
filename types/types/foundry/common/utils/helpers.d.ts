@@ -4,6 +4,18 @@ declare global {
     module foundry {
         module utils {
             /**
+             * Wrap a callback in a debounced timeout.
+             * Delay execution of the callback function until the function has not been called for delay milliseconds
+             * @param callback A function to execute once the debounced threshold has been passed
+             * @param delay An amount of time in milliseconds to delay
+             * @return A wrapped function which can be called to debounce execution
+             */
+            function debounce<T extends (...args: any[]) => unknown>(
+                callback: T,
+                delay: number
+            ): (...args: Parameters<T>) => void;
+
+            /**
              * Quickly clone a simple piece of data, returning a copy which can be mutated safely.
              * This method DOES support recursive data structures containing inner objects or arrays.
              * This method DOES NOT support advanced object types like Set, Map, or other specialized classes.
@@ -11,7 +23,7 @@ declare global {
              * @return The clone of that data
              */
             function deepClone<T>(
-                original: T,
+                original: T
             ): T extends Set<any> | Map<any, any> | foundry.utils.Collection<any> ? never : T;
 
             /**
@@ -19,7 +31,7 @@ declare global {
              * For a subset of cases the deepClone function will offer better performance.
              * @param original Some sort of data
              */
-            function duplicate<T extends foundry.abstract.Document>(original: T): T['data'];
+            function duplicate<T extends foundry.abstract.Document>(original: T): T["data"];
             function duplicate<T extends foundry.abstract.DocumentData>(original: T): RawObject<T>;
             function duplicate<T>(original: T): T;
 
@@ -59,7 +71,7 @@ declare global {
                 original: T,
                 other?: U,
                 { insertKeys, insertValues, overwrite, inplace, enforceTypes }?: MergeObjectOptions,
-                _d?: number,
+                _d?: number
             ): T & U;
 
             /**
@@ -95,7 +107,7 @@ declare global {
                 source: object,
                 template: object,
                 keepSpecial?: boolean,
-                templateValues?: boolean,
+                templateValues?: boolean
             ): object;
 
             /**
@@ -201,21 +213,21 @@ declare global {
              * @param  v       The value
              * @return         The RGB representation
              */
-            function hsvToRgb(h: number, s: number, v: number): Array<number>;
+            function hsvToRgb(h: number, s: number, v: number): [number, number, number];
 
             /**
              * Converts a color as an [R, G, B] array of normalized floats to a hexadecimal number.
              * @param rgb - Array of numbers where all values are normalized floats from 0.0 to 1.0.
              * @return      Number in hexadecimal.
              */
-            function rgbToHex(rgb: Array<number>): number;
+            function rgbToHex(rgb: [number, number, number]): number;
 
             /**
              * Convert a hex color code to an RGB array
              * @param hex    A hex color number
              * @return       An array of [r,g,b] colors normalized on the range of [0,1]
              */
-            function hexToRGB(hex: number): Array<number>;
+            function hexToRGB(hex: number): [number, number, number];
 
             /**
              * Convert a hex color code to an RGBA color string which can be used for CSS styling
@@ -239,7 +251,7 @@ declare global {
              * @param v1
              * @return
              */
-            function isNewerVersion(v1: number | string, v0: number | string): boolean;
+            function isNewerVersion(v1: number | string | null, v0: number | string): boolean;
 
             /**
              * Generate a random ID
@@ -251,13 +263,6 @@ declare global {
              * @return          Return a string containing random letters and numbers
              */
             function randomID(length?: number): string;
-
-            /**
-             * Load a single texture and return a Promise which resolves once the texture is ready to use
-             * @param src       The requested texture source
-             * @param fallback  A fallback texture to use if the requested source is unavailable or invalid
-             */
-            function loadTexture(src: string, fallback?: string): Promise<PIXI.Texture>;
         }
     }
 
@@ -282,6 +287,14 @@ declare global {
         var mergeObject: typeof foundry.utils.mergeObject;
         var setProperty: typeof foundry.utils.setProperty;
         var randomID: typeof foundry.utils.randomID;
+
+        /**
+         * Load a single texture and return a Promise which resolves once the texture is ready to use
+         * @param src       The requested texture source
+         * @param fallback  A fallback texture to use if the requested source is unavailable or invalid
+         */
+        function loadTexture(src: string, { fallback }?: { fallback?: ImagePath }): Promise<PIXI.Texture>;
+
         /* eslint-enable no-var */
     }
 }

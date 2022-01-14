@@ -1,6 +1,12 @@
-export const AmbientLightDocumentConstructor: CanvasDocumentMixin<typeof foundry.documents.BaseAmbientLight, null>;
+export const AmbientLightDocumentConstructor: CanvasDocumentMixin<
+    typeof foundry.documents.BaseAmbientLight,
+    LightingLayer<AmbientLight>
+>;
 
-export const AmbientSoundDocumentConstructor: CanvasDocumentMixin<typeof foundry.documents.BaseAmbientSound, null>;
+export const AmbientSoundDocumentConstructor: CanvasDocumentMixin<
+    typeof foundry.documents.BaseAmbientSound,
+    SoundsLayer
+>;
 
 export const ActiveEffectConstructor: ClientDocumentMixin<typeof foundry.documents.BaseActiveEffect>;
 
@@ -12,7 +18,9 @@ export const CombatConstructor: ClientDocumentMixin<typeof foundry.documents.Bas
 
 export const ChatMessageConstructor: ClientDocumentMixin<typeof foundry.documents.BaseChatMessage>;
 
-export const DrawingConstructor: CanvasDocumentMixin<typeof foundry.documents.BaseDrawing, DrawingLayer>;
+export const DrawingConstructor: CanvasDocumentMixin<typeof foundry.documents.BaseDrawing, DrawingsLayer>;
+
+export const FogExplorationConstructor: ClientDocumentMixin<typeof foundry.documents.BaseFogExploration>;
 
 export const FolderConstructor: ClientDocumentMixin<typeof foundry.documents.BaseFolder>;
 

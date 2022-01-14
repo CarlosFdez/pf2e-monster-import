@@ -14,28 +14,28 @@ declare global {
                 static override get metadata(): SceneMetadata;
 
                 /** A reference to the Collection of Drawing instances in the Scene document, indexed by _id. */
-                get drawings(): this['data']['drawings'];
+                get drawings(): this["data"]["drawings"];
 
                 /** A reference to the Collection of AmbientLight instances in the Scene document, indexed by _id. */
-                get lights(): this['data']['lights'];
+                get lights(): this["data"]["lights"];
 
                 /** A reference to the Collection of Note instances in the Scene document, indexed by _id. */
-                get notes(): this['data']['notes'];
+                get notes(): this["data"]["notes"];
 
                 /** A reference to the Collection of AmbientSound instances in the Scene document, indexed by _id. */
-                get sounds(): this['data']['sounds'];
+                get sounds(): this["data"]["sounds"];
 
                 /** A reference to the Collection of MeasuredTemplate instances in the Scene document, indexed by _id. */
-                get templates(): this['data']['templates'];
+                get templates(): this["data"]["templates"];
 
                 /** A reference to the Collection of Token instances in the Scene document, indexed by _id. */
-                get tokens(): this['data']['tokens'];
+                get tokens(): this["data"]["tokens"];
 
                 /** A reference to the Collection of Tile instances in the Scene document, indexed by _id. */
-                get tiles(): this['data']['tiles'];
+                get tiles(): this["data"]["tiles"];
 
                 /** A reference to the Collection of Wall instances in the Scene document, indexed by _id. */
-                get walls(): this['data']['walls'];
+                get walls(): this["data"]["walls"];
 
                 /**
                  * Get the Canvas dimensions which would be used to display this Scene.
@@ -50,39 +50,19 @@ declare global {
                     padding,
                     shiftX,
                     shiftY,
-                }?: {
-                    width: number;
-                    height: number;
-                    size: number;
-                    gridDistance: number;
-                    padding: number;
-                    shiftX: number;
-                    shiftY: number;
-                }): {
-                    sceneWidth: number;
-                    sceneHeight: number;
-                    size: number;
-                    distance: number;
-                    shiftX: number;
-                    shiftY: number;
-                    ratio: number;
-                    paddingX: number;
-                    width: number;
-                    paddingY: number;
-                    height: number;
-                };
+                }: GetDimensionsParams): SceneDimensions;
             }
 
             interface BaseScene {
-                readonly data: data.SceneData<BaseScene>;
+                readonly data: data.SceneData<this>;
 
                 readonly parent: null;
             }
 
             interface SceneMetadata extends abstract.DocumentMetadata {
-                name: 'Scene';
-                collection: 'scenes';
-                label: 'DOCUMENT.Scene';
+                name: "Scene";
+                collection: "scenes";
+                label: "DOCUMENT.Scene";
                 isPrimary: true;
                 embedded: {
                     AmbientLight: typeof documents.BaseAmbientLight;
@@ -103,5 +83,29 @@ declare global {
      */
     interface SceneEmbeddedModificationContext extends DocumentModificationContext {
         isUndo?: boolean;
+    }
+
+    interface GetDimensionsParams {
+        gridDistance: number;
+        height: number;
+        padding: number;
+        shiftX: number;
+        shiftY: number;
+        size: number;
+        width: number;
+    }
+
+    interface SceneDimensions {
+        distance: number;
+        height: number;
+        paddingX: number;
+        paddingY: number;
+        ratio: number;
+        sceneHeight: number;
+        sceneWidth: number;
+        shiftX: number;
+        shiftY: number;
+        size: number;
+        width: number;
     }
 }

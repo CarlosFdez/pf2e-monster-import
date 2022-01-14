@@ -1,4 +1,4 @@
-import { MeasuredTemplateDocumentConstructor } from './constructors';
+import { MeasuredTemplateDocumentConstructor } from "./constructors";
 
 declare global {
     /**
@@ -6,6 +6,10 @@ declare global {
      * Each MeasuredTemplate document contains MeasuredTemplateData which defines its data schema.
      */
     class MeasuredTemplateDocument extends MeasuredTemplateDocumentConstructor {
+        /* -------------------------------------------- */
+        /*  Properties                                  */
+        /* -------------------------------------------- */
+
         /** A reference to the User who created the MeasuredTemplate document. */
         get author(): User | undefined;
 
@@ -16,6 +20,8 @@ declare global {
     interface MeasuredTemplateDocument {
         readonly parent: Scene | null;
 
-        _object: MeasuredTemplate;
+        _sheet: MeasuredTemplateConfig | null;
+
+        readonly _object: MeasuredTemplate<MeasuredTemplateDocument> | null;
     }
 }

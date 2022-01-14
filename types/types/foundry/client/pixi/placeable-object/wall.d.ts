@@ -12,7 +12,7 @@ declare class Wall extends PlaceableObject<WallDocument> {
     /** A reference to an overhead Tile that is a roof, interior to which this wall is contained */
     roof: Tile;
 
-    static embeddedName: 'Wall';
+    static embeddedName: "Wall";
 
     /* -------------------------------------------- */
     /*  Properties                                  */
@@ -120,7 +120,7 @@ declare class Wall extends PlaceableObject<WallDocument> {
     /*  Interaction Event Callbacks                 */
     /* -------------------------------------------- */
 
-    protected _canControl(user: User, event: Event): boolean;
+    protected override _canControl(user: User, event?: PIXI.InteractionEvent): boolean;
 
     protected _onHoverIn(event: PIXI.InteractionEvent, options?: { hoverOutOthers?: boolean }): boolean;
 
@@ -139,5 +139,9 @@ declare class Wall extends PlaceableObject<WallDocument> {
 
     protected _onDragLeftMove(event: PIXI.InteractionEvent): void;
 
-    protected _onDragLeftDrop(event: PIXI.InteractionEvent): Promise<this['document'][]>;
+    protected _onDragLeftDrop(event: PIXI.InteractionEvent): Promise<this["document"][]>;
+}
+
+declare interface Wall extends PlaceableObject<WallDocument> {
+    get layer(): WallsLayer<this>;
 }

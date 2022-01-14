@@ -8,34 +8,31 @@ declare global {
      * // Roll 4 six-sided dice
      * let die = new Die({faces: 6, number: 4}).evaluate();
      */
-    class Die extends DiceTerm<DieData> {
-        /** @override */
-        constructor(termData: DieData);
+    class Die<TData extends DieData = DieData> extends DiceTerm<TData> {
+        constructor(termData?: Partial<TData>);
 
-        /** @override */
-        DENOMINATION: 'd';
+        static override DENOMINATION: string;
 
-        /** @override */
-        MODIFIERS: {
-            r: 'reroll';
-            rr: 'rerollRecursive';
-            x: 'explode';
-            xo: 'explodeOnce';
-            k: 'keep';
-            kh: 'keep';
-            kl: 'keep';
-            d: 'drop';
-            dh: 'drop';
-            dl: 'drop';
-            min: 'minimum';
-            max: 'maximum';
-            even: 'countEven';
-            odd: 'countOdd';
-            cs: 'countSuccess';
-            cf: 'countFailures';
-            df: 'deductFailures';
-            sf: 'subtractFailures';
-            ms: 'marginSuccess';
+        static override MODIFIERS: {
+            r: "reroll";
+            rr: "rerollRecursive";
+            x: "explode";
+            xo: "explodeOnce";
+            k: "keep";
+            kh: "keep";
+            kl: "keep";
+            d: "drop";
+            dh: "drop";
+            dl: "drop";
+            min: "minimum";
+            max: "maximum";
+            even: "countEven";
+            odd: "countOdd";
+            cs: "countSuccess";
+            cf: "countFailures";
+            df: "deductFailures";
+            sf: "subtractFailures";
+            ms: "marginSuccess";
         };
 
         /**

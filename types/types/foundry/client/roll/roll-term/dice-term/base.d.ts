@@ -17,7 +17,7 @@ declare global {
         number: number;
 
         /** The number of faces on the die */
-        faces: number;
+        faces: TData["faces"];
 
         /** An Array of dice term modifiers which are applied */
         modifiers: string[];
@@ -42,21 +42,17 @@ declare global {
          */
         static MODIFIER_REGEXP: RegExp;
 
-        /** @override */
-        static REGEXP: RegExp;
+        static override REGEXP: RegExp;
 
-        /** @override */
-        static SERIALIZE_ATTRIBUTES: ['number', 'faces', 'modifiers', 'results'];
+        static override SERIALIZE_ATTRIBUTES: ["number", "faces", "modifiers", "results"];
 
         /* -------------------------------------------- */
         /*  Dice Term Attributes                        */
         /* -------------------------------------------- */
 
-        /** @override */
-        get expression(): string;
+        override get expression(): string;
 
-        /** @override */
-        get total(): number | undefined;
+        override get total(): number | undefined;
 
         /** Return an array of rolled values which are still active within this term */
         get values(): number;
@@ -73,8 +69,13 @@ declare global {
          */
         alter(multiply: number, add: number): this;
 
-        /** @override */
-        protected _evaluateSync({ minimize, maximize }?: { minimize?: boolean; maximize?: boolean }): Evaluated<this>;
+        protected override _evaluateSync({
+            minimize,
+            maximize,
+        }?: {
+            minimize?: boolean;
+            maximize?: boolean;
+        }): Evaluated<this>;
 
         /**
          * Roll the DiceTerm by mapping a random uniform draw against the faces of the dice term.
@@ -152,7 +153,7 @@ declare global {
         protected static _keepOrDrop<T extends DiceTermResult>(
             results: T[],
             number: number,
-            { keep, highest }?: { keep?: boolean; highest?: boolean },
+            { keep, highest }?: { keep?: boolean; highest?: boolean }
         ): T[];
 
         /**
@@ -162,7 +163,7 @@ declare global {
             results: T,
             comparison: ComparisonOperator,
             target: number,
-            { flagSuccess, flagFailure }?: { flagSuccess?: boolean; flagFailure?: boolean },
+            { flagSuccess, flagFailure }?: { flagSuccess?: boolean; flagFailure?: boolean }
         ): void;
 
         /** A reusable helper function to handle the identification and deduction of failures */
@@ -170,7 +171,7 @@ declare global {
             results: T[],
             comparison: ComparisonOperator,
             target: number,
-            { deductFailure, invertFailure }?: { deductFailure?: boolean; invertFailure?: boolean },
+            { deductFailure, invertFailure }?: { deductFailure?: boolean; invertFailure?: boolean }
         ): void;
 
         /* -------------------------------------------- */
@@ -222,5 +223,5 @@ declare global {
         results?: DiceTermResult[];
     }
 
-    type ComparisonOperator = '=' | '<' | '<=' | '>' | '>=';
+    type ComparisonOperator = "=" | "<" | "<=" | ">" | ">=";
 }

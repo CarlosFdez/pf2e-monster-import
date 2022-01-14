@@ -1,6 +1,6 @@
 declare module foundry {
     module documents {
-        /**The Tile embedded document model. */
+        /** The Tile embedded document model. */
         class BaseTile extends abstract.Document {
             static override get schema(): typeof data.TileData;
 
@@ -14,9 +14,9 @@ declare module foundry {
         }
 
         interface TileMetadata extends abstract.DocumentMetadata {
-            name: 'Tile';
-            collection: 'tiles';
-            label: 'DOCUMENT.Tile';
+            name: "Tile";
+            collection: "tiles";
+            label: "DOCUMENT.Tile";
             isEmbedded: true;
         }
     }

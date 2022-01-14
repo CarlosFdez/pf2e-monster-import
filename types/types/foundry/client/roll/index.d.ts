@@ -4,7 +4,7 @@ declare global {
     type RollMode = typeof CONST.DICE_ROLL_MODES[keyof typeof CONST.DICE_ROLL_MODES];
 
     /**
-     * This class provides an interface and API for conducting dice rolls.
+     * An interface and API for constructing and evaluating dice rolls.
      * The basic structure for a dice roll is a string formula and an object of data against which to parse it.
      *
      * @param formula The string formula to parse
@@ -26,8 +26,8 @@ declare global {
      * // The total resulting from the roll
      * console.log(r.total);    // 22
      */
-    class Roll<TData extends object & RollData = object & RollData> {
-        constructor(formula: string, data?: TData, options?: RollData);
+    class Roll<TData extends RollData = RollData> {
+        constructor(formula: string, data?: Partial<TData>, options?: Partial<TData>);
 
         /** The original provided data object which substitutes into attributes of the roll formula */
         data: TData;
@@ -83,6 +83,9 @@ declare global {
         /** Return the total result of the Roll expression if it has been evaluated. */
         get total(): number | undefined;
 
+        /** Whether this Roll contains entirely deterministic terms or whether there is some randomness. */
+        get isDeterministic(): boolean;
+
         /* -------------------------------------------- */
         /*  Roll Instance Methods                       */
         /* -------------------------------------------- */
@@ -104,7 +107,7 @@ declare global {
          * @param [options={}] Options which inform how the Roll is evaluated
          * @param [options.minimize=false] Minimize the result, obtaining the smallest possible value.
          * @param [options.maximize=false] Maximize the result, obtaining the largest possible value.
-         * @param [options.async=false]    Evaluate the roll asynchronously, receiving a Promise as the returned value.
+         * @param [options.async=true]     Evaluate the roll asynchronously, receiving a Promise as the returned value.
          *                                 This will become the default behavior in version 10.x
          * @returns The evaluated Roll instance
          *
@@ -164,7 +167,25 @@ declare global {
          * Alias for evaluate.
          * @see {Roll#evaluate}
          */
-        roll(options?: Record<string, unknown>): Rolled<this>;
+        roll({ minimize, maximize, async }?: { minimize?: boolean; maximize?: boolean; async?: false }): Rolled<this>;
+        roll({
+            minimize,
+            maximize,
+            async,
+        }: {
+            minimize?: boolean;
+            maximize?: boolean;
+            async: true;
+        }): Promise<Rolled<this>>;
+        roll({
+            minimize,
+            maximize,
+            async,
+        }?: {
+            minimize?: boolean;
+            maximize?: boolean;
+            async?: boolean;
+        }): Rolled<this> | Promise<Rolled<this>>;
 
         /**
          * Create a new Roll object using the original provided formula and data.
@@ -172,7 +193,15 @@ declare global {
          * @param [options={}] Evaluation options passed to Roll#evaluate
          * @return A new Roll object, rolled using the same formula and data
          */
-        reroll(options?: Record<string, unknown>): this;
+        reroll({
+            minimize,
+            maximize,
+            async,
+        }?: {
+            minimize?: boolean;
+            maximize?: boolean;
+            async?: boolean;
+        }): ReturnType<this["roll"]>;
 
         /* -------------------------------------------- */
         /*  Static Class Methods                        */
@@ -248,7 +277,7 @@ declare global {
         static replaceFormulaData<T extends object>(
             formula: string,
             data: T,
-            { missing, warn }?: { missing?: string; warn?: boolean },
+            { missing, warn }?: { missing?: string; warn?: boolean }
         ): string;
 
         /**
@@ -295,7 +324,7 @@ declare global {
                 openSymbol?: string;
                 closeSymbol?: string;
                 onClose?: () => void | Promise<void>;
-            },
+            }
         ): string[];
 
         /**
@@ -338,7 +367,7 @@ declare global {
                 intermediate,
                 prior,
                 next,
-            }?: { intermediate?: boolean; prior?: RollTerm | string; next?: RollTerm | string },
+            }?: { intermediate?: boolean; prior?: RollTerm | string; next?: RollTerm | string }
         ): RollTerm;
 
         /* -------------------------------------------- */
@@ -372,16 +401,16 @@ declare global {
          */
         toMessage(
             messageData: PreCreate<foundry.data.ChatMessageSource> | undefined,
-            { rollMode, create }: { rollMode: RollMode; create: false },
+            { rollMode, create }: { rollMode: RollMode; create: false }
         ): Promise<foundry.data.ChatMessageData>;
         toMessage(
             messageData?: PreCreate<foundry.data.ChatMessageSource>,
-            { rollMode, create }?: { rollMode?: RollMode; create?: true },
+            { rollMode, create }?: { rollMode?: RollMode; create?: true }
         ): Promise<foundry.data.ChatMessageData>;
         toMessage(
             messageData?: PreCreate<foundry.data.ChatMessageSource>,
-            { rollMode, create }?: { rollMode?: RollMode; create?: boolean },
-        ): Promise<ChatMessage> | Promise<foundry.data.ChatMessageData>;
+            { rollMode, create }?: { rollMode?: RollMode; create?: boolean }
+        ): Promise<ChatMessage | foundry.data.ChatMessageSource>;
 
         /* -------------------------------------------- */
         /*  Interface Helpers                           */

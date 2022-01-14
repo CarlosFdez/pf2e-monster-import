@@ -1,66 +1,6 @@
-import { Editor as MCEEditor } from 'tinymce';
+import type * as TinyMCE from "tinymce";
 
 declare global {
-    class FormDataExtended extends FormData {
-        constructor(form: HTMLElement, options?: { editors?: any; dtypes?: any[] });
-
-        toObject(): any;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface FormApplicationOptions extends ApplicationOptions {}
-
-    interface FormApplicationData<O extends {} = {}> {
-        object?: O;
-        options?: FormApplicationOptions;
-        title?: string;
-    }
-
-    interface OnSubmitFormOptions {
-        updateData?: Record<string, unknown> | null;
-        preventClose?: boolean;
-        preventRender?: boolean;
-    }
-
-    interface FormApplicationOptions extends ApplicationOptions {
-        /**
-         * Whether the application form is editable - if true, it's fields will
-         * be unlocked and the form can be submitted. If false, all form fields
-         * will be disabled and the form cannot be submitted. Default is true.
-         */
-        editable?: boolean;
-        /**
-         * Whether to automatically close the application when it's contained
-         * form is submitted. Default is true.
-         */
-        closeOnSubmit?: boolean;
-        /**
-         * Whether to automatically submit the contained HTML form when the
-         * application window is manually closed. Default is false.
-         */
-        submitOnClose?: boolean;
-        /**
-         * Whether to automatically submit the contained HTML form when an input
-         * or select element is changed. Default is false.
-         */
-        submitOnChange?: boolean;
-    }
-
-    interface TinyMCEEditorData {
-        active: boolean;
-        button: HTMLElement;
-        changed: boolean;
-        hasButton: boolean;
-        initial: string;
-        mce: MCEEditor | null;
-        options: {
-            target: HTMLElement;
-            height: number;
-            save_onsavecallback: Function;
-        };
-        target: string;
-    }
-
     /**
      * An abstract pattern for defining an Application responsible for updating some object using an HTML form
      *
@@ -75,9 +15,9 @@ declare global {
      */
     abstract class FormApplication<
         TObject extends {} = {},
-        TOptions extends FormApplicationOptions = FormApplicationOptions,
+        TOptions extends FormApplicationOptions = FormApplicationOptions
     > extends Application<TOptions> {
-        constructor(object?: TObject, options?: TOptions);
+        constructor(object?: TObject, options?: Partial<TOptions>);
 
         override options: TOptions;
 
@@ -93,7 +33,7 @@ declare global {
          * Keep track of any FilePicker instances which are associated with this form
          * The values of this Array are inner-objects with references to the FilePicker instances and other metadata
          */
-        filepickers: any[];
+        filepickers: FilePicker[];
 
         /**
          * Keep track of any mce editors which may be active as part of this form
@@ -101,17 +41,17 @@ declare global {
          */
         editors: Record<string, TinyMCEEditorData>;
 
-        /**
-         * Assign the default options which are supported by the entity edit sheet
-         */
+        /** Assign the default options which are supported by the entity edit sheet */
         static override get defaultOptions(): FormApplicationOptions;
 
-        /**
-         * Is the Form Application currently editable?
-         */
+        /** Is the Form Application currently editable? */
         get isEditable(): boolean;
 
-        getData(options?: TOptions): FormApplicationData<TObject>;
+        getData(options?: TOptions): FormApplicationData<TObject> | Promise<FormApplicationData<TObject>>;
+
+        protected override _render(force?: boolean, options?: RenderOptions): Promise<void>;
+
+        protected override _renderInner(data: FormApplicationData<TObject>, options: RenderOptions): Promise<JQuery>;
 
         /* -------------------------------------------- */
         /*  Event Listeners and Handlers                */
@@ -140,10 +80,7 @@ declare global {
          * @param [preventRender] Prevent the application from re-rendering as a result of form submission
          * @returns A promise which resolves to the validated update data
          */
-        protected _onSubmit(
-            event: Event,
-            { updateData, preventClose, preventRender }?: OnSubmitFormOptions,
-        ): Promise<Record<string, unknown>>;
+        protected _onSubmit(event: Event, options?: OnSubmitFormOptions): Promise<Record<string, unknown>>;
 
         /**
          * Get an object of update data used to update the form's target object
@@ -164,15 +101,28 @@ declare global {
          * @param formData  The object of validated form data with which to update the object
          * @returns         A Promise which resolves once the update operation has completed
          */
-        protected abstract _updateObject(event: Event, formData: {}): Promise<unknown>;
+        protected abstract _updateObject(event: Event, formData: Record<string, unknown>): Promise<unknown>;
 
         /* -------------------------------------------- */
         /*  TinyMCE Editor                              */
         /* -------------------------------------------- */
 
         /**
-         * Activate a TinyMCE editor instance present within the form
+         * Activate a named TinyMCE text editor
+         * @param name           The named data field which the editor modifies.
+         * @param options        TinyMCE initialization options passed to TextEditor.create
+         * @param initialContent Initial text content for the editor area.
          */
+        activateEditor(name: string, options?: Partial<TinyMCE.EditorSettings>, initialContent?: string): void;
+
+        /**
+         * Handle saving the content of a specific editor by name
+         * @param name     The named editor to save
+         * @param [remove] Remove the editor after saving its content
+         */
+        saveEditor(name: string, { remove }?: { remove?: boolean }): Promise<void>;
+
+        /** Activate a TinyMCE editor instance present within the form */
         protected _activateEditor(div: JQuery | HTMLElement): void;
 
         /**
@@ -193,5 +143,61 @@ declare global {
         submit(options?: OnSubmitFormOptions): Promise<this>;
 
         override close(options?: { force?: boolean }): Promise<void>;
+    }
+
+    class FormDataExtended extends FormData {
+        constructor(form: HTMLElement, options?: { editors?: any; dtypes?: any[] });
+
+        toObject(): any;
+    }
+
+    interface FormApplicationData<O extends {} = {}> {
+        object?: O;
+        options?: Partial<FormApplicationOptions>;
+        title?: string;
+    }
+
+    interface OnSubmitFormOptions {
+        updateData?: Record<string, unknown> | null;
+        preventClose?: boolean;
+        preventRender?: boolean;
+    }
+
+    interface FormApplicationOptions extends ApplicationOptions {
+        /**
+         * Whether the application form is editable - if true, it's fields will
+         * be unlocked and the form can be submitted. If false, all form fields
+         * will be disabled and the form cannot be submitted. Default is true.
+         */
+        editable: boolean;
+
+        /**
+         * Whether to automatically close the application when it's contained
+         * form is submitted. Default is true.
+         */
+        closeOnSubmit: boolean;
+
+        /**
+         * Whether to automatically submit the contained HTML form when the
+         * application window is manually closed. Default is false.
+         */
+        submitOnClose: boolean;
+
+        /**
+         * Whether to automatically submit the contained HTML form when an input
+         * or select element is changed. Default is false.
+         */
+        submitOnChange: boolean;
+    }
+
+    interface TinyMCEEditorData {
+        active: boolean;
+        button: HTMLElement;
+        changed: boolean;
+        hasButton: boolean;
+        initial: string;
+        mce: TinyMCE.Editor | null;
+        options: Partial<TinyMCE.EditorSettings>;
+        target: string;
     }
 }

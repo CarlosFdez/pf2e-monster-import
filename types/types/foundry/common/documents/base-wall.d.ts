@@ -1,6 +1,6 @@
 declare module foundry {
     module documents {
-        /**The Wall embedded document model. */
+        /** The Wall embedded document model. */
         class BaseWall extends abstract.Document {
             static override get schema(): typeof data.WallData;
 
@@ -17,14 +17,14 @@ declare module foundry {
         }
 
         interface WallMetadata extends abstract.DocumentMetadata {
-            name: 'Wall';
-            collection: 'walls';
-            label: 'DOCUMENT.Wall';
+            name: "Wall";
+            collection: "walls";
+            label: "DOCUMENT.Wall";
             isEmbedded: true;
             permissions: {
-                create: 'ASSISTANT';
-                update: typeof documents.BaseWall['_canUpdate'];
-                delete: 'ASSISTANT';
+                create: "ASSISTANT";
+                update: typeof documents.BaseWall["_canUpdate"];
+                delete: "ASSISTANT";
             };
         }
     }

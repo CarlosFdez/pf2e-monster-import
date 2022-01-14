@@ -18,19 +18,18 @@ declare module foundry {
         }
 
         interface BaseToken extends abstract.Document {
-            readonly data: data.TokenData<BaseToken>;
+            readonly data: data.TokenData<this>;
 
             readonly parent: BaseScene | null;
         }
 
         interface TokenMetadata extends abstract.DocumentMetadata {
-            name: 'Token';
-            collection: 'tokens';
-            label: 'DOCUMENT.Token';
+            name: "Token";
+            collection: "tokens";
+            label: "DOCUMENT.Token";
             isEmbedded: true;
-            permissions: Omit<abstract.DocumentMetadata['permissions'], 'create' | 'update'> & {
-                create: 'TOKEN_CREATE';
-                update: typeof BaseToken['_canUpdate'];
+            permissions: Omit<abstract.DocumentMetadata["permissions"], "create"> & {
+                create: "TOKEN_CREATE";
             };
         }
     }

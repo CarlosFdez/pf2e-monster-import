@@ -2,10 +2,8 @@
  * The Chat Log application displayed in the Sidebar
  * @see {Sidebar}
  */
-declare class ChatLog extends SidebarTab {
-    /**
-     * Track whether the user currently has pending text in the chat box
-     */
+declare class ChatLog<TChatMessage extends ChatMessage = ChatMessage> extends SidebarTab<ChatLogOptions> {
+    /** Track whether the user currently has pending text in the chat box */
     protected _pendingText: string;
 
     /**
@@ -31,30 +29,20 @@ declare class ChatLog extends SidebarTab {
     /**
      * Track the last received message which included the user as a whisper recipient.
      */
-    _lastWhisper: ChatMessage | null;
+    protected _lastWhisper: TChatMessage | null;
 
     constructor(options?: {});
 
-    /** @override */
-    static get defaultOptions(): typeof SidebarTab['defaultOptions'] & {
-        id: 'chat';
-        template: string;
-        title: string;
-        scrollContainer: null;
-        stream: boolean;
-    };
+    static override get defaultOptions(): ChatLogOptions;
 
-    /**
-     * A reference to the Messages collection that the chat log displays
-     */
-    get collection(): Game['messages'];
+    /** A reference to the Messages collection that the chat log displays */
+    get collection(): Messages<TChatMessage>;
 
     /* -------------------------------------------- */
     /*  Application Rendering                       */
     /* -------------------------------------------- */
 
-    /** @override */
-    getData(options?: { stream?: boolean }): {
+    override getData(options?: ChatLogOptions): {
         user: User;
         rollMode: number;
         rollModes: number[];
@@ -67,8 +55,7 @@ declare class ChatLog extends SidebarTab {
      */
     protected _renderBatch(size: number): Promise<void>;
 
-    /** @override */
-    renderPopout(original: ChatMessage): void;
+    override renderPopout(original: TChatMessage): void;
 
     /* -------------------------------------------- */
     /*  Chat Sidebar Methods                        */
@@ -104,7 +91,7 @@ declare class ChatLog extends SidebarTab {
      * @param [notify] Trigger a notification which shows the log as having a new unread message
      * @return A Promise which resolves once the message is posted
      */
-    postOne(message: ChatMessage, notify?: boolean): Promise<void>;
+    postOne(message: TChatMessage, notify?: boolean): Promise<void>;
 
     /**
      * Scroll the chat log to the bottom
@@ -116,12 +103,12 @@ declare class ChatLog extends SidebarTab {
      * @param message The ChatMessage instance to update
      * @param notify  Trigger a notification which shows the log as having a new unread message
      */
-    updateMessage(message: ChatMessage, { notify }?: { notify?: boolean }): void;
+    updateMessage(message: TChatMessage, notify?: boolean): Promise<void>;
 
     updateTimestamps(): void;
 
     /* -------------------------------------------- */
-    /*  Event Listeners and Handlers
+    /*  Event Listeners and Handlers                */
     /* -------------------------------------------- */
 
     /**
@@ -137,5 +124,17 @@ declare class ChatLog extends SidebarTab {
      */
     protected processMessage(message: string): Promise<foundry.data.ChatMessageData>;
 
-    /** @todo: Fill remaining properties */
+    /**
+     * Get the ChatLog entry context options
+     * @return The sidebar entry context options
+     */
+    protected override _getEntryContextOptions(): EntryContextOption[];
+}
+
+declare interface ChatLogOptions extends SidebarTabOptions {
+    id: "chat";
+    template: string;
+    title: string;
+    scrollContainer: null;
+    stream: boolean;
 }

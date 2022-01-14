@@ -7,9 +7,8 @@ declare global {
      * @param metadata The compendium metadata, an object provided by game.data
      */
     abstract class CompendiumCollection<
-        TDocument extends CompendiumDocument = CompendiumDocument,
+        TDocument extends CompendiumDocument = CompendiumDocument
     > extends DocumentCollection<TDocument> {
-        /** @override */
         constructor(metadata: CompendiumMetadata<TDocument>, options?: ApplicationOptions);
 
         /** The compendium metadata which defines the compendium content and location */
@@ -26,7 +25,7 @@ declare global {
         static CACHE_LIFETIME_SECONDS: number;
 
         /** The named game setting which contains Compendium configurations. */
-        static CONFIG_SETTING: 'compendiumConfiguration';
+        static CONFIG_SETTING: "compendiumConfiguration";
 
         /**
          * Create a new Compendium Collection using provided metadata.
@@ -35,7 +34,7 @@ declare global {
          */
         static createCompendium<T extends CompendiumDocument>(
             metadata: CompendiumMetadata<T>,
-            options?: Record<string, unknown>,
+            options?: Record<string, unknown>
         ): Promise<CompendiumCollection<T>>;
 
         /** The canonical Compendium name - comprised of the originating package and the pack name */
@@ -44,8 +43,23 @@ declare global {
         /** Access the compendium configuration data for this pack */
         get config(): Record<string, unknown>;
 
-        /** @override */
-        get documentName(): string;
+        override get documentName(): TDocument extends Actor
+            ? "Actor"
+            : TDocument extends Item
+            ? "Item"
+            : TDocument extends JournalEntry
+            ? "JournalEntry"
+            : TDocument extends Macro
+            ? "Macro"
+            : TDocument extends Playlist
+            ? "Playlist"
+            : TDocument extends RollTable
+            ? "RollTable"
+            : TDocument extends Scene
+            ? "Scene"
+            : TDocument extends CompendiumDocument
+            ? CompendiumDocumentType
+            : never;
 
         /** Track whether the Compendium Collection is locked for editing */
         get locked(): boolean;
@@ -56,17 +70,14 @@ declare global {
         /** A convenience reference to the label which should be used as the title for the Compendium pack. */
         get title(): string;
 
-        /** @override */
-        get(key: string, options: Record<string, unknown>): TDocument | undefined;
+        override get(key: string, options?: Record<string, unknown>): TDocument | undefined;
 
-        /** @override */
-        set(id: string, document: TDocument): this;
+        override set(id: string, document: TDocument): this;
 
-        /** @override */
-        delete(id: string): boolean;
+        override delete(id: string): boolean;
 
         /** Load the Compendium index and cache it as the keys and values of the Collection. */
-        getIndex(): Promise<CompendiumIndex>;
+        getIndex(options?: { fields: string[] }): Promise<CompendiumIndex>;
 
         /**
          * Get a single Document from this Compendium by ID.
@@ -138,28 +149,25 @@ declare global {
         /** Request that a Compendium pack be migrated to the latest System data template */
         migrate(options?: Record<string, unknown>): Promise<this>;
 
-        /** @override */
-        _onCreateDocuments(
+        protected override _onCreateDocuments(
             documents: TDocument[],
-            result: TDocument['data']['_source'][],
+            result: TDocument["data"]["_source"][],
             options: DocumentModificationContext,
-            userId: string,
+            userId: string
         ): void;
 
-        /** @override */
-        _onUpdateDocuments(
+        protected override _onUpdateDocuments(
             documents: TDocument[],
-            result: TDocument['data']['_source'][],
+            result: TDocument["data"]["_source"][],
             options: DocumentModificationContext,
-            userId: string,
+            userId: string
         ): void;
 
-        /** @override */
-        _onDeleteDocuments(
+        protected override _onDeleteDocuments(
             documents: TDocument[],
-            result: TDocument['data']['_source'][],
+            result: TDocument["data"]["_source"][],
             options: DocumentModificationContext,
-            userId: string,
+            userId: string
         ): void;
 
         /** Follow-up actions taken when Documents within this Compendium pack are modified */
@@ -167,41 +175,43 @@ declare global {
     }
 
     type CompendiumDocumentType = typeof CONST.COMPENDIUM_ENTITY_TYPES[number];
-    type CompendiumUUID = `${'Compendium' | CompendiumDocumentType}.${string}.${string}`;
-    function fromUuid(uuid: CompendiumUUID): Promise<CompendiumDocument | null>;
+    type CompendiumUUID = `Compendium.${string}.${string}`;
+    type DocumentUUID = `${CompendiumDocumentType}.${string}` | CompendiumUUID | TokenDocumentUUID;
+    function fromUuid<T extends ClientDocument = ClientDocument>(uuid: string): Promise<T | null>;
 
     interface CompendiumMetadata<T extends CompendiumDocument = CompendiumDocument> {
-        absPath: string;
-        readonly entity: T extends Actor
-            ? 'Actor'
+        readonly type: T extends Actor
+            ? "Actor"
             : T extends Item
-            ? 'Item'
+            ? "Item"
             : T extends JournalEntry
-            ? 'JournalEntry'
+            ? "JournalEntry"
             : T extends Macro
-            ? 'Macro'
+            ? "Macro"
             : T extends Playlist
-            ? 'Playlist'
+            ? "Playlist"
             : T extends RollTable
-            ? 'RollTable'
+            ? "RollTable"
             : T extends Scene
-            ? 'Scene'
+            ? "Scene"
             : CompendiumDocumentType;
-        label: string;
-        module: string;
         name: string;
-        package: string;
+        label: string;
         path: string;
+        private?: string;
+        module?: string;
+        package?: string;
         system: string;
-        private: string;
     }
 
-    type CompendiumIndex = Collection<{
+    interface CompendiumIndexData {
         _id: string;
         type: string;
         name: string;
-        img: string;
-    }>;
+        [key: string]: any;
+    }
+
+    type CompendiumIndex = Collection<CompendiumIndexData>;
 
     type CompendiumDocument = Actor | Item | JournalEntry | Macro | Playlist | RollTable | Scene;
 }

@@ -5,8 +5,7 @@ declare global {
     abstract class PlaceablesLayer<TPlaceableObject extends PlaceableObject = PlaceableObject> extends CanvasLayer {
         constructor();
 
-        /** Placeable Layer Objects */
-        objects: TPlaceableObject[];
+        objects: PIXI.Application;
 
         /** Preview Object Placement */
         preview: PIXI.Container;
@@ -15,7 +14,7 @@ declare global {
         history: unknown[];
 
         /** Track the PlaceableObject on this layer which is currently being hovered upon */
-        protected _hover: this;
+        protected _hover: TPlaceableObject | null;
 
         /** Track the set of PlaceableObjects on this layer which are currently controlled by their id */
         protected _controlled: Record<string, TPlaceableObject>;
@@ -64,6 +63,9 @@ declare global {
         /*  Rendering                                   */
         /* -------------------------------------------- */
 
+        /** Obtain an iterable of objects which should be added to this PlaceableLayer */
+        getDocuments(): TPlaceableObject["document"][];
+
         /**
          * Draw the PlaceablesLayer.
          * Draw each Sound within the scene as a child of the sounds container.
@@ -71,7 +73,7 @@ declare global {
         override draw(): Promise<this>;
 
         /** Draw a single placeable object */
-        createObject(data: PreCreate<TPlaceableObject['data']['_source']>): TPlaceableObject;
+        createObject(data: PreCreate<TPlaceableObject["data"]["_source"]>): TPlaceableObject;
 
         override tearDown(): Promise<void>;
 
@@ -79,9 +81,9 @@ declare global {
         /*  Methods                                     */
         /* -------------------------------------------- */
 
-        override activate(): void;
+        override activate(): this;
 
-        override deactivate(): void;
+        override deactivate(): this;
 
         /**
          * Get a PlaceableObject contained in this layer by it's ID
@@ -184,7 +186,7 @@ declare global {
          * A helper method to prompt for deletion of all PlaceableObject instances within the Scene
          * Renders a confirmation dialogue to confirm with the requester that all objects will be deleted
          */
-        deleteAll(): Promise<TPlaceableObject['document'][] | void>;
+        deleteAll(): Promise<TPlaceableObject["document"][] | void>;
 
         /**
          * Record a new CRUD event in the history log so that it can be undone later
@@ -205,8 +207,8 @@ declare global {
          */
         pasteObjects(
             position: { x: number; y: number },
-            { hidden }?: { hidden?: boolean },
-        ): Promise<TPlaceableObject['document'][]>;
+            { hidden }?: { hidden?: boolean }
+        ): Promise<TPlaceableObject["document"][]>;
 
         /**
          * Select all PlaceableObject instances which fall within a coordinate rectangle.
@@ -245,11 +247,11 @@ declare global {
          */
         updateAll(
             transformation: (
-                document: TPlaceableObject,
-            ) => DocumentUpdateData<TPlaceableObject['document']> | DocumentUpdateData<TPlaceableObject['document']>,
+                document: TPlaceableObject
+            ) => DocumentUpdateData<TPlaceableObject["document"]> | DocumentUpdateData<TPlaceableObject["document"]>,
             condition?: Function | null,
-            options?: DocumentModificationContext,
-        ): Promise<TPlaceableObject['document'][]>;
+            options?: DocumentModificationContext
+        ): Promise<TPlaceableObject["document"][]>;
 
         /* -------------------------------------------- */
         /*  Event Listeners and Handlers                */
@@ -283,7 +285,7 @@ declare global {
          * Conclude a left-click drag workflow originating from the Canvas stage.
          * @see {Canvas#_onDragLeftDrop}
          */
-        protected _onDragLeftDrop(event: ElementDragEvent): Promise<void>;
+        protected _onDragLeftDrop(event: PIXI.InteractionEvent): Promise<void>;
 
         /**
          * Cancel a left-click drag workflow originating from the Canvas stage.
@@ -302,7 +304,7 @@ declare global {
          * This handler will rotate all controlled objects by some incremental angle.
          * @param event   The mousewheel event which originated the request
          */
-        protected _onMouseWheel(event: PIXI.InteractionEvent): void;
+        protected _onMouseWheel(event: WheelEvent): void;
 
         /**
          * Handle a DELETE keypress while a placeable object is hovered

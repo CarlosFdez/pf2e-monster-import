@@ -159,7 +159,7 @@ declare global {
                     required: true;
                     nullable: false;
                     clean: (v: unknown) => string;
-                    default: '';
+                    default: "";
                 };
 
                 /** A field used for integer sorting of a Document relative to its siblings */
@@ -175,7 +175,7 @@ declare global {
                 const TIMESTAMP_FIELD: {
                     type: typeof Number;
                     required: false;
-                    default: typeof Date['now'];
+                    default: typeof Date["now"];
                     nullable: false;
                 };
 
@@ -205,7 +205,7 @@ declare global {
                     type: typeof Object;
                     required: true;
                     nullable: false;
-                    default: { default: typeof CONST.ENTITY_PERMISSIONS.NONE };
+                    default: { default: typeof CONST.DOCUMENT_PERMISSION_LEVELS.NONE };
                     validate: typeof _validatePermissions;
                     validationError: '{name} {field} "{value}" is not a mapping of user IDs and document permission levels';
                 };
@@ -223,7 +223,7 @@ declare global {
 
                 /** Create a foreign key field which references a primary Document id */
                 function foreignDocumentField<T extends ForeignDocumentFieldOptions>(
-                    options: T,
+                    options: T
                 ): ForeignDocumentField<T>;
 
                 /**
@@ -232,25 +232,25 @@ declare global {
                  * @param [options={}] Additional field options
                  */
                 function embeddedCollectionField(
-                    document: ConstructorOf<foundry.abstract.Document>,
-                    options?: { required?: boolean; default?: ConstructorOf<foundry.abstract.Document> },
+                    document: ConstructorOf<abstract.Document>,
+                    options?: { required?: boolean; default?: ConstructorOf<abstract.Document> }
                 ): foundry.abstract.DocumentField;
 
                 /** Return a document field which is a modification of a static field type */
-                function field(
-                    field: foundry.abstract.DocumentField,
-                    options?: Record<string, unknown>,
-                ): foundry.abstract.DocumentField;
+                function field<T extends abstract.DocumentField, U extends DeepPartial<T>>(
+                    field: T,
+                    options?: U
+                ): T & U;
 
                 /** Generic interfaces returned by the above "dynamic field" functions */
                 interface ForeignDocumentField<
-                    TOptions extends ForeignDocumentFieldOptions = ForeignDocumentFieldOptions,
+                    TOptions extends ForeignDocumentFieldOptions = ForeignDocumentFieldOptions
                 > {
                     type: typeof String;
-                    required: TOptions['required'] extends true ? true : false;
-                    nullable: TOptions['nullable'] extends false ? false : true;
-                    default: TOptions['default'] extends abstract.Document ? TOptions['default'] : null;
-                    clean: <T extends any>(d: T) => T extends TOptions['type'] ? T : null;
+                    required: TOptions["required"] extends true ? true : false;
+                    nullable: TOptions["nullable"] extends false ? false : true;
+                    default: TOptions["default"] extends abstract.Document ? TOptions["default"] : null;
+                    clean: <T>(d: T) => T extends TOptions["type"] ? T : null;
                     validate: typeof _validateId;
                     validationError: '`{name} {field} "{value}" is not a valid ${options.type.documentName} id`';
                 }
@@ -260,7 +260,6 @@ declare global {
 
     type AudioPath = `${string}.${AudioFileExtension}`;
     type HexColorString = `#${string}`;
-    type GridType = typeof CONST.GRID_TYPES[keyof typeof CONST.GRID_TYPES];
     type ImagePath = `${string}.${ImageFileExtension}`;
     type VideoPath = `${string}.${VideoFileExtension}` | ImagePath;
 }
@@ -271,7 +270,3 @@ interface ForeignDocumentFieldOptions {
     nullable?: boolean;
     default?: typeof foundry.abstract.Document;
 }
-
-type ImageFileExtension = typeof CONST.IMAGE_FILE_EXTENSIONS[number];
-type VideoFileExtension = typeof CONST.VIDEO_FILE_EXTENSIONS[number];
-type AudioFileExtension = typeof CONST.AUDIO_FILE_EXTENSIONS[number];

@@ -1,4 +1,4 @@
-import { ItemConstructor } from './constructors';
+import { ItemConstructor } from "./constructors";
 
 declare global {
     /**
@@ -10,7 +10,7 @@ declare global {
      */
     class Item<TParent extends Actor = Actor> extends ItemConstructor {
         /** A convenience alias of Item#parent which is more semantically intuitive */
-        get actor(): TParent;
+        get actor(): this["parent"];
 
         /** A convenience reference to the image path (data.img) used to represent this Item */
         get img(): ImagePath;
@@ -22,7 +22,7 @@ declare global {
          * Return an array of the Active Effect instances which originated from this Item.
          * The returned instances are the ActiveEffect instances which exist on the Item itself.
          */
-        get transferredEffects(): CollectionValue<this['effects']>[];
+        get transferredEffects(): CollectionValue<this["data"]["effects"]>[];
 
         /** A convenience reference to the item type (data.type) of this Item */
         get type(): string;
@@ -30,27 +30,37 @@ declare global {
         /** Prepare a data object which defines the data schema used by dice roll commands against this Item */
         getRollData(): object;
 
-        protected override _getSheetClass(): ConstructorOf<NonNullable<this['_sheet']>>;
+        protected override _getSheetClass(): ConstructorOf<NonNullable<this["_sheet"]>>;
 
         protected static override _onCreateDocuments<T extends Item>(
             this: ConstructorOf<T>,
             items: T[],
-            context: DocumentModificationContext,
+            context: DocumentModificationContext
         ): Promise<void>;
 
         protected static override _onDeleteDocuments<T extends Item>(
             this: ConstructorOf<T>,
             items: T[],
-            context: DocumentModificationContext,
+            context: DocumentModificationContext
         ): Promise<void>;
     }
 
     interface Item<TParent extends Actor = Actor> {
         readonly data: foundry.data.ItemData<Item, ActiveEffect>;
+
         readonly parent: TParent | null;
-        _sheet: ItemSheet<Item>;
+
+        get collection(): Items<this>;
+
+        get uuid(): ItemUUID;
+
+        _sheet: ItemSheet<Item> | null;
+
+        get sheet(): ItemSheet<Item>;
 
         getFlag(scope: string, key: string): any;
-        getFlag(scope: 'core', key: 'sourceId'): string | undefined;
+        getFlag(scope: "core", key: "sourceId"): string | undefined;
     }
+
+    type ItemUUID = `Item.${string}` | `Actor.${string}.Item.${string}` | CompendiumUUID;
 }

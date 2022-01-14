@@ -14,7 +14,7 @@ declare global {
                 readonly pack: string | null;
 
                 /** The base data object for this Document which persists both the original source and any derived data. */
-                readonly data: DocumentData;
+                readonly data: DocumentData<Document>;
 
                 /**
                  * A collection of Application instances which should be re-rendered whenever this Document experiences an update to
@@ -91,16 +91,13 @@ declare global {
                  * @returns The cloned Document instance
                  */
                 clone<T extends this>(
-                    data: PreCreate<T['data']['_source']> | undefined,
-                    options: { save?: false | undefined; keepId?: boolean },
-                ): T;
-                clone<T extends this>(
-                    data: PreCreate<T['data']['_source']> | undefined,
-                    options: { save: true; keepId?: boolean },
+                    data: DocumentUpdateData<this> | undefined,
+                    options: { save: true; keepId?: boolean }
                 ): Promise<T>;
+                clone<T extends this>(data?: DocumentUpdateData<this>, options?: { save?: false; keepId?: boolean }): T;
                 clone<T extends this>(
-                    data?: PreCreate<T['data']['_source']>,
-                    options?: { save?: boolean; keepId?: boolean },
+                    data?: DocumentUpdateData<this>,
+                    options?: { save?: boolean; keepId?: boolean }
                 ): T | Promise<T>;
 
                 /**
@@ -121,7 +118,7 @@ declare global {
                 testUserPermission(
                     user: documents.BaseUser,
                     permission: DocumentPermission | UserAction,
-                    { exact }?: { exact?: boolean },
+                    { exact }?: { exact?: boolean }
                 ): boolean;
 
                 /**
@@ -162,11 +159,12 @@ declare global {
                  * const data = [{name: "Compendium Actor", type: "character", img: "path/to/profile.jpg"}];
                  * const created = await Actor.createDocuments(data, {pack: "mymodule.mypack"});
                  */
-                static createDocuments<T extends Document>(
-                    this: ConstructorOf<T>,
-                    data?: PreCreate<T['data']['_source']>[],
-                    context?: DocumentModificationContext,
-                ): Promise<T[]>;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                static createDocuments<T extends ConstructorOf<any>>(
+                    this: T,
+                    data?: PreCreate<InstanceType<T>["data"]["_source"]>[],
+                    context?: DocumentModificationContext
+                ): Promise<InstanceType<T>[]>;
 
                 /**
                  * Update multiple Document instances using provided differential data.
@@ -193,11 +191,11 @@ declare global {
                  * const actor = await pack.getDocument(documentId);
                  * const updated = await Actor.updateDocuments([{_id: actor.id, name: "New Name"}], {pack: "mymodule.mypack"});
                  */
-                static updateDocuments<T extends Document>(
-                    this: ConstructorOf<T>,
-                    updates?: DocumentUpdateData<T>[],
-                    context?: DocumentModificationContext,
-                ): Promise<T[]>;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                static updateDocuments<T extends ConstructorOf<any>>(
+                    updates?: DocumentUpdateData<InstanceType<T>>[],
+                    context?: DocumentModificationContext
+                ): Promise<InstanceType<T>[]>;
 
                 /**
                  * Delete one or multiple existing Documents using an array of provided ids.
@@ -226,11 +224,12 @@ declare global {
                  * const actor = await pack.getDocument(documentId);
                  * const deleted = await Actor.deleteDocuments([actor.id], {pack: "mymodule.mypack"});
                  */
-                static deleteDocuments<T extends Document>(
-                    this: ConstructorOf<T>,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                static deleteDocuments<T extends ConstructorOf<any>>(
+                    this: T,
                     ids?: string[],
-                    context?: DocumentModificationContext,
-                ): Promise<T[]>;
+                    context?: DocumentModificationContext
+                ): Promise<InstanceType<T>[]>;
 
                 /**
                  * Create a new Document using provided input data, saving it to the database.
@@ -254,18 +253,18 @@ declare global {
                  */
                 static create<T extends Document>(
                     this: ConstructorOf<T>,
-                    data: PreCreate<T['data']['_source']>,
-                    context?: DocumentModificationContext,
+                    data: PreCreate<T["data"]["_source"]>,
+                    context?: DocumentModificationContext
                 ): Promise<T | undefined>;
                 static create<T extends Document>(
                     this: ConstructorOf<T>,
-                    data: PreCreate<T['data']['_source']>[],
-                    context?: DocumentModificationContext,
+                    data: PreCreate<T["data"]["_source"]>[],
+                    context?: DocumentModificationContext
                 ): Promise<T[]>;
                 static create<T extends Document>(
                     this: ConstructorOf<T>,
-                    data: PreCreate<T['data']['_source']> | PreCreate<T['data']['_source']>[],
-                    context?: DocumentModificationContext,
+                    data: PreCreate<T["data"]["_source"]> | PreCreate<T["data"]["_source"]>[],
+                    context?: DocumentModificationContext
                 ): Promise<T[] | T | undefined>;
 
                 /**
@@ -322,12 +321,12 @@ declare global {
                 getEmbeddedDocument(
                     embeddedName: string,
                     id: string,
-                    { strict }: { strict: false },
+                    { strict }: { strict: false }
                 ): Document | undefined;
                 getEmbeddedDocument(
                     embeddedName: string,
                     id: string,
-                    { strict }?: { strict?: boolean },
+                    { strict }?: { strict?: boolean }
                 ): Document | undefined;
 
                 /**
@@ -341,7 +340,7 @@ declare global {
                 createEmbeddedDocuments(
                     embeddedName: string,
                     data: PreCreate<DocumentSource>[],
-                    context?: DocumentModificationContext,
+                    context?: DocumentModificationContext
                 ): Promise<Document[]>;
 
                 /**
@@ -357,8 +356,8 @@ declare global {
                  */
                 updateEmbeddedDocuments(
                     embeddedName: string,
-                    updateData: EmbeddedDocumentUpdateData<this>[],
-                    context?: DocumentModificationContext,
+                    updateData: EmbeddedDocumentUpdateData<Document>[],
+                    context?: DocumentModificationContext
                 ): Promise<Document[]>;
 
                 /**
@@ -369,11 +368,11 @@ declare global {
                  * @param [context={}] Additional context which customizes the deletion workflow
                  * @return An array of deleted Document instances
                  */
-                deleteEmbeddedDocuments<T extends Document = Document>(
+                deleteEmbeddedDocuments(
                     embeddedName: string,
                     dataId: string[],
-                    context?: DocumentModificationContext,
-                ): Promise<T[]>;
+                    context?: DocumentModificationContext
+                ): Promise<Document[]>;
 
                 /* -------------------------------------------- */
                 /*  Flag Operations                             */
@@ -429,9 +428,9 @@ declare global {
                  * @param user    The User requesting the document creation
                  */
                 protected _preCreate(
-                    data: PreDocumentId<this['data']['_source']>,
+                    data: PreDocumentId<this["data"]["_source"]>,
                     options: DocumentModificationContext,
-                    user: documents.BaseUser,
+                    user: documents.BaseUser
                 ): Promise<void>;
 
                 /**
@@ -441,10 +440,10 @@ declare global {
                  * @param options Additional options which modify the update request
                  * @param user    The User requesting the document update
                  */
-                protected _preUpdate<T extends Document>(
-                    data: DocumentUpdateData<T>,
-                    options: DocumentModificationContext,
-                    user: documents.BaseUser,
+                protected _preUpdate(
+                    changed: DeepPartial<this["data"]["_source"]>,
+                    options: DocumentUpdateContext<this>,
+                    user: documents.BaseUser
                 ): Promise<void>;
 
                 /**
@@ -453,7 +452,10 @@ declare global {
                  * @param options Additional options which modify the deletion request
                  * @param user    The User requesting the document deletion
                  */
-                protected _preDelete(options: DocumentModificationContext, user: documents.BaseUser): Promise<void>;
+                protected _preDelete(
+                    options: DocumentModificationContext<this>,
+                    user: documents.BaseUser
+                ): Promise<void>;
 
                 /**
                  * Perform follow-up operations after a Document of this type is created.
@@ -462,9 +464,9 @@ declare global {
                  * @param options Additional options which modify the creation request
                  */
                 protected _onCreate(
-                    data: this['data']['_source'],
-                    options: DocumentModificationContext,
-                    userId: string,
+                    data: this["data"]["_source"],
+                    options: DocumentModificationContext<this>,
+                    userId: string
                 ): void;
 
                 /**
@@ -475,9 +477,9 @@ declare global {
                  * @param userId  The ID of the User requesting the document update
                  */
                 protected _onUpdate(
-                    changed: DeepPartial<this['data']['_source']>,
-                    options: DocumentModificationContext,
-                    userId: string,
+                    changed: DeepPartial<this["data"]["_source"]>,
+                    options: DocumentUpdateContext<this>,
+                    userId: string
                 ): void;
 
                 /**
@@ -486,7 +488,7 @@ declare global {
                  * @param options Additional options which modify the deletion request
                  * @param userId The ID of the User requesting the document deletion
                  */
-                protected _onDelete(options: DocumentModificationContext, userId: string): void;
+                protected _onDelete(options: DocumentModificationContext<this>, userId: string): void;
 
                 /**
                  * Perform follow-up operations when a set of Documents of this type are created.
@@ -497,7 +499,7 @@ declare global {
                  */
                 protected static _onCreateDocuments(
                     documents: Document[],
-                    context: DocumentModificationContext,
+                    context: DocumentModificationContext
                 ): Promise<void>;
 
                 /**
@@ -509,7 +511,7 @@ declare global {
                  */
                 protected static _onUpdateDocuments(
                     documents: Document[],
-                    context: DocumentModificationContext,
+                    context: DocumentModificationContext
                 ): Promise<void>;
 
                 /**
@@ -521,7 +523,7 @@ declare global {
                  */
                 protected static _onDeleteDocuments(
                     documents: Document[],
-                    context: DocumentModificationContext,
+                    context: DocumentModificationContext
                 ): Promise<void>;
 
                 /* ---------------------------------------- */
@@ -535,14 +537,14 @@ declare global {
                  * @param [source=true] Draw values from the underlying data source rather than transformed values
                  * @returns The extracted primitive object
                  */
-                toObject<T extends true>(source?: T): this['data']['_source'];
-                toObject<T extends false>(source: T): RawObject<this['data']>;
-                toObject<T extends boolean>(source?: T): this['data']['_source'] | RawObject<this['data']>;
+                toObject(source?: true): this["data"]["_source"];
+                toObject(source: false): RawObject<this["data"]>;
+                toObject(source?: boolean): this["data"]["_source"] | RawObject<this["data"]>;
 
                 /**
                  * Serializing an Document should simply serialize its inner data, not the entire instance
                  */
-                toJSON(): RawObject<this['data']>;
+                toJSON(): RawObject<this["data"]>;
             }
 
             type MetadataPermission =
@@ -569,50 +571,55 @@ declare global {
     }
 
     interface DocumentConstructionContext<T extends foundry.abstract.Document = foundry.abstract.Document> {
-        parent?: T['parent'];
+        parent?: T["parent"];
         compendium?: CompendiumCollection | null;
         [key: string]: unknown;
     }
 
-    /**
-     * @property [parent]            A parent Document within which these Documents should be embedded
-     * @property [pack]              A Compendium pack identifier within which the Documents should be modified
-     * @property [noHook=false]      Block the dispatch of preCreate hooks for this operation
-     * @property [index=false]       Return an index of the Document collection, used only during a get operation.
-     * @property [keepId=false]        When performing a creation operation, keep the provided _id instead of clearing it.
-     * @property [temporary=false]   Create a temporary document which is not saved to the database. Only used during creation.
-     * @property [render=true]       Automatically re-render existing applications associated with the document.
-     * @property [renderSheet=false] Automatically create and render the Document sheet when the Document is first created.
-     * @property [diff=true]         Difference each update object against current Document data to reduce the size of the transferred data. Only used during update.
-     * @property [recursive=true]    Merge objects recursively. If false, inner objects will be replaced explicitly. Use with caution!
-     * @property [deleteAll]         Whether to delete all documents of a given type, regardless of the array of ids provided. Only used during a delete operation.
-     */
-    interface DocumentModificationContext {
-        parent?: foundry.abstract.Document | null;
-        pack?: string;
+    interface DocumentModificationContext<T extends foundry.abstract.Document = foundry.abstract.Document> {
+        /** A parent Document within which these Documents should be embedded */
+        parent?: T["parent"];
+        /** Block the dispatch of preCreate hooks for this operation */
         noHook?: boolean;
+        /** A Compendium pack identifier within which the Documents should be modified */
+        pack?: string;
+        /** Return an index of the Document collection, used only during a get operation. */
         index?: boolean;
+        /** When performing a creation operation, keep the provided _id instead of clearing it. */
         keepId?: boolean;
+        /** When performing a creation operation, keep existing _id values of documents embedded within the one being created instead of generating new ones. */
+        keepEmbeddedIds?: boolean;
+        /** Create a temporary document which is not saved to the database. Only used during creation. */
         temporary?: boolean;
+        /** Automatically re-render existing applications associated with the document. */
         render?: boolean;
+        /** Automatically create and render the Document sheet when the Document is first created. */
         renderSheet?: boolean;
+        /** Difference each update object against current Document data to reduce the size of the transferred data. Only used during update. */
         diff?: boolean;
+        /** Merge objects recursively. If false, inner objects will be replaced explicitly. Use with caution! */
         recursive?: boolean;
+        /** Whether to delete all documents of a given type, regardless of the array of ids provided. Only used during a delete operation. */
         deleteAll?: boolean;
     }
 
+    type DocumentUpdateContext<T extends foundry.abstract.Document> = Omit<
+        DocumentModificationContext<T>,
+        "deleteAll" | "index" | "keepId" | "keepEmbeddedIds" | "temporary"
+    >;
+
     type Embedded<T extends foundry.abstract.Document> = T & {
-        readonly parent: NonNullable<T['parent']>;
+        readonly parent: NonNullable<T["parent"]>;
     };
 
     type PreCreate<T extends foundry.abstract.DocumentSource> = T extends { name: string; type: string }
-        ? DeepPartial<T> & { name: string; type: T['type'] }
+        ? Omit<DeepPartial<T>, "name" | "type"> & { name: string; type: T["type"] }
         : DeepPartial<T>;
 
-    type PreDocumentId<T extends foundry.abstract.DocumentSource> = Omit<T, '_id'> & { _id: null };
+    type PreDocumentId<T extends foundry.abstract.DocumentSource> = Omit<T, "_id"> & { _id: null };
 
     type DocumentUpdateData<T extends foundry.abstract.Document = foundry.abstract.Document> =
-        | Partial<T['data']['_source']>
+        | Partial<T["data"]["_source"]>
         | Record<string, unknown>;
 
     type EmbeddedDocumentUpdateData<T extends foundry.abstract.Document> = DocumentUpdateData<T> & { _id: string };

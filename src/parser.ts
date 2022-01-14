@@ -117,7 +117,7 @@ export class MonsterParser {
 
         return {
             size: { value: SizesMap[data.size] ?? "med" },
-            rarity: { value: (rarity ?? "common") as Rarity },
+            rarity: (rarity ?? "common") as Rarity,
             languages: { value: languages },
             traits: { value: traits.filter((trait) => objectHasKey(CONFIG.PF2E.creatureTraits, trait)) }
         }

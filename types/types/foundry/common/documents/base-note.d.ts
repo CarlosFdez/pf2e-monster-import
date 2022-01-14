@@ -1,6 +1,6 @@
 declare module foundry {
     module documents {
-        /**The Note embedded document model. */
+        /** The Note embedded document model. */
         class BaseNote extends abstract.Document {
             static override get schema(): typeof data.NoteData;
 
@@ -17,12 +17,12 @@ declare module foundry {
         }
 
         interface NoteMetadata extends abstract.DocumentMetadata {
-            name: 'Note';
-            collection: 'notess';
-            label: 'DOCUMENT.Note';
+            name: "Note";
+            collection: "notess";
+            label: "DOCUMENT.Note";
             isEmbedded: true;
-            permissions: Omit<abstract.DocumentMetadata['permissions'], 'update'> & {
-                update: typeof foundry.documents.BaseNote['_canUpdate'];
+            permissions: Omit<abstract.DocumentMetadata["permissions"], "update"> & {
+                update: typeof foundry.documents.BaseNote["_canUpdate"];
             };
         }
     }

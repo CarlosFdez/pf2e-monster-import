@@ -34,7 +34,7 @@ declare global {
             sight: {
                 initialize: boolean;
                 refresh: boolean;
-                noUpdateFog: boolean;
+                skipUpdateFog: boolean;
                 forceUpdateFog: boolean;
             };
             sounds: {
@@ -43,7 +43,9 @@ declare global {
                 fade: boolean;
             };
             foreground: {
+                initialize: boolean;
                 refresh: boolean;
+                fade: boolean;
             };
         };
 
@@ -83,4 +85,4 @@ declare global {
     }
 }
 
-type PerceptionManagerParameters = DeepPartial<typeof PerceptionManager['DEFAULTS']>;
+type PerceptionManagerParameters = DeepPartial<typeof PerceptionManager["DEFAULTS"]>;

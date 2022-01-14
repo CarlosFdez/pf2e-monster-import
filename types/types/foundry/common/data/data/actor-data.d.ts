@@ -26,19 +26,19 @@ declare module foundry {
             type: TType;
             img: ImagePath;
             data: TSystemData;
-            token: TokenSource;
+            token: PrototypeTokenSource;
             items: ItemSource[];
             effects: ActiveEffectSource[];
             folder: string | null;
             sort: number;
             permission: Record<string, PermissionLevel>;
-            flags: Record<string, any>;
+            flags: ActorFlags;
         }
 
         class ActorData<
             TDocument extends documents.BaseActor,
             TActiveEffect extends documents.BaseActiveEffect,
-            TItem extends documents.BaseItem,
+            TItem extends documents.BaseItem
         > extends abstract.DocumentData<TDocument> {
             static override defineSchema(): abstract.DocumentSchema;
 
@@ -54,7 +54,7 @@ declare module foundry {
             /** Default Token settings that are used for Tokens created from this Actor **/
             token: PrototypeTokenData;
 
-            protected override _initializeSource(data: ActorSource): this['_source'];
+            protected override _initializeSource(data: ActorSource): this["_source"];
 
             protected override _initialize(): void;
         }
@@ -62,9 +62,16 @@ declare module foundry {
         interface ActorData<
             TDocument extends documents.BaseActor,
             TActiveEffect extends documents.BaseActiveEffect,
-            TItem extends documents.BaseItem,
-        > extends Omit<ActorSource, 'effects' | 'items' | 'token'> {
+            TItem extends documents.BaseItem
+        > extends Omit<ActorSource, "effects" | "items" | "token"> {
             readonly _source: ActorSource;
+        }
+
+        interface ActorFlags {
+            core?: {
+                sourceId: ActorUUID;
+            };
+            [key: string]: Record<string, any> | undefined;
         }
     }
 }

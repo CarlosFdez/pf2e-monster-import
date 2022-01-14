@@ -2,8 +2,43 @@ import { Alignment } from '@actor/creature/data';
 import { Living } from './living';
 declare const damageTypes: Set<"mental" | "chaotic" | "evil" | "good" | "lawful" | "fire" | "acid" | "cold" | "electricity" | "force" | "positive" | "sonic" | "negative" | "poison" | "bludgeoning" | "piercing" | "slashing" | "bleed">;
 export declare type SetElement<SetType extends Set<unknown>> = SetType extends Set<infer ElementType> ? ElementType : never;
+
+export declare const DAMAGE_TYPES: Set<[
+    "bludgeoning", "piercing", "slashing", "bleed",
+    "acid", "cold", "electricity", "fire", "sonic", "force",
+    "positive", "negative",
+    "chaotic", "lawful", "good", "evil",
+    "mental",
+    "poison",
+    "untyped", // see https://2e.aonprd.com/Spells.aspx?ID=162
+][number]>;
 export declare type DamageType = SetElement<typeof damageTypes>;
 export declare function isDamageType(value: string): value is DamageType;
+export declare const DAMAGE_CATEGORIES: Set<[
+    "adamantine",
+    "alignment",
+    "coldiron",
+    "darkwood",
+    "energy",
+    "ghostTouch",
+    "mithral",
+    "orichalcum",
+    "physical",
+    "precision",
+    "salt",
+    "salt-water",
+    "silver",
+    "warpglass",
+][number]>;
+export declare const DAMAGE_TRAITS: Set<["air", "earth", "light", "magical", "unarmed", "water"][number]>;
+export declare const ATTACK_TYPES: Set<[
+    "area-damage",
+    "nonlethal-attacks", // has to be present on every damage type pool!
+    "persistent-damage",
+    "precision",
+    "vorpal",
+    "weapons",
+][number]>;
 declare const attackTraits: Set<"unarmed" | "light" | "magical" | "air" | "earth" | "fire" | "water" | "adamantine" | "coldiron" | "ghostTouch" | "silver" | "area-damage" | "darkwood" | "mithral" | "orichalcum" | "salt" | "salt water" | "vorpal" | "warpglass" | "nonlethal attacks" | "persistent-damage">;
 export declare type AttackTrait = SetElement<typeof attackTraits>;
 export declare function isAttackTrait(trait: string): trait is AttackTrait;

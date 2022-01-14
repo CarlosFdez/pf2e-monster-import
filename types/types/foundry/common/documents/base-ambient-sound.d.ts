@@ -1,6 +1,6 @@
 declare module foundry {
     module documents {
-        /**The AmbientSound embedded document model. */
+        /** The AmbientSound embedded document model. */
         class BaseAmbientSound extends abstract.Document {
             static override get schema(): typeof data.AmbientSoundData;
 
@@ -14,11 +14,11 @@ declare module foundry {
         }
 
         interface AmbientSoundMetadata extends abstract.DocumentMetadata {
-            name: 'AmbientSound';
-            collection: 'sounds';
-            label: 'DOCUMENT.AmbientSound';
+            name: "AmbientSound";
+            collection: "sounds";
+            label: "DOCUMENT.AmbientSound";
             isEmbedded: true;
-            types: ['l', 'g'];
+            types: ["l", "g"];
         }
     }
 }

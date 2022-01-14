@@ -1,6 +1,6 @@
 declare module foundry {
     module documents {
-        /**The AmbientLight embedded document model. */
+        /** The AmbientLight embedded document model. */
         class BaseAmbientLight extends abstract.Document {
             static override get schema(): typeof data.AmbientLightData;
 
@@ -10,15 +10,15 @@ declare module foundry {
         }
 
         interface BaseAmbientLight {
-            readonly data: data.AmbientLightData<this>;
+            readonly data: data.AmbientLightData<BaseAmbientLight>;
 
             readonly parent: BaseScene | null;
         }
 
         interface AmbientLightMetadata extends abstract.DocumentMetadata {
-            name: 'AmbientLight';
-            collection: 'lights';
-            label: 'DOCUMENT.AmbientLight';
+            name: "AmbientLight";
+            collection: "lights";
+            label: "DOCUMENT.AmbientLight";
             isEmbedded: true;
         }
     }
