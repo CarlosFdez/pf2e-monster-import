@@ -8,6 +8,7 @@ import { tupleHasValue, objectHasKey } from "./util";
 import example from "./examples/example.json";
 import malfunctioningRepairDrone from "./examples/malfunctioning-repair-drone.json";
 import { ActionSource, ItemSourcePF2e, MeleeSource } from "@pf2e/module/item/data";
+import { MeleeDamageRoll } from "@pf2e/module/item/melee/data";
 
 type SpecialType = "offense" | "general" | "defense";
 
@@ -53,7 +54,18 @@ function createEmptyData(): DeepPartial<NPCData> {
     };
 }
 
+/** A mapping of lowercase values to the key for the damage type */
+function createDamageReverseMap() {
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(CONFIG.PF2E.damageTypes)) {
+        result[game.i18n.localize(value).toLowerCase()] = key;
+    }
+    return result;
+}
+
 export class MonsterParser {
+    reverseDamageTypes = createDamageReverseMap();
+
     parse(input: string, actor: NPCPF2e) {
         const data: MonsterData = JSON.parse(input);
 
@@ -86,8 +98,8 @@ export class MonsterParser {
         });
 
         const items: DeepPartial<ItemSourcePF2e>[] = [];
-        items.push(...(data.strikes ?? []).map(this.readStrike));
-        items.push(...(data.specials ?? []).map(this.readAction));
+        items.push(...(data.strikes ?? []).map(this.readStrike.bind(this)));
+        items.push(...(data.specials ?? []).map(this.readAction.bind(this)));
 
         return { updates, items };
     }
@@ -164,7 +176,25 @@ export class MonsterParser {
 
     private readStrike(data: MonsterData["strikes"][number]): DeepPartial<MeleeSource> {
         const type = data.type?.toLowerCase() ?? "melee";
-        const damageRolls: Record<string, unknown> = {};
+        const damageRolls: Record<string, MeleeDamageRoll> = {};
+        const rollStrings = data.damage.split(" plus ");
+        for (const rollString of rollStrings) {
+            const match = rollString?.trim().match(/(\d+d\d+\+\d+) (\w*)/);
+            if (!match) return;
+            const damage = match[1];
+            const damageType = (() => {
+                const parts = match[2].split(" ").map(part => part.toLowerCase());
+                for (const part of parts) {
+                    if (part in this.reverseDamageTypes) {
+                        return this.reverseDamageTypes[part];
+                    }
+                }
+
+                return "untyped";
+            })();
+
+            damageRolls[randomID()] = { damage, damageType };
+        }
 
         return {
             name: data.name,
