@@ -69,7 +69,7 @@ const config: Configuration = {
         }),
         new copyWebpackPlugin({
             patterns: [
-                { from: "Readme.md" },
+                { from: "README.md" },
                 { from: "module.json" },
                 { from: "src/lang", to: 'lang' },
                 { from: "src/templates", to: 'templates' },
