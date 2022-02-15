@@ -24,7 +24,7 @@ export interface SpellDifficultyClass {
     notes: RollNotePF2e[];
     value: number;
 }
-interface SpellSlotData {
+export interface SpellSlotData {
     prepared: {
         id: string;
     }[];
