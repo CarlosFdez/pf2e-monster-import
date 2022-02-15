@@ -20,3 +20,4 @@ foundryconfig.json
 dist/
 
 docs/
+package-lock.json
