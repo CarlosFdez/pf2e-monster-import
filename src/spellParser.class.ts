@@ -102,6 +102,7 @@ export class SpellParser {
 
     const traditionId = randomID();
     const spellType = name.split(' ');
+
     const traditionName = this.parseTraditionName(spellType[0]);
     const preparedType = this.parsePreparationType(spellType[1]);
 
@@ -249,6 +250,7 @@ export class SpellParser {
   }
 
   private parseTraditionName(tradition): MagicTradition {
+    if (!tradition) return "arcane"
     tradition = tradition.toLowerCase().trim();
 
     if (objectHasKey(this.spellTraditions, tradition)) {
@@ -259,6 +261,7 @@ export class SpellParser {
   }
 
   private parsePreparationType(preparation): PreparationType {
+    if (!preparation) return "innate"
     preparation = preparation.toLowerCase().trim();
     
     if (objectHasKey(CONFIG.PF2E.preparationType, preparation)) {
