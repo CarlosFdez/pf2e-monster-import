@@ -332,20 +332,26 @@ export class MonsterParser {
         const damageRolls: Record<string, MeleeDamageRoll> = {};
         const rollStrings = data.damage.split(" plus ");
         for (const rollString of rollStrings) {
-            const match = rollString?.trim().match(/(\d+d\d+\+\d+) (\w*)/);
+            const match = rollString?.trim().match(/(\d+?d\d+[\+\-]?\d?)+(.*)?/);
+            console.warn("roll string", rollString)
+            console.warn("match", match)
+
             if (!match) return;
             const damage = match[1];
             const damageType = (() => {
+              if (match[2]) {
                 const parts = match[2].split(" ").map(part => part.toLowerCase());
                 for (const part of parts) {
                     if (part in this.reverseDamageTypes) {
+
                         return this.reverseDamageTypes[part];
                     }
                 }
-
+              } else {
                 return "untyped";
+              }
             })();
-
+            
             damageRolls[randomID()] = { damage, damageType };
         }
 
