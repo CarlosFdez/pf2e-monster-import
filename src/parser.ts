@@ -336,21 +336,27 @@ export class MonsterParser {
             console.warn("roll string", rollString)
             console.warn("match", match)
 
-            if (!match) return;
-            const damage = match[1];
-            const damageType = (() => {
-              if (match[2]) {
-                const parts = match[2].split(" ").map(part => part.toLowerCase());
-                for (const part of parts) {
+            let damage;
+            let damageType;
+            if (!match) {
+              damage = rollString
+              damageType = "untyped";
+            } else {
+              damage = match[1];
+              damageType = (() => {
+                if (match[2]) {
+                  const parts = match[2].split(" ").map(part => part.toLowerCase());
+                  for (const part of parts) {
                     if (part in this.reverseDamageTypes) {
-
-                        return this.reverseDamageTypes[part];
+                      return this.reverseDamageTypes[part];
                     }
+                  }
+                } else {
+                  return "untyped";
                 }
-              } else {
-                return "untyped";
-              }
-            })();
+              })();
+            }
+
             
             damageRolls[randomID()] = { damage, damageType };
         }
