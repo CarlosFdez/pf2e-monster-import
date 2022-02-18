@@ -332,7 +332,7 @@ export class MonsterParser {
         const damageRolls: Record<string, MeleeDamageRoll> = {};
         const rollStrings = data.damage.split(" plus ");
         for (const rollString of rollStrings) {
-            const match = rollString?.trim().match(/(\d+?d\d+[\+\-]?\d?)+(.*)?/);
+            const match = rollString?.trim().match(/(\d+?d\d+[\+\-]?\d*)+(.*)?/);
             console.warn("roll string", rollString)
             console.warn("match", match)
 
