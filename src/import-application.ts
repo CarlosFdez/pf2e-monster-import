@@ -14,7 +14,7 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
             title: game.i18n.localize("PF2E-MI.Import.Title"),
             width: 550,
             height: 700,
-            closeOnSubmit: true
+            closeOnSubmit: true,
         });
     }
 
@@ -32,9 +32,9 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
             console.log(items);
             console.log(newItems);
             await actor.createEmbeddedDocuments("Item", newItems);
-            
-            console.warn("FINAL SPELL ITEMS: ", parsedSpells)
-            await actor.createEmbeddedDocuments("Item", parsedSpells, {keepId: true});
+
+            console.warn("FINAL SPELL ITEMS: ", parsedSpells);
+            await actor.createEmbeddedDocuments("Item", parsedSpells, { keepId: true });
         });
     }
 }
