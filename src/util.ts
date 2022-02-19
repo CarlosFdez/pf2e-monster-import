@@ -1,5 +1,5 @@
-type Abstract<T> = Function & {prototype: T};
-type Constructor<T> = new (...args: any[]) => T;
+type Abstract<T> = Function & { prototype: T };
+type Constructor<T> = new (...args: unknown[]) => T;
 type Class<T> = Abstract<T> | Constructor<T>;
 type UnknownFunction = (...args: unknown[]) => unknown;
 
@@ -7,11 +7,18 @@ type UnknownFunction = (...args: unknown[]) => unknown;
 export function replaceMethod<T, K extends keyof T>(
     object: Class<T>,
     name: K,
-    impl: (this: T, original: T[K], ...args: T[K] extends UnknownFunction ? Parameters<T[K]> : never) => T[K] extends UnknownFunction ? ReturnType<T[K]> : never
+    impl: (
+        this: T,
+        original: T[K],
+        ...args: T[K] extends UnknownFunction ? Parameters<T[K]> : never
+    ) => T[K] extends UnknownFunction ? ReturnType<T[K]> : never,
 ) {
-    if (!object) throw new Error(`PF2E Action Tracking | Attempted to override property ${name} for an object that does not exist`)
+    if (!object)
+        throw new Error(
+            `PF2E Action Tracking | Attempted to override property ${name} for an object that does not exist`,
+        );
     const original = object.prototype[name];
-    object.prototype[name] = function(...args) {
+    object.prototype[name] = function (...args) {
         return impl.apply(this, [original, ...args]);
     };
 }
@@ -22,14 +29,14 @@ export function replaceMethod<T, K extends keyof T>(
  * @param obj The object to check
  * @param key The key to check
  */
- export function objectHasKey<O extends object>(obj: O, key: unknown): key is keyof O {
+export function objectHasKey<O extends object>(obj: O, key: unknown): key is keyof O {
     return (typeof key === "string" || typeof key === "number") && key in obj;
 }
 
 /**
  * Check if a value is present in the provided array. Especially useful for checking against literal tuples
  */
- export function tupleHasValue<A extends readonly unknown[]>(array: A, value: unknown): value is A[number] {
+export function tupleHasValue<A extends readonly unknown[]>(array: A, value: unknown): value is A[number] {
     return array.includes(value);
 }
 

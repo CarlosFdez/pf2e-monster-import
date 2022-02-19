@@ -14,7 +14,7 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
             title: game.i18n.localize("PF2E-MI.Import.Title"),
             width: 550,
             height: 700,
-            closeOnSubmit: true
+            closeOnSubmit: true,
         });
     }
 

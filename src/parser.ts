@@ -32,17 +32,17 @@ type Language = keyof typeof CONFIG.PF2E.languages;
 
 const Alignments: ReadonlyArray<Alignment> = ["LG", "NG", "CG", "LN", "N", "CN", "LE", "NE", "CE"] as const;
 const SizesMap: Record<string, Size> = {
-    "tiny": "tiny",
-    "small": "sm",
-    "medium": "med",
-    "large": "lg",
-    "gargantuam": "grg"
+    tiny: "tiny",
+    small: "sm",
+    medium: "med",
+    large: "lg",
+    gargantuam: "grg",
 };
 const ActionCategoryMap: Record<SpecialType, keyof ConfigPF2e["PF2E"]["actionCategories"]> = {
     offense: "offensive",
     defense: "defensive",
     general: "interaction",
-}
+};
 
 function createEmptyData(): DeepPartial<NPCData> {
     return {
@@ -50,7 +50,7 @@ function createEmptyData(): DeepPartial<NPCData> {
             attributes: {},
             details: {},
             traits: {},
-        }
+        },
     };
 }
 
@@ -94,7 +94,7 @@ export class MonsterParser {
                     reflex: { value: Number(data.reflex.value) },
                     will: { value: Number(data.will.value) },
                 },
-            }
+            },
         });
 
         const items: DeepPartial<ItemSourcePF2e>[] = [];
@@ -116,23 +116,25 @@ export class MonsterParser {
             int: score(data.intelligence.value),
             wis: score(data.wisdom.value),
             cha: score(data.charisma.value),
-        }
+        };
     }
 
     private readTraits(data: MonsterData): DeepPartial<NPCData["data"]["traits"]> {
         const traits = [data.type, ...data.traits.split(",")].map((trait) => trait.toLowerCase().trim());
 
         const rarity = traits.find((trait) => objectHasKey(CONFIG.PF2E.rarityTraits, trait));
-        const languages = (data.languages?.split(",") ?? []).filter(
-            (language): language is Language => objectHasKey(CONFIG.PF2E.languages, language),
+        const languages = (data.languages?.split(",") ?? []).filter((language): language is Language =>
+            objectHasKey(CONFIG.PF2E.languages, language),
         );
 
         return {
             size: { value: SizesMap[data.size] ?? "med" },
             rarity: (rarity ?? "common") as Rarity,
             languages: { value: languages },
-            traits: { value: traits.filter((trait) => objectHasKey(CONFIG.PF2E.creatureTraits, trait)) }
-        }
+            traits: {
+                value: traits.filter((trait) => objectHasKey(CONFIG.PF2E.creatureTraits, trait)),
+            },
+        };
     }
 
     private readAction(data: MonsterData["specials"][number]): DeepPartial<ActionSource> {
@@ -152,7 +154,7 @@ export class MonsterParser {
             if (data.actions in actionCostMap) {
                 return {
                     actionType: { value: "action" },
-                    actions: { value: actionCostMap[data.actions] }
+                    actions: { value: actionCostMap[data.actions] },
                 };
             }
 
@@ -169,8 +171,8 @@ export class MonsterParser {
             data: {
                 ...actionCost,
                 actionCategory: { value: ActionCategoryMap[data.type] },
-                description: { value: parseDescription(data.description) }
-            }
+                description: { value: parseDescription(data.description) },
+            },
         };
     }
 
@@ -183,7 +185,7 @@ export class MonsterParser {
             if (!match) return;
             const damage = match[1];
             const damageType = (() => {
-                const parts = match[2].split(" ").map(part => part.toLowerCase());
+                const parts = match[2].split(" ").map((part) => part.toLowerCase());
                 for (const part of parts) {
                     if (part in this.reverseDamageTypes) {
                         return this.reverseDamageTypes[part];
@@ -202,35 +204,36 @@ export class MonsterParser {
             data: {
                 bonus: { value: Number(data.attack) },
                 weaponType: { value: type === "melee" ? "melee" : "ranged" },
-                damageRolls
-            }
+                damageRolls,
+            },
         };
     }
 }
 
-
 const CONDITION_COMPENDIUM = "@Compendium[pf2e.conditionitems.";
 
 function parseDescription(text: string) {
-    let string = "<p>" + text.replaceAll("’", "'")
-        .replaceAll("Trigger", "<p><strong>Trigger</strong>")
-        .replaceAll("Requirements", "<p><strong>Requirements</strong>")
-        .replaceAll("\nCritical Success", "</p><hr /><p><strong>Critical Success</strong>")
-        .replaceAll("\nSuccess", "</p><p><strong>Success</strong>")
-        .replaceAll("\nFailure", "</p><p><strong>Failure</strong>")
-        .replaceAll("\nCritical Failure", "</p><p><strong>Critical Failure</strong>")
-        .replaceAll("\nSpecial", "</p><p><strong>Special</strong>")
-        .replaceAll("\n", " ")
-        .replaceAll("Frequency", "<p><strong>Frequency</strong>")
-        .replaceAll("Effect", "</p><p><strong>Effect</strong>")
-        .replaceAll("—", "-")
-        .replaceAll("Cost", "<strong>Cost</strong>") + "</p>";
-    string = string.replaceAll("<p><p>", "<p>")
-        .replaceAll("–", "-")
-        .replaceAll("”", "\"")
-        .replaceAll("“", "\"")
+    let string =
+        "<p>" +
+        text
+            .replaceAll("’", "'")
+            .replaceAll("Trigger", "<p><strong>Trigger</strong>")
+            .replaceAll("Requirements", "<p><strong>Requirements</strong>")
+            .replaceAll("\nCritical Success", "</p><hr /><p><strong>Critical Success</strong>")
+            .replaceAll("\nSuccess", "</p><p><strong>Success</strong>")
+            .replaceAll("\nFailure", "</p><p><strong>Failure</strong>")
+            .replaceAll("\nCritical Failure", "</p><p><strong>Critical Failure</strong>")
+            .replaceAll("\nSpecial", "</p><p><strong>Special</strong>")
+            .replaceAll("\n", " ")
+            .replaceAll("Frequency", "<p><strong>Frequency</strong>")
+            .replaceAll("Effect", "</p><p><strong>Effect</strong>")
+            .replaceAll("—", "-")
+            .replaceAll("Cost", "<strong>Cost</strong>") +
+        "</p>";
+    string = string.replaceAll("<p><p>", "<p>").replaceAll("–", "-").replaceAll("”", '"').replaceAll("“", '"');
 
-    string = string.replaceAll("Maximum Duration", "</p><p><strong>Maximum Duration</strong>")
+    string = string
+        .replaceAll("Maximum Duration", "</p><p><strong>Maximum Duration</strong>")
         .replaceAll("Onset", "</p><p><strong>Onset</strong>")
         .replaceAll("Saving Throw", "</p><p><strong>Saving Throw</strong>");
     string = string.replace(/Stage (\d)/, "</p><p><strong>Stage $1</strong>");
@@ -240,46 +243,81 @@ function parseDescription(text: string) {
     string = string.replace(/Activate \?/, "</p><p><strong>Activate</strong> <span class='pf2-icon'>1</span>");
 
     // // Skills and saves
-    string = string.replace(/DC (\d+) basic (\w+) save/, "<span data-pf2-check='$2' data-pf2-traits='damaging-effect' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>basic $2</span> save")
-    string = string.replace(/DC (\d+) (Reflex|Will|Fortitude)/, "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span>")
-    string = string.replace(/(Reflex|Will|Fortitude) DC (\d+)/, "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>")
-    string = string.replace(/(Reflex|Will|Fortitude) \(DC (\d+)\)/, "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>")
-    string = string.replace(/(Reflex|Will|Fortitude) save \(DC (\d+)\)/, "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>")
+    string = string.replace(
+        /DC (\d+) basic (\w+) save/,
+        "<span data-pf2-check='$2' data-pf2-traits='damaging-effect' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>basic $2</span> save",
+    );
+    string = string.replace(
+        /DC (\d+) (Reflex|Will|Fortitude)/,
+        "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span>",
+    );
+    string = string.replace(
+        /(Reflex|Will|Fortitude) DC (\d+)/,
+        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
+    );
+    string = string.replace(
+        /(Reflex|Will|Fortitude) \(DC (\d+)\)/,
+        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
+    );
+    string = string.replace(
+        /(Reflex|Will|Fortitude) save \(DC (\d+)\)/,
+        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
+    );
 
-    string = string.replace(/DC (\d+) (Reflex|Will|Fortitude)/, "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span>")
-    string = string.replace(/(Reflex|Will|Fortitude) DC (\d+)/, "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>")
-    string = string.replace(/(Reflex|Will|Fortitude) \(DC (\d+)\)/, "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>")
+    string = string.replace(
+        /DC (\d+) (Reflex|Will|Fortitude)/,
+        "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span>",
+    );
+    string = string.replace(
+        /(Reflex|Will|Fortitude) DC (\d+)/,
+        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
+    );
+    string = string.replace(
+        /(Reflex|Will|Fortitude) \(DC (\d+)\)/,
+        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
+    );
 
-    string = string.replace(/(\w+) Lore DC (\d+)/, "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2 Lore</span>")
-    string = string.replace(/DC (\d+) (\w+) save/, "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span> save")
-    string = string.replace(/DC (\d+) flat check/, "<span data-pf2-check='flat' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='owner'>Flat Check</span>")
+    string = string.replace(
+        /(\w+) Lore DC (\d+)/,
+        "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2 Lore</span>",
+    );
+    string = string.replace(
+        /DC (\d+) (\w+) save/,
+        "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span> save",
+    );
+    string = string.replace(
+        /DC (\d+) flat check/,
+        "<span data-pf2-check='flat' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='owner'>Flat Check</span>",
+    );
 
     // Catch capitalized saves
     //string = string.replace(/check='(Reflex|Will|Fortitude)'/, convert_to_lower)
     //string = string.replace(/check='%s'/ % SKILLS, convert_to_lower)
 
     // Damage rolls
-    string = string.replace(/ (\d)d(\d) (rounds|minutes|hours|days)/, " [[/r $1d$2 #$3]]{$1d$2 $3}")
-    string = string.replace(/ (\d+) (\w*) damage/, " [[/r {$1}[$2]]]{$1 $2 Damage}")
-    string = string.replace(/(\d+)d(\d+)\+(\d+) (\w*) damage/, "[[/r {$1d$2 + $3}[$4]]]{$1d$2 + $3 $4 damage}")
-    string = string.replace(/(\d+)d(\d+) persistent (\w*) damage/,
-                    `[[/r {$1d$2}[persistent,$3]]]{$1d$2} ${CONDITION_COMPENDIUM}Persistent Damage]{Persistent $3 Damage}`)
-    string = string.replace(/(\d+)d(\d+) (\w*) damage/, "[[/r {$1d$2}[$3]]]{$1d$2 $3 damage}")
-    string = string.replace(/(\d+)d(\d+) (\w+)(\,|\.)/, "[[/r $1d$2 #$3]]{$1d$2 $3}$4")
-    string = string.replace(/(\d+)d(\d+)\./, "[[/r $1d$2]]{$1d$2}.")
+    string = string.replace(/ (\d)d(\d) (rounds|minutes|hours|days)/, " [[/r $1d$2 #$3]]{$1d$2 $3}");
+    string = string.replace(/ (\d+) (\w*) damage/, " [[/r {$1}[$2]]]{$1 $2 Damage}");
+    string = string.replace(/(\d+)d(\d+)\+(\d+) (\w*) damage/, "[[/r {$1d$2 + $3}[$4]]]{$1d$2 + $3 $4 damage}");
+    string = string.replace(
+        /(\d+)d(\d+) persistent (\w*) damage/,
+        `[[/r {$1d$2}[persistent,$3]]]{$1d$2} ${CONDITION_COMPENDIUM}Persistent Damage]{Persistent $3 Damage}`,
+    );
+    string = string.replace(/(\d+)d(\d+) (\w*) damage/, "[[/r {$1d$2}[$3]]]{$1d$2 $3 damage}");
+    string = string.replace(/(\d+)d(\d+) (\w+)(,|\.)/, "[[/r $1d$2 #$3]]{$1d$2 $3}$4");
+    string = string.replace(/(\d+)d(\d+)\./, "[[/r $1d$2]]{$1d$2}.");
 
     // Spell heightening handling
-    string = string.replace("Heightened (", "<hr />Heightened (")
-    string = string.replace(/Heightened \(\+(\d+)\)/, "</p><p><strong>Heightened (+$1)</strong>")
-    string = string.replace(/Heightened \((\d+)(\w+)\)/, "</p><p><strong>Heightened ($1$2)</strong>")
-    string = string.replaceAll("<hr /></p><p><strong>Heightened", "</p><hr /><p><strong>Heightened")
+    string = string.replace("Heightened (", "<hr />Heightened (");
+    string = string.replace(/Heightened \(\+(\d+)\)/, "</p><p><strong>Heightened (+$1)</strong>");
+    string = string.replace(/Heightened \((\d+)(\w+)\)/, "</p><p><strong>Heightened ($1$2)</strong>");
+    string = string.replaceAll("<hr/></p><p><strong>Heightened", "</p><hr/><p><strong>Heightened");
 
     // Removing bullet points, should replace with the actual bullet points.
-    string = string.replace("•", "<ul><li>")
-    string = string.replaceAll("•", "</li><li>")
+    string = string.replace("•", "<ul><li>");
+    string = string.replaceAll("•", "</li><li>");
 
     // Add template buttons
-    string = string.replace(/(\d+)-foot (emanation|burst|cone|line)/, "@Template[type:$2|distance:$1]")
+    string = string.replace(/(\d+)-foot (emanation|burst|cone|line)/, "@Template[type:$2|distance:$1]");
 
     // string = handle_actions(string)
     // string = handle_conditions(string)

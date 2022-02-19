@@ -1,7 +1,7 @@
 import { MonsterImportApplication } from "./import-application";
 
 // will be extracted by webpack
-import './styles/styles.scss';
+import "./styles/styles.scss";
 
 Hooks.on("renderActorSheet", async (sheet: ActorSheet, $html: JQuery) => {
     const actor = sheet.actor;
@@ -10,7 +10,7 @@ Hooks.on("renderActorSheet", async (sheet: ActorSheet, $html: JQuery) => {
     }
 
     const title = game.i18n.localize("PF2E-MI.Import.Title");
-    const label = game.i18n.localize("PF2E-MI.Import.Label")
+    const label = game.i18n.localize("PF2E-MI.Import.Label");
     const $button = $(`<a class="pf2e-monster-import" title="${title}"><i class="fas fa-file-upload"></i>${label}</a>`);
     $button.on("click", () => {
         new MonsterImportApplication({ actor }).render(true);
