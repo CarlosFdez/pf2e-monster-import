@@ -10,6 +10,7 @@ import malfunctioningRepairDrone from "./examples/malfunctioning-repair-drone.js
 import { ActionSource, ItemSourcePF2e, LoreSource, MeleeSource } from "@pf2e/module/item/data";
 import { MeleeDamageRoll } from "@pf2e/module/item/melee/data";
 import { SpellParser } from "./spellParser.class";
+import { sluggify } from "./util";
 
 type SpecialType = "offense" | "general" | "defense";
 
@@ -169,23 +170,14 @@ export class MonsterParser {
             const splitSpeed = speed.split(";");
 
             const value = splitSpeed[0].match(/[0-9]+/g)[0];
-            // extract type. If no type, then it's walking speed.
-
-            const type = splitSpeed[0].match(/[A-Za-z]+/g);
-
-            if (type && objectHasKey(CONFIG.PF2E.speedTypes, type[0])) {
-                const otherSpeed = {
-                    type: type[0],
-                    value: value,
-                };
-                formattedSpeeds.otherSpeeds.push(otherSpeed);
+            
+            // If there's no type, then it's walking speed.
+            const type = splitSpeed[0].match(/[A-Za-z]+/g)?.[0];
+            if (type && objectHasKey(CONFIG.PF2E.speedTypes, type)) {
+                formattedSpeeds.otherSpeeds.push({ type, value });
             } else {
                 formattedSpeeds.value = value;
-                if (splitSpeed.length > 1) {
-                    formattedSpeeds.details = splitSpeed[1];
-                } else {
-                    formattedSpeeds.details = "walking";
-                }
+                formattedSpeeds.details = splitSpeed[1] ?? "walking";
             }
         }
 
@@ -231,19 +223,11 @@ export class MonsterParser {
             item = item.replace("or", "");
             item = item.trim("");
 
-            let type = item.split("(")[0].match(/[A-Za-z]+/g);
-            type = type.join("-").toLowerCase();
-            const value = item.match(/[0-9]+/g);
-            const exceptions = item.match(/(?<=\().*(?=\))/g);
-
-            if (type == "all-damage") {
-                type = "all";
-            }
-
+            const typeSlug = sluggify(item.split("(")[0].match(/[A-Za-z]+/g)[0]);
             formattedResistances.push({
-                type: type,
-                value: value[0],
-                exceptions: exceptions,
+                type: typeSlug === "all-damage" ? "all" : typeSlug,
+                value: item.match(/[0-9]+/g)[0],
+                exceptions: item.match(/(?<=\().*(?=\))/g),
             });
         }
 
@@ -259,13 +243,9 @@ export class MonsterParser {
             const value = weakness.match(/[0-9]+/g);
 
             // extract string from weakness
-            const type = weakness.match(/[A-Za-z]+/g);
-
+            const type = sluggify(weakness.match(/[A-Za-z]+/g)?.[0] ?? "");
             if (type) {
-                formattedWeaknesses.push({
-                    type: type.join("-").toLowerCase(),
-                    value: value,
-                });
+                formattedWeaknesses.push({ type, value });
             }
         }
 
