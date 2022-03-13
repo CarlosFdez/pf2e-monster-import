@@ -170,7 +170,7 @@ export class MonsterParser {
             const splitSpeed = speed.split(";");
 
             const value = splitSpeed[0].match(/[0-9]+/g)[0];
-            
+
             // If there's no type, then it's walking speed.
             const type = splitSpeed[0].match(/[A-Za-z]+/g)?.[0];
             if (type && objectHasKey(CONFIG.PF2E.speedTypes, type)) {
@@ -184,7 +184,7 @@ export class MonsterParser {
         return formattedSpeeds;
     }
 
-    private readResistances(data: MonsterData): any[] {
+    private readResistances(data: MonsterData) {
         const resistances = data.resistance.value.split("");
 
         const splitArray = [];
@@ -234,7 +234,7 @@ export class MonsterParser {
         return formattedResistances;
     }
 
-    private readWeaknesses(data: MonsterData): any[] {
+    private readWeaknesses(data: MonsterData) {
         const weaknesses = data.weakness.value.split(",");
 
         const formattedWeaknesses = [];
@@ -252,7 +252,7 @@ export class MonsterParser {
         return formattedWeaknesses;
     }
 
-    private readImmunities(data: MonsterData): any[] {
+    private readImmunities(data: MonsterData) {
         const immunities = data.immunity.value.split(",");
 
         const formattedImmunity = [];
@@ -311,23 +311,23 @@ export class MonsterParser {
         const damageRolls: Record<string, MeleeDamageRoll> = {};
         const rollStrings = data.damage.split(" plus ");
         for (const rollString of rollStrings) {
-            const match = rollString?.trim().match(/(\d+?d\d+[\+\-]?\d*)+(.*)?/);
+            const match = rollString?.trim().match(/(\d+?d\d+[+-]?\d*)+(.*)?/);
             console.warn("roll string", rollString);
             console.warn("match", match);
 
-            const damage = match? match[1]: rollString;
+            const damage = match ? match[1] : rollString;
             const damageType = (() => {
-              if (match && match[2]) {
-                  const parts = match[2].split(" ").map((part) => part.toLowerCase());
-                  for (const part of parts) {
-                      if (part in this.reverseDamageTypes) {
-                        return this.reverseDamageTypes[part];
-                      }
-                  }
-              } else {
-                  return "untyped";
-              }
-          })(); ;
+                if (match && match[2]) {
+                    const parts = match[2].split(" ").map((part) => part.toLowerCase());
+                    for (const part of parts) {
+                        if (part in this.reverseDamageTypes) {
+                            return this.reverseDamageTypes[part];
+                        }
+                    }
+                } else {
+                    return "untyped";
+                }
+            })();
 
             damageRolls[randomID()] = { damage, damageType };
         }

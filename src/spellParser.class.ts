@@ -59,7 +59,7 @@ function capitalizeWords(string): string {
 }
 
 export class SpellParser {
-    traditionItems: Array<any>;
+    traditionItems;
     spellItems: Array<SpellData>;
 
     focus: Focus = {
@@ -94,7 +94,7 @@ export class SpellParser {
         return spellGroups;
     }
 
-    private async parseTradition(data): Promise<any> {
+    private async parseTradition(data) {
         const cha = "cha";
 
         let name = "";
@@ -172,8 +172,8 @@ export class SpellParser {
                     for (const spell of parsedSpells[i]) {
                         for (let j = spell.preparedNumber; j > 0; j--) {
                             slots[`slot${i}`].prepared.push(spell.spellID);
-                            slots[`slot${i}`].value++;
-                            slots[`slot${i}`].max++;
+                            slots[`slot${i}`].value += 1;
+                            slots[`slot${i}`].max += 1;
                         }
                     }
                 }
