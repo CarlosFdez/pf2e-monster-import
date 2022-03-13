@@ -7,8 +7,10 @@ import { tupleHasValue, objectHasKey } from "./util";
 
 import example from "./examples/example.json";
 import malfunctioningRepairDrone from "./examples/malfunctioning-repair-drone.json";
-import { ActionSource, ItemSourcePF2e, MeleeSource } from "@pf2e/module/item/data";
+import { ActionSource, ItemSourcePF2e, LoreSource, MeleeSource } from "@pf2e/module/item/data";
 import { MeleeDamageRoll } from "@pf2e/module/item/melee/data";
+import { SpellParser } from "./spellParser.class";
+import { sluggify } from "./util";
 
 type SpecialType = "offense" | "general" | "defense";
 
@@ -66,7 +68,7 @@ function createDamageReverseMap() {
 export class MonsterParser {
     reverseDamageTypes = createDamageReverseMap();
 
-    parse(input: string, actor: NPCPF2e) {
+    async parse(input: string, actor: NPCPF2e) {
         const data: MonsterData = JSON.parse(input);
 
         const updates = createEmptyData();
@@ -76,11 +78,7 @@ export class MonsterParser {
             name: data.name,
             data: {
                 abilities: this.readAbilities(data),
-                attributes: {
-                    ac: { value: Number(data.ac.value) },
-                    perception: { value: Number(data.perception.value) },
-                    hp: { value: Number(data.hp.value), max: Number(data.hp.value) },
-                },
+                attributes: this.readAttributes(data),
                 details: {
                     level: { value: data.level },
                     alignment: {
@@ -100,8 +98,12 @@ export class MonsterParser {
         const items: DeepPartial<ItemSourcePF2e>[] = [];
         items.push(...(data.strikes ?? []).map(this.readStrike.bind(this)));
         items.push(...(data.specials ?? []).map(this.readAction.bind(this)));
+        items.push(...this.readSkill(data));
 
-        return { updates, items };
+        const spellParser = new SpellParser();
+        const parsedSpells = await spellParser.readSpellcastingEntry(data);
+
+        return { updates, items, parsedSpells };
     }
 
     private readAbilities(data: MonsterData) {
@@ -119,6 +121,18 @@ export class MonsterParser {
         };
     }
 
+    private readAttributes(data: MonsterData) {
+        const speed = this.readSpeed(data);
+
+        return {
+            ac: { value: Number(data.ac.value) },
+            perception: { value: Number(data.perception.value) },
+            hp: { value: Number(data.hp.value), max: Number(data.hp.value) },
+            allSaves: { value: data.savenote },
+            speed: speed,
+        };
+    }
+
     private readTraits(data: MonsterData): DeepPartial<NPCData["data"]["traits"]> {
         const traits = [data.type, ...data.traits.split(",")].map((trait) => trait.toLowerCase().trim());
 
@@ -126,15 +140,131 @@ export class MonsterParser {
         const languages = (data.languages?.split(",") ?? []).filter((language): language is Language =>
             objectHasKey(CONFIG.PF2E.languages, language),
         );
+        const weaknesses = this.readWeaknesses(data);
+        const resistances = this.readResistances(data);
+        const immunities = this.readImmunities(data);
 
         return {
             size: { value: SizesMap[data.size] ?? "med" },
             rarity: (rarity ?? "common") as Rarity,
             languages: { value: languages },
-            traits: {
-                value: traits.filter((trait) => objectHasKey(CONFIG.PF2E.creatureTraits, trait)),
-            },
+            traits: { value: traits.filter((trait) => objectHasKey(CONFIG.PF2E.creatureTraits, trait)) },
+            dv: weaknesses,
+            dr: resistances,
+            di: { value: immunities },
         };
+    }
+
+    private readSpeed(data: MonsterData): {} {
+        const speeds = data.speed.split(",");
+
+        const formattedSpeeds = {
+            value: "",
+            details: "",
+            otherSpeeds: [],
+        };
+
+        for (let speed of speeds) {
+            speed = speed.replace("feet", "").trim();
+
+            const splitSpeed = speed.split(";");
+
+            const value = splitSpeed[0].match(/[0-9]+/g)[0];
+
+            // If there's no type, then it's walking speed.
+            const type = splitSpeed[0].match(/[A-Za-z]+/g)?.[0];
+            if (type && objectHasKey(CONFIG.PF2E.speedTypes, type)) {
+                formattedSpeeds.otherSpeeds.push({ type, value });
+            } else {
+                formattedSpeeds.value = value;
+                formattedSpeeds.details = splitSpeed[1] ?? "walking";
+            }
+        }
+
+        return formattedSpeeds;
+    }
+
+    private readResistances(data: MonsterData) {
+        const resistances = data.resistance.value.split("");
+
+        const splitArray = [];
+        let element = [];
+        let openBracket = false;
+
+        for (let i = 0; i <= resistances.length; i++) {
+            const char = resistances[i];
+
+            if (openBracket == false) {
+                if (char == ",") {
+                    if (element.length) {
+                        splitArray.push(element.join(""));
+                        element = [];
+                    }
+                } else if (char == "(") {
+                    openBracket = true;
+                    element.push(char);
+                } else {
+                    element.push(char);
+                }
+            } else {
+                if (char == ")") {
+                    element.push(char);
+                    splitArray.push(element.join(""));
+                    openBracket = false;
+                    element = [];
+                } else {
+                    element.push(char);
+                }
+            }
+        }
+
+        const formattedResistances = [];
+        for (let item of splitArray) {
+            item = item.replace("or", "");
+            item = item.trim("");
+
+            const typeSlug = sluggify(item.split("(")[0].match(/[A-Za-z]+/g)[0]);
+            formattedResistances.push({
+                type: typeSlug === "all-damage" ? "all" : typeSlug,
+                value: item.match(/[0-9]+/g)[0],
+                exceptions: item.match(/(?<=\().*(?=\))/g),
+            });
+        }
+
+        return formattedResistances;
+    }
+
+    private readWeaknesses(data: MonsterData) {
+        const weaknesses = data.weakness.value.split(",");
+
+        const formattedWeaknesses = [];
+        for (const weakness of weaknesses) {
+            // extract number value from weakness
+            const value = weakness.match(/[0-9]+/g);
+
+            // extract string from weakness
+            const type = sluggify(weakness.match(/[A-Za-z]+/g)?.[0] ?? "");
+            if (type) {
+                formattedWeaknesses.push({ type, value });
+            }
+        }
+
+        return formattedWeaknesses;
+    }
+
+    private readImmunities(data: MonsterData) {
+        const immunities = data.immunity.value.split(",");
+
+        const formattedImmunity = [];
+        for (const immunity of immunities) {
+            // extract string from weakness
+            const type = immunity.match(/[A-Za-z]+/g);
+
+            if (type) {
+                formattedImmunity.push(type.join("-").toLowerCase());
+            }
+        }
+        return formattedImmunity;
     }
 
     private readAction(data: MonsterData["specials"][number]): DeepPartial<ActionSource> {
@@ -181,18 +311,22 @@ export class MonsterParser {
         const damageRolls: Record<string, MeleeDamageRoll> = {};
         const rollStrings = data.damage.split(" plus ");
         for (const rollString of rollStrings) {
-            const match = rollString?.trim().match(/(\d+d\d+\+\d+) (\w*)/);
-            if (!match) return;
-            const damage = match[1];
-            const damageType = (() => {
-                const parts = match[2].split(" ").map((part) => part.toLowerCase());
-                for (const part of parts) {
-                    if (part in this.reverseDamageTypes) {
-                        return this.reverseDamageTypes[part];
-                    }
-                }
+            const match = rollString?.trim().match(/(\d+?d\d+[+-]?\d*)+(.*)?/);
+            console.warn("roll string", rollString);
+            console.warn("match", match);
 
-                return "untyped";
+            const damage = match ? match[1] : rollString;
+            const damageType = (() => {
+                if (match && match[2]) {
+                    const parts = match[2].split(" ").map((part) => part.toLowerCase());
+                    for (const part of parts) {
+                        if (part in this.reverseDamageTypes) {
+                            return this.reverseDamageTypes[part];
+                        }
+                    }
+                } else {
+                    return "untyped";
+                }
             })();
 
             damageRolls[randomID()] = { damage, damageType };
@@ -207,6 +341,61 @@ export class MonsterParser {
                 damageRolls,
             },
         };
+    }
+
+    private readSkill(data: MonsterData): DeepPartial<LoreSource>[] {
+        const skills = [
+            "Acrobatics",
+            "Arcana",
+            "Athletics",
+            "Crafting",
+            "Deception",
+            "Diplomacy",
+            "Intimidation",
+            "Lore",
+            "Medicine",
+            "Nature",
+            "Occultism",
+            "Performance",
+            "Religion",
+            "Society",
+            "Stealth",
+            "Survival",
+            "Thievery",
+        ];
+
+        const skillModel = {
+            _id: "",
+            type: "lore",
+            name: data.name,
+            data: {
+                mod: {
+                    value: "",
+                },
+                proficient: {
+                    value: 0,
+                },
+            },
+        };
+
+        const skillsList = [];
+
+        for (const [key, value] of Object.entries(data)) {
+            const capitalizedSkill = key.charAt(0).toUpperCase() + key.slice(1);
+            if (skills.includes(capitalizedSkill)) {
+                if (value.value) {
+                    const newSkill = Object.assign({}, skillModel);
+
+                    newSkill._id = randomID();
+                    newSkill.name = capitalizedSkill;
+                    newSkill.data.mod.value = value.value;
+
+                    skillsList.push(newSkill);
+                }
+            }
+        }
+
+        return skillsList;
     }
 }
 

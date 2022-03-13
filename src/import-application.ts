@@ -23,7 +23,7 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
             const actor = this.options.actor;
             const input = $html.find("textarea").val().toString();
             const parser = new MonsterParser();
-            const { updates, items } = parser.parse(input, actor);
+            const { updates, items, parsedSpells } = await parser.parse(input, actor);
             console.log(updates);
             await actor.update(updates);
 
@@ -32,6 +32,9 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
             console.log(items);
             console.log(newItems);
             await actor.createEmbeddedDocuments("Item", newItems);
+
+            console.warn("FINAL SPELL ITEMS: ", parsedSpells);
+            await actor.createEmbeddedDocuments("Item", parsedSpells, { keepId: true });
         });
     }
 }
