@@ -1,0 +1,276 @@
+{
+    "name": "Cillian Creed",
+    "traits": "human, unique",
+    "level": 4,
+    "specials": [
+        {
+            "id": "_2jtiy0a76qo",
+            "name": "Shadow man",
+            "traits": "",
+            "range": "",
+            "actions": "none",
+            "type": "general",
+            "description": "% takes damage from positive energy, and heals from negative damage. Creed is also affected by abilities that affect undead. "
+        },
+        {
+            "id": "_1tryb71lz1t",
+            "name": "Shadow Mass",
+            "traits": "",
+            "range": "",
+            "actions": "two",
+            "type": "offense",
+            "description": "% becomes hidden and incorporeal, but cannot attack.  As an action, he can return visible and corporeal. Postive or light damage shifts him back to corporeal form."
+        },
+        {
+            "id": "_vu81631nlm",
+            "name": "Inject Sedative",
+            "traits": "poison",
+            "range": "",
+            "actions": "one",
+            "type": "offense",
+            "description": "Requirement Creed is grabbing a creature Effect % injects a dose of sedative on the grabbed creature. **Sedative** Fort DC 20, Duration 6 rounds. Stage 1 Enfeebled, Clumsy and Stupefied 1 (1 round) Stage 2 The conditions increase to 2 (1 round) Stage 3 The conditions increase to 4 (1 round) Stage 4 unconscious for 1 hour"
+        },
+        {
+            "id": "_1rltfvprlyo",
+            "name": "Light Vulnerability",
+            "traits": "",
+            "range": "",
+            "actions": "none",
+            "type": "defense",
+            "description": "An object shedding magical light (such as from the light spell) ignores Creed's physical resistance."
+        }
+    ],
+    "morespells": [],
+    "alignment": "le",
+    "size": "medium",
+    "type": "humanoid",
+    "adjust": 0,
+    "description": "",
+    "items": "2 syringes of sedative,<i>+1 striking handwraps (eclipse claw), +1 striking dueling pistol</i>",
+    "spellattack": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "spelldc": {
+        "value": 18,
+        "benchmark": "high",
+        "note": ""
+    },
+    "savenote": "",
+    "creature": "",
+    "speed": "25 feet",
+    "imgurl": "",
+    "spelltype": "Occult innate",
+    "focuspoints": 0,
+    "cantriplevel": "",
+    "ritualtype": "",
+    "rituals": "",
+    "spells": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "illusory disguise (at will)",
+        "",
+        "",
+        ""
+    ],
+    "constant": "",
+    "minprof": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "strength": {
+        "value": 3,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "dexterity": {
+        "value": 5,
+        "benchmark": "high",
+        "note": ""
+    },
+    "constitution": {
+        "value": 3,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "intelligence": {
+        "value": 3,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "wisdom": {
+        "value": 2,
+        "benchmark": "low",
+        "note": ""
+    },
+    "charisma": {
+        "value": 2,
+        "benchmark": "low",
+        "note": ""
+    },
+    "perception": {
+        "value": 11,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "acrobatics": {
+        "value": 10,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "arcana": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "athletics": {
+        "value": 12,
+        "benchmark": "high",
+        "note": ""
+    },
+    "crafting": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "deception": {
+        "value": 10,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "diplomacy": {
+        "value": 10,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "intimidation": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "medicine": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "nature": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "occultism": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "performance": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "religion": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "society": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "stealth": {
+        "value": 15,
+        "benchmark": "extreme",
+        "note": ""
+    },
+    "survival": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "thievery": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "lore": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": "",
+        "name": "lore"
+    },
+    "lorealt": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": "",
+        "name": "lore"
+    },
+    "ac": {
+        "value": 20,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "hp": {
+        "value": 45,
+        "benchmark": "low",
+        "note": ""
+    },
+    "fortitude": {
+        "value": 11,
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "reflex": {
+        "value": 14,
+        "benchmark": "high",
+        "note": ""
+    },
+    "will": {
+        "value": 8,
+        "benchmark": "low",
+        "note": ""
+    },
+    "resistance": {
+        "value": "5 physical",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "weakness": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "immunity": {
+        "value": "",
+        "benchmark": "moderate",
+        "note": ""
+    },
+    "roadmap": "sniper",
+    "info": "",
+    "strikes": [
+        {
+            "id": "_26dqe97wzt1",
+            "name": "<i>eclipse claw",
+            "traits": "agile, finesse, reach 15 feet, unarmed",
+            "attack": 14,
+            "damage": "2d6+5 slashing plus 1d6 persistent negative damage",
+            "type": "Melee"
+        },
+        {
+            "id": "_2f5qrtc7izi",
+            "name": "<i>dueling pistol",
+            "traits": "conceleable, concussive, fatal d10, range 60 ft.",
+            "attack": 14,
+            "damage": "2d6+5 piercing",
+            "type": "Ranged"
+        }
+    ],
+    "tags": []
+}

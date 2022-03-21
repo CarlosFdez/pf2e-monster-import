@@ -1,38 +1,18 @@
 import { NPCPF2e } from "@pf2e/module/actor";
-import { Alignment } from "@pf2e/module/actor/creature/data";
 import { NPCData } from "@pf2e/module/actor/data";
 import { Rarity, Size } from "@pf2e/module/data";
 
-import { tupleHasValue, objectHasKey } from "./util";
+import { tupleHasValue, objectHasKey } from "../util";
 
-import example from "./examples/example.json";
-import malfunctioningRepairDrone from "./examples/malfunctioning-repair-drone.json";
 import { ActionSource, ItemSourcePF2e, LoreSource, MeleeSource } from "@pf2e/module/item/data";
 import { MeleeDamageRoll } from "@pf2e/module/item/melee/data";
-import { SpellParser } from "./spellParser.class";
-import { sluggify } from "./util";
-
-type SpecialType = "offense" | "general" | "defense";
-
-interface MonsterDataGood {
-    languages?: string;
-    specials: {
-        id: string;
-        name: string;
-        traits: string;
-        actions: string;
-        type: SpecialType;
-        description: string;
-    }[];
-}
-
-type MonsterDataExample = typeof malfunctioningRepairDrone & typeof example;
-
-type MonsterData = MonsterDataGood & Omit<MonsterDataExample, keyof MonsterDataGood>;
+import { SpellParser } from "./spells";
+import { sluggify } from "../util";
+import { MonsterData, MonsterParseResults, SpecialType } from "./types";
+import { ALIGNMENTS } from "./values";
 
 type Language = keyof typeof CONFIG.PF2E.languages;
 
-const Alignments: ReadonlyArray<Alignment> = ["LG", "NG", "CG", "LN", "N", "CN", "LE", "NE", "CE"] as const;
 const SizesMap: Record<string, Size> = {
     tiny: "tiny",
     small: "sm",
@@ -68,7 +48,7 @@ function createDamageReverseMap() {
 export class MonsterParser {
     reverseDamageTypes = createDamageReverseMap();
 
-    async parse(input: string, actor: NPCPF2e) {
+    async parse(input: string, actor: NPCPF2e): Promise<MonsterParseResults> {
         const data: MonsterData = JSON.parse(input);
 
         const updates = createEmptyData();
@@ -82,7 +62,7 @@ export class MonsterParser {
                 details: {
                     level: { value: data.level },
                     alignment: {
-                        value: tupleHasValue(Alignments, alignment) ? alignment : "N",
+                        value: tupleHasValue(ALIGNMENTS, alignment) ? alignment : "N",
                     },
                     publicNotes: data.description,
                 },
@@ -324,9 +304,9 @@ export class MonsterParser {
                             return this.reverseDamageTypes[part];
                         }
                     }
-                } else {
-                    return "untyped";
                 }
+
+                return "untyped";
             })();
 
             damageRolls[randomID()] = { damage, damageType };

@@ -3,9 +3,12 @@
         "target": "ES2019",
         "module": "commonjs",
         "lib": ["esnext", "dom"],
+        "strict": true,
 
         "esModuleInterop": true,
         "noImplicitThis": true,
+        "noImplicitOverride": true,
+        "noImplicitAny": true,
         "noUnusedLocals": true,
 
         "sourceMap": true,

@@ -1,36 +1,16 @@
-import { objectHasKey } from "./util";
-
-import example from "./examples/example.json";
-import malfunctioningRepairDrone from "./examples/malfunctioning-repair-drone.json";
-import { MagicTradition, PreparationType, SpellSlotData, SpellSlots } from "@pf2e/module/item/spellcasting-entry/data";
-import { SpellData, SpellSource } from "@pf2e/module/item/data";
+import { capitalizeWords, objectHasKey } from "../util";
+import {
+    MagicTradition,
+    PreparationType,
+    SpellcastingEntrySource,
+    SpellSlotData,
+} from "@pf2e/module/item/spellcasting-entry/data";
+import { SpellSource } from "@pf2e/module/item/data";
 import { SpellPF2e } from "@pf2e/module/item";
+import { MonsterData, MonsterSpellStats } from "./types";
 
-type SpecialType = "offense" | "general" | "defense";
-
-interface MonsterDataGood {
-    languages?: string;
-    specials: {
-        id: string;
-        name: string;
-        traits: string;
-        actions: string;
-        type: SpecialType;
-        description: string;
-    }[];
-}
-
-type MonsterDataExample = typeof malfunctioningRepairDrone & typeof example;
-
-type MonsterData = MonsterDataGood & Omit<MonsterDataExample, keyof MonsterDataGood>;
-
-interface Focus {
-    max: number;
-    value: number;
-}
-
-interface Spell {
-    spellID: string;
+interface SpellMetadata {
+    id: string;
     compendiumID: string;
     name: string;
     preparedNumber: number;
@@ -41,32 +21,7 @@ function isSpell(document: unknown): document is SpellPF2e {
     return document instanceof Item && document?.type === "spell";
 }
 
-function capitalizeWords(string): string {
-    // remove anything in paranthesis
-    string = string.replace(/\([^()]+\)/g, "");
-
-    return string
-        .split(" ")
-        .map((word) => {
-            // capitalize name
-            word = word.toLowerCase();
-            word = word.charAt(0).toUpperCase() + word.slice(1);
-
-            return word;
-        })
-        .join(" ")
-        .trim();
-}
-
 export class SpellParser {
-    traditionItems;
-    spellItems: Array<SpellData>;
-
-    focus: Focus = {
-        max: 0,
-        value: 0,
-    };
-
     // let spellTraditions = CONFIG['PF2E']['spellTraditions']
     spellTraditions = {
         arcane: "arcane",
@@ -81,29 +36,21 @@ export class SpellParser {
 
         // read the main spell tradition, if exists
         if (data.spelltype) {
-            spellGroups.push(...(await this.parseTradition(data)));
+            spellGroups.push(...(await this.parseTradition(data.spelltype, data)));
         }
 
         // check for additional casting types
         if (data.morespells && data.morespells.length) {
             for (const moreTradition of data.morespells) {
-                spellGroups.push(...(await this.parseTradition(moreTradition)));
+                spellGroups.push(...(await this.parseTradition(moreTradition.name, moreTradition)));
             }
         }
 
         return spellGroups;
     }
 
-    private async parseTradition(data) {
+    private async parseTradition(name: string, data: MonsterSpellStats) {
         const cha = "cha";
-
-        let name = "";
-        if (data.spelltype) {
-            name = data.spelltype;
-        } else {
-            name = data.name;
-        }
-
         const traditionId = randomID();
         const spellType = name.split(" ");
 
@@ -112,7 +59,7 @@ export class SpellParser {
 
         const parsedSpells = await this.parseSpells(data.spells, preparedType, traditionId);
 
-        const spellCastingEntry = {
+        const spellCastingEntry: DeepPartial<SpellcastingEntrySource> = {
             _id: traditionId,
             name: capitalizeWords(`${traditionName} ${preparedType} Spells`),
             type: "spellcastingEntry",
@@ -121,8 +68,8 @@ export class SpellParser {
                     value: cha,
                 },
                 spelldc: {
-                    value: parseInt(data.spelldc.value ? data.spelldc.value : "0"),
-                    dc: parseInt(data.spelldc.value ? data.spelldc.value : "0"),
+                    value: data.spelldc.value ? Number(data.spelldc.value) : 0,
+                    dc: data.spelldc.value ? Number(data.spelldc.value) : 0,
                     mod: 0,
                 },
                 tradition: {
@@ -143,49 +90,51 @@ export class SpellParser {
                 },
                 displayLevels: [],
                 slots: {},
-                signatureSpells: {
-                    value: [],
-                },
             },
         };
 
-        spellCastingEntry.data.slots = this.createSpellSlots(spellCastingEntry, parsedSpells);
+        spellCastingEntry.data.slots = (() => {
+            const preparedType = spellCastingEntry.data?.prepared?.value;
+
+            const slots: Record<`slot${number}`, SpellSlotData> = {};
+            for (let i = 0; i <= 11; i++) {
+                slots[`slot${i}`] = {
+                    prepared: [],
+                    value: 0,
+                    max: 0,
+                };
+
+                if (preparedType == "prepared") {
+                    if (parsedSpells[i] && parsedSpells[i].length) {
+                        for (const spell of parsedSpells[i]) {
+                            for (let j = spell.preparedNumber; j > 0; j--) {
+                                slots[`slot${i}`].prepared.push(spell.id);
+                                slots[`slot${i}`].value += 1;
+                                slots[`slot${i}`].max += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        })();
+
         const flatSpells = parsedSpells.flat().map((item) => item.spellData);
 
         return [spellCastingEntry, ...flatSpells];
     }
 
-    private createSpellSlots(spellCastingEntry, parsedSpells: Array<Array<Spell>>): SpellSlots {
-        const preparedType = spellCastingEntry.data.prepared.value;
-
-        const slots = {};
-
-        for (let i = 0; i <= 11; i++) {
-            slots[`slot${i}`] = {
-                prepared: [],
-                value: 0,
-                max: 0,
-            } as SpellSlotData;
-
-            if (preparedType == "prepared") {
-                if (parsedSpells[i] && parsedSpells[i].length) {
-                    for (const spell of parsedSpells[i]) {
-                        for (let j = spell.preparedNumber; j > 0; j--) {
-                            slots[`slot${i}`].prepared.push(spell.spellID);
-                            slots[`slot${i}`].value += 1;
-                            slots[`slot${i}`].max += 1;
-                        }
-                    }
-                }
-            }
+    private async parseSpells(
+        spellLevels: string[],
+        preparedType: string,
+        traditionId: string,
+    ): Promise<Array<Array<SpellMetadata>>> {
+        const compendium = await this.getCompendium();
+        if (!compendium) {
+            ui.notifications.error("Failed to load spell compendium to import spells");
+            return [];
         }
 
-        return slots as SpellSlots;
-    }
-
-    private async parseSpells(spellLevels, preparedType, traditionId): Promise<Array<Array<Spell>>> {
-        const compendium = await this.getCompendium();
-        const spellCompendium = (await compendium.getIndex()).contents;
+        const spellCompendium = await compendium.getIndex();
 
         spellLevels = spellLevels.reverse();
 
@@ -194,7 +143,7 @@ export class SpellParser {
         for (let level = 0; level <= spellLevels.length; level++) {
             const levelSpellList = spellLevels[level];
 
-            const parsedLevelSpells = [];
+            const parsedLevelSpells: SpellMetadata[] = [];
 
             if (levelSpellList && levelSpellList.length) {
                 const levelSpellListArray = levelSpellList.split(",");
@@ -209,24 +158,14 @@ export class SpellParser {
 
                     const preparedValue: number = prepared && prepared[1] ? parseInt(prepared[1]) : 1;
 
-                    const spellName = capitalizeWords(spell);
-
                     // find spellId in compendium
-                    const id = spellCompendium.find((item) => {
-                        if (item.name.toLowerCase() === spellName.toLowerCase()) {
-                            return item;
-                        } else {
-                            return "";
-                        }
-                    });
+                    const indexData = spellCompendium.find((item) => item.name.toLowerCase() === spell.toLowerCase());
 
-                    if (id) {
-                        const spellEntry = await compendium.getDocument(id._id);
-
-                        let spellData;
+                    if (indexData) {
+                        const spellEntry = await compendium.getDocument(indexData._id);
                         const spellID = randomID();
                         if (isSpell(spellEntry)) {
-                            spellData = Object.assign({}, spellEntry.data);
+                            const spellData = spellEntry.toObject();
 
                             if (level > 0 && preparedType !== "prepared" && spellData.data) {
                                 spellData.data["heightenedLevel"] = { value: level };
@@ -236,9 +175,9 @@ export class SpellParser {
                             spellData.data.location = { value: traditionId };
 
                             parsedLevelSpells.push({
-                                spellID: spellID,
-                                compendiumID: id._id,
-                                name: spellName,
+                                id: spellID,
+                                compendiumID: indexData._id,
+                                name: spellEntry.name,
                                 preparedNumber: preparedValue,
                                 spellData: spellData,
                             });
@@ -253,7 +192,7 @@ export class SpellParser {
         return spellList;
     }
 
-    private parseTraditionName(tradition): MagicTradition {
+    private parseTraditionName(tradition: string): MagicTradition {
         if (!tradition) return "arcane";
         tradition = tradition.toLowerCase().trim();
 
@@ -264,7 +203,7 @@ export class SpellParser {
         }
     }
 
-    private parsePreparationType(preparation): PreparationType {
+    private parsePreparationType(preparation: string): PreparationType {
         if (!preparation) return "innate";
         preparation = preparation.toLowerCase().trim();
 

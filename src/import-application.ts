@@ -6,7 +6,7 @@ interface MonsterImportOptions extends ApplicationOptions {
 }
 
 export class MonsterImportApplication extends Application<MonsterImportOptions> {
-    static get defaultOptions() {
+    static override get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             template: "./modules/pf2e-monster-import/templates/import-form.html",
             class: "pf2e-monster-import-form",
@@ -21,7 +21,7 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
     override activateListeners($html: JQuery) {
         $html.find("[data-action=import]").on("click", async () => {
             const actor = this.options.actor;
-            const input = $html.find("textarea").val().toString();
+            const input = $html.find("textarea").val()?.toString() ?? "";
             const parser = new MonsterParser();
             const { updates, items, parsedSpells } = await parser.parse(input, actor);
             console.log(updates);

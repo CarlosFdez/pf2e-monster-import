@@ -12,6 +12,7 @@ module.exports = {
     parserOptions: {
         ecmaVersion: 2018,
         sourceType: 'module',
+        project: "./tsconfig.json",
     },
     rules: {
         'prettier/prettier': 'error',
@@ -23,6 +24,7 @@ module.exports = {
         '@typescript-eslint/explicit-module-boundary-types': 'off',
         '@typescript-eslint/lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
         '@typescript-eslint/no-empty-function': 'off',
+        "@typescript-eslint/no-explicit-any": "off",
         '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
     },

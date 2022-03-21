@@ -1,9 +1,10 @@
+import { ItemPF2e } from "@pf2e/module/item";
 import { MonsterImportApplication } from "./import-application";
 
 // will be extracted by webpack
 import "./styles/styles.scss";
 
-Hooks.on("renderActorSheet", async (sheet: ActorSheet, $html: JQuery) => {
+Hooks.on("renderActorSheet", async (sheet: ActorSheet<ActorPF2e, ItemPF2e>, $html: JQuery) => {
     const actor = sheet.actor;
     if (!game.user.isGM || !(actor instanceof CONFIG.PF2E.Actor.documentClasses.npc)) {
         return;

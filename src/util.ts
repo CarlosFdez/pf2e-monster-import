@@ -49,3 +49,16 @@ export function sluggify(name: string) {
         .trim()
         .replace(/[-\s]+/g, "-");
 }
+
+export function capitalizeWords(string: string): string {
+    return string
+        .split(" ")
+        .map((word) => {
+            // capitalize name
+            word = word.toLowerCase();
+            word = word.charAt(0).toUpperCase() + word.slice(1);
+            return word;
+        })
+        .join(" ")
+        .trim();
+}
