@@ -1,5 +1,6 @@
-import { ActorPF2e } from '@actor/index';
-import { ItemDataPF2e, PhysicalItemData } from '@item/data';
+import type { ActorPF2e } from "@actor";
+import type { ItemDataPF2e, PhysicalItemData } from "@item/data";
+export declare const DENOMINATIONS: readonly ["cp", "sp", "gp", "pp"];
 export interface Coins {
     pp: number;
     gp: number;
@@ -7,11 +8,20 @@ export interface Coins {
     cp: number;
 }
 export declare function coinValueInCopper(coins: Coins): number;
-/**
- * Converts the price of an item to the Coin structure
- * @param item
- */
-export declare function extractPriceFromItem(item: PhysicalItemData, quantityOverride?: number): Coins;
+/** Convert a `Coins` object into a price string */
+export declare function coinsToString({ cp, sp, gp, pp }: Partial<Coins>): string;
+export declare function toCoins(denomination: string, value: number): Coins;
+export declare function combineCoins(first: Coins, second: Coins): Coins;
+/** Converts the price of an item to the Coin structure */
+export declare function extractPriceFromItem(itemData: {
+    data: {
+        price: {
+            value: string;
+        };
+        quantity: number;
+    };
+}, quantity?: number): Coins;
+export declare function multiplyCoinValue(coins: Coins, factor: number): Coins;
 /**
  * Sums up all wealth of a character, not just the treasure, but all other equipment
  * @param items

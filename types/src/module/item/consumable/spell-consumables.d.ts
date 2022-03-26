@@ -1,12 +1,8 @@
-import type { ActorPF2e } from '@actor/index';
-import { ConsumableData, ConsumableSource, SpellSource, TrickMagicItemCastData } from '@item/data';
-import { DCOptions } from '@module/dc';
-export declare enum SpellConsumableTypes {
-    Scroll = 0,
-    Wand = 1
-}
-export declare function createConsumableFromSpell(type: SpellConsumableTypes, spellData: SpellSource, heightenedLevel?: number): Promise<ConsumableSource>;
-export declare function canCastConsumable(actor: ActorPF2e, item: ConsumableData): boolean;
+import { ConsumableData, ConsumableSource } from "@item/data";
+import { SpellPF2e } from "@item/spell";
+import { DCOptions } from "@module/dc";
+export declare function isSpellConsumable(itemId: string): boolean;
+export declare function createConsumableFromSpell(type: "scroll" | "wand", spell: SpellPF2e, heightenedLevel?: number): Promise<ConsumableSource>;
 export interface TrickMagicItemDifficultyData {
     arc?: number;
     rel?: number;
@@ -14,4 +10,3 @@ export interface TrickMagicItemDifficultyData {
     nat?: number;
 }
 export declare function calculateTrickMagicItemCheckDC(itemData: ConsumableData, options?: DCOptions): TrickMagicItemDifficultyData;
-export declare function calculateTrickMagicItemCastData(actor: ActorPF2e, skill: string): TrickMagicItemCastData;

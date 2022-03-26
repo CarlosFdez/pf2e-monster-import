@@ -13,7 +13,7 @@ declare module foundry {
 
             override testUserPermission(
                 user: BaseUser,
-                permission: DocumentPermission | UserAction,
+                permission: DocumentPermission | DocumentPermissionNumber,
                 { exact }?: { exact?: boolean }
             ): boolean;
 
@@ -41,6 +41,8 @@ declare module foundry {
             readonly data: data.ItemData<BaseItem, BaseActiveEffect>;
 
             readonly parent: BaseActor | null;
+
+            get documentName(): typeof BaseItem["metadata"]["name"];
         }
 
         interface ItemMetadata extends abstract.DocumentMetadata {

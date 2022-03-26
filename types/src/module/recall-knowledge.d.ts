@@ -5,8 +5,9 @@
  *
  * See https://www.youtube.com/watch?v=UtNS1vM7czM for interpretations
  */
-import { NPCSystemData } from '@actor/npc/data';
-import { DCAdjustment, DCOptions } from './dc';
+import { SkillAbbreviation } from "@actor/creature/data";
+import { NPCSystemData } from "@actor/npc/data";
+import { DCAdjustment, DCOptions } from "./dc";
 export interface RecallKnowledgeDC {
     dc: number;
     progression: number[];
@@ -16,7 +17,7 @@ export interface IdentifyCreatureData {
     skill: RecallKnowledgeDC;
     specificLoreDC: RecallKnowledgeDC;
     unspecificLoreDC: RecallKnowledgeDC;
-    skills: Set<string>;
+    skills: Set<SkillAbbreviation>;
 }
 export declare function identifyCreature(creature: {
     data: NPCSystemData;

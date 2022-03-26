@@ -2,12 +2,14 @@ import { capitalizeWords, objectHasKey } from "../util";
 import {
     MagicTradition,
     PreparationType,
+    SlotKey,
     SpellcastingEntrySource,
-    SpellSlotData,
+    SpellcastingEntrySystemData,
 } from "@pf2e/module/item/spellcasting-entry/data";
-import { SpellSource } from "@pf2e/module/item/data";
+import { ItemSourcePF2e, SpellSource } from "@pf2e/module/item/data";
 import { SpellPF2e } from "@pf2e/module/item";
 import { MonsterData, MonsterSpellStats } from "./types";
+import { OneToTen } from "@pf2e/module/data";
 
 interface SpellMetadata {
     id: string;
@@ -30,9 +32,9 @@ export class SpellParser {
         primal: "primal",
     };
 
-    public async readSpellcastingEntry(data: MonsterData) {
+    public async readSpellcastingEntry(data: MonsterData): Promise<DeepPartial<ItemSourcePF2e>[]> {
         // collect all spell traditions from monster data
-        const spellGroups = [];
+        const spellGroups: DeepPartial<ItemSourcePF2e>[] = [];
 
         // read the main spell tradition, if exists
         if (data.spelltype) {
@@ -49,7 +51,7 @@ export class SpellParser {
         return spellGroups;
     }
 
-    private async parseTradition(name: string, data: MonsterSpellStats) {
+    private async parseTradition(name: string, data: MonsterSpellStats): Promise<DeepPartial<ItemSourcePF2e>[]> {
         const cha = "cha";
         const traditionId = randomID();
         const spellType = name.split(" ");
@@ -58,6 +60,31 @@ export class SpellParser {
         const preparedType = this.parsePreparationType(spellType[1]);
 
         const parsedSpells = await this.parseSpells(data.spells, preparedType, traditionId);
+
+        // const focus = { value: data.focuspoints, max: data.focuspoints };
+
+        const slots = (() => {
+            const slots: Partial<SpellcastingEntrySystemData["slots"]> = {};
+            for (let i = 0; i <= 10; i++) {
+                const slotKey = `slot${i as OneToTen}` as SlotKey;
+                if (preparedType !== "prepared" || !parsedSpells[i]) {
+                    slots[slotKey] = { prepared: [], value: 0, max: 0 };
+                    continue;
+                }
+
+                const prepared: { id: string }[] = [];
+                for (const spell of parsedSpells[i]) {
+                    for (let j = spell.preparedNumber; j > 0; j--) {
+                        prepared.push({ id: spell.id });
+                    }
+                }
+
+                const total = parsedSpells[i].reduce((total, current) => total + current.preparedNumber, 0);
+                slots[slotKey] = { prepared: { ...prepared }, value: total, max: total };
+            }
+
+            return slots;
+        })();
 
         const spellCastingEntry: DeepPartial<SpellcastingEntrySource> = {
             _id: traditionId,
@@ -75,10 +102,6 @@ export class SpellParser {
                 tradition: {
                     value: traditionName as MagicTradition,
                 },
-                focus: {
-                    points: data.focuspoints,
-                    pool: data.focuspoints,
-                },
                 prepared: {
                     value: preparedType as PreparationType,
                 },
@@ -86,37 +109,12 @@ export class SpellParser {
                     value: true,
                 },
                 proficiency: {
-                    value: 0,
+                    value: 1,
                 },
                 displayLevels: [],
-                slots: {},
+                slots,
             },
         };
-
-        spellCastingEntry.data.slots = (() => {
-            const preparedType = spellCastingEntry.data?.prepared?.value;
-
-            const slots: Record<`slot${number}`, SpellSlotData> = {};
-            for (let i = 0; i <= 11; i++) {
-                slots[`slot${i}`] = {
-                    prepared: [],
-                    value: 0,
-                    max: 0,
-                };
-
-                if (preparedType == "prepared") {
-                    if (parsedSpells[i] && parsedSpells[i].length) {
-                        for (const spell of parsedSpells[i]) {
-                            for (let j = spell.preparedNumber; j > 0; j--) {
-                                slots[`slot${i}`].prepared.push(spell.id);
-                                slots[`slot${i}`].value += 1;
-                                slots[`slot${i}`].max += 1;
-                            }
-                        }
-                    }
-                }
-            }
-        })();
 
         const flatSpells = parsedSpells.flat().map((item) => item.spellData);
 
@@ -168,7 +166,7 @@ export class SpellParser {
                             const spellData = spellEntry.toObject();
 
                             if (level > 0 && preparedType !== "prepared" && spellData.data) {
-                                spellData.data["heightenedLevel"] = { value: level };
+                                spellData.data.location.heightenedLevel = level;
                             }
 
                             spellData["_id"] = spellID;
@@ -216,27 +214,5 @@ export class SpellParser {
 
     private async getCompendium() {
         return game.packs.get("pf2e.spells-srd");
-    }
-
-    public addLocationId(items, spellGroups) {
-        console.warn(
-            "ITEMS",
-            items.map((item) => item.data),
-        );
-        console.warn("spellGroups", spellGroups);
-
-        const spells = [];
-        for (const group of spellGroups) {
-            const spellEntryID = items.find((item) => item.data.name == group.traditionName).data.id;
-
-            spells.push(
-                ...group.spells.map((spell) => {
-                    spell.data.location.value = spellEntryID;
-                    return spell;
-                }),
-            );
-        }
-
-        return spells;
     }
 }

@@ -28,7 +28,7 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
             await actor.update(updates);
 
             const existingItems = new Set(actor.items.map((item) => item.name));
-            const newItems = items.filter((strike) => !existingItems.has(strike.name));
+            const newItems = items.filter((strike) => !existingItems.has(strike.name ?? ""));
             console.log(items);
             console.log(newItems);
             await actor.createEmbeddedDocuments("Item", newItems);

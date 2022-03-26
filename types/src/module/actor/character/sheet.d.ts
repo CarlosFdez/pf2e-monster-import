@@ -1,15 +1,16 @@
 /// <reference types="jquery" />
 /// <reference types="tooltipster" />
-import { ItemPF2e } from '@item/base';
-import { ItemSourcePF2e } from '@item/data';
-import { CharacterPF2e } from '.';
-import { CreatureSheetPF2e } from '../creature/sheet';
+import { ItemPF2e } from "@item/base";
+import { ItemSourcePF2e } from "@item/data";
+import { CharacterPF2e } from ".";
+import { CreatureSheetPF2e } from "../creature/sheet";
+import { CharacterStrike } from "./data";
+import { CraftingFormula } from "./crafting";
+import { CharacterSheetData, CraftingEntriesSheetData } from "./data/sheet";
+import { ActorSheetDataPF2e } from "@actor/sheet/data-types";
 export declare class CharacterSheetPF2e extends CreatureSheetPF2e<CharacterPF2e> {
+    private knownFormulas;
     static get defaultOptions(): ActorSheetOptions & {
-        classes: string[];
-        submitOnClose: boolean;
-        scrollY: string[];
-    } & {
         classes: string[];
         width: number;
         height: number;
@@ -21,57 +22,52 @@ export declare class CharacterSheetPF2e extends CreatureSheetPF2e<CharacterPF2e>
         showUnpreparedSpells: boolean;
     };
     get template(): string;
-    protected _updateObject(event: Event, formData: any): Promise<void>;
-    getData(): any;
-    /**
-     * Organize and classify Items for Character sheets
-     */
-    protected prepareItems(sheetData: any): void;
-    /**
-     * Activate event listeners using the prepared sheet HTML
-     * @param html The prepared HTML object ready to be rendered into the DOM
-     */
-    activateListeners(html: JQuery): void;
+    getData(options?: ActorSheetOptions): Promise<CharacterSheetData>;
+    /** Organize and classify Items for Character sheets */
+    protected prepareItems(sheetData: ActorSheetDataPF2e<CharacterPF2e>): void;
+    protected prepareSpellcasting(sheetData: CharacterSheetData): void;
+    protected prepareCraftingFormulas(): Promise<Record<number, CraftingFormula[]>>;
+    protected prepareCraftingEntries(): Promise<CraftingEntriesSheetData>;
+    /** Disable the initiative button located on the sidebar */
+    disableInitiativeButton(): void;
+    /** Enable the initiative button located on the sidebar */
+    enableInitiativeButton(): void;
+    activateListeners($html: JQuery): void;
+    /** Contextually search the feats tab of the Compendium Browser */
+    private onClickBrowseFeatCompendia;
+    /** Handle changing of proficiency-rank via dropdown */
+    private onChangeAdjustStat;
     /** Handle clicking of proficiency-rank adjustment buttons */
     private onClickAdjustStat;
+    /** Handle changing of lore and spellcasting entry proficiency-rank via dropdown */
+    private onChangeAdjustItemStat;
     /** Handle clicking of lore and spellcasting entry adjustment buttons */
     private onClickAdjustItemStat;
-    /**
-     * Get the font-awesome icon used to display a certain level of focus points
-     * expection focus = { points: 1, pool: 1}
-     */
-    private getFocusIcon;
     private onIncrementModifierValue;
     private onDecrementModifierValue;
     private onAddCustomModifier;
     private onRemoveCustomModifier;
-    private onToggleAutomation;
-    protected _onDropItemCreate(itemData: ItemSourcePF2e): Promise<ItemPF2e[]>;
     private isFeatValidInFeatSlot;
     /** Handle cycling of dying, wounded, or doomed */
-    private onClickDyingWoundedDoomed;
+    private onClickDyingWounded;
     private getNearestSlotId;
-    private onToggleSignatureSpell;
-    protected _onDropItem(event: ElementDragEvent, data: DropCanvasData<ItemSourcePF2e>): Promise<ItemPF2e[]>;
+    protected _onDropItem(event: ElementDragEvent, data: DropCanvasData<"Item", ItemPF2e>): Promise<ItemPF2e[]>;
+    protected _onDrop(event: ElementDragEvent): Promise<boolean | void>;
     /**
      * Handle a drop event for an existing Owned Item to sort that item
      * @param event
      * @param itemData
      */
     protected _onSortItem(event: ElementDragEvent, itemData: ItemSourcePF2e): Promise<ItemPF2e[]>;
-    protected _onSubmit(event: any): Promise<Record<string, unknown>>;
-    /**
-     * Get the font-awesome icon used to display a certain level of dying
-     */
+    /** Get the font-awesome icon used to display a certain level of dying */
     private getDyingIcon;
     /**
      * Get the font-awesome icon used to display a certain level of wounded
      */
     private getWoundedIcon;
-    /**
-     * Get the font-awesome icon used to display a certain level of doomed
-     */
-    private getDoomedIcon;
     /** Get the font-awesome icon used to display hero points */
     private getHeroPointsIcon;
+}
+export interface CharacterSheetPF2e extends CreatureSheetPF2e<CharacterPF2e> {
+    getStrikeFromDOM(target: HTMLElement): CharacterStrike | null;
 }

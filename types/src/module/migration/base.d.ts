@@ -1,5 +1,7 @@
-import { ActorSourcePF2e } from '@actor/data';
-import { ItemSourcePF2e } from '@item/data';
+import { ActorPF2e } from "@actor";
+import { ActorSourcePF2e } from "@actor/data";
+import { ItemSourcePF2e } from "@item/data";
+import { ScenePF2e } from "@module/scene";
 /**
  * This is the base class for a migration.
  * If you make a change to the database schema (i.e. anything in template.json or data-definitions.ts),
@@ -34,35 +36,33 @@ export declare abstract class MigrationBase {
      * if you only want to update items that are on a npc you can do that here.
      */
     updateItem(_item: ItemSourcePF2e, _actor?: ActorSourcePF2e): Promise<void>;
+}
+/** Optional methods */
+export interface MigrationBase {
     /**
      * Update the macro to the latest schema version.
      * @param macroData Macro data to update. This should be a `MacroData` from the previous version.
      */
-    updateMacro(_macroData: foundry.data.MacroSource): Promise<void>;
-    /**
-     * Update the chat message to the latest schema version.
-     * @param messageData Message data to update. This should be a `ChatMessageData` from the previous version.
-     */
-    updateMessage(_messageData: foundry.data.ChatMessageSource): Promise<void>;
+    updateMacro?(_macroData: foundry.data.MacroSource): Promise<void>;
     /**
      * Update the rollable table to the latest schema version.
      * @param tableData Rolltable data to update. This should be a `RollTableData` from the previous version.
      */
-    updateTable(_tableData: foundry.data.RollTableSource): Promise<void>;
+    updateTable?(_tableData: foundry.data.RollTableSource): Promise<void>;
     /**
      * Update the token to the latest schema version.
      * @param tokenData Token data to update. This should be a `TokenData` from the previous version.
      */
-    updateToken(_tokenData: foundry.data.TokenSource): Promise<void>;
+    updateToken?(_tokenData: foundry.data.TokenSource, _actor: Readonly<ActorPF2e | null>, _scene: Readonly<ScenePF2e | null>): Promise<void>;
     /**
      * Update the user to the latest schema version.
      * @param userData User's data to update. This should be a `UserData` from the previous version.
      */
-    updateUser(_userData: foundry.data.UserSource): Promise<void>;
+    updateUser?(_userData: foundry.data.UserSource): Promise<void>;
     /**
      * Run migrations for this schema version.
      * Sometimes there needs to be custom steps run during a migration. For instance, if the change
      * isn't actor or item related. This function will be called during the migration.
      */
-    migrate(): Promise<void>;
+    migrate?(): Promise<void>;
 }

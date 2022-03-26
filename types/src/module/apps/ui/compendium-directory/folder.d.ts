@@ -1,4 +1,4 @@
-import { EnfolderedSummaryData } from './index';
+import { EnfolderedSummaryData } from "./index";
 interface DataParameters {
     id: string;
     name: string;

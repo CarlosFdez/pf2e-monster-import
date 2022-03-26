@@ -1,19 +1,20 @@
-import { AbilityString } from '@actor/data/base';
-import { ABCSystemData } from '@item/abc/data';
-import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from '@item/data/non-physical';
-import { ZeroToFour } from '@module/data';
-import type { ClassPF2e } from '.';
-export declare type ClassSource = BaseNonPhysicalItemSource<'class', ClassSystemData>;
+import { AbilityString } from "@actor/data/base";
+import { ABCSystemData } from "@item/abc/data";
+import { ItemTraits } from "@item/data/base";
+import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from "@item/data/non-physical";
+import { ZeroToFour } from "@module/data";
+import type { ClassPF2e } from ".";
+export declare type ClassSource = BaseNonPhysicalItemSource<"class", ClassSystemData>;
 export declare class ClassData extends BaseNonPhysicalItemData<ClassPF2e> {
-    /** @override */
     static DEFAULT_ICON: ImagePath;
 }
-export interface ClassData extends Omit<ClassSource, '_id' | 'effects'> {
-    type: ClassSource['type'];
-    data: ClassSource['data'];
+export interface ClassData extends Omit<ClassSource, "effects" | "flags"> {
+    type: ClassSource["type"];
+    data: ClassSource["data"];
     readonly _source: ClassSource;
 }
 interface ClassSystemData extends ABCSystemData {
+    traits: ItemTraits;
     keyAbility: {
         value: AbilityString[];
     };
@@ -64,4 +65,6 @@ interface ClassSystemData extends ABCSystemData {
         value: number[];
     };
 }
+export declare const CLASS_TRAITS: readonly ["alchemist", "barbarian", "bard", "champion", "cleric", "druid", "fighter", "gunslinger", "inventor", "investigator", "magus", "monk", "oracle", "ranger", "rogue", "sorcerer", "summoner", "swashbuckler", "witch", "wizard"];
+export declare type ClassTrait = typeof CLASS_TRAITS[number];
 export {};

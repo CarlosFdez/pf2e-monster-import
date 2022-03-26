@@ -1,10 +1,14 @@
-import { ItemPF2e } from '@item/base';
-import { ActionData } from './data';
+import { ItemPF2e } from "@item/base";
+import { ActionData } from "./data";
+import { OneToThree } from "@module/data";
+import { UserPF2e } from "@module/user";
+import { ActionCost } from "@item/data/base";
 export declare class ActionPF2e extends ItemPF2e {
     static get schema(): typeof ActionData;
+    get actionCost(): ActionCost | null;
     prepareData(): void;
     getChatData(this: Embedded<ActionPF2e>, htmlOptions?: EnrichHTMLOptions): {
-        properties: (string | null)[];
+        properties: string[];
         traits: import("../data").TraitChatData[];
         actionType: {
             value: "passive" | "action" | "reaction" | "free";
@@ -12,11 +16,8 @@ export declare class ActionPF2e extends ItemPF2e {
         actionCategory: {
             value: string;
         };
-        weapon: {
-            value: string;
-        };
         actions: {
-            value: string;
+            value: OneToThree | null;
         };
         requirements: {
             value: string;
@@ -26,8 +27,6 @@ export declare class ActionPF2e extends ItemPF2e {
         };
         description: {
             value: string;
-            chat: string;
-            unidentified: string;
         };
         source: {
             value: string;
@@ -35,12 +34,11 @@ export declare class ActionPF2e extends ItemPF2e {
         options?: {
             value: string[];
         } | undefined;
-        usage: {
-            value: string;
-        };
-        rules: import("../../rules/rules-data-definitions").RuleElementData[];
+        rules: import("../../rules").RuleElementSource[];
         slug: string | null;
+        schema: import("@module/data").DocumentSchemaRecord;
     };
+    protected _preUpdate(changed: DeepPartial<this["data"]["_source"]>, options: DocumentModificationContext<this>, user: UserPF2e): Promise<void>;
 }
 export interface ActionPF2e {
     readonly data: ActionData;

@@ -1,5 +1,6 @@
 /// <reference types="jquery" />
-import { ActorPF2e } from '../module/actor/base';
+import { ItemPF2e } from "@item";
+import { ActorPF2e } from "../module/actor/base";
 /**
  * @category Other
  */
@@ -27,8 +28,9 @@ export declare class DicePF2e {
      * @param onClose       Callback for actions to take when the dialog form is closed
      * @param dialogOptions Modal dialog options
      */
-    static d20Roll({ event, parts, data, template, title, speaker, flavor, onClose, dialogOptions, rollMode, rollType, }: {
+    static d20Roll({ event, item, parts, data, template, title, speaker, flavor, onClose, dialogOptions, rollMode, rollType, }: {
         event: JQuery.Event;
+        item?: Embedded<ItemPF2e> | null;
         parts: any[];
         actor?: ActorPF2e;
         data: any;
@@ -37,7 +39,7 @@ export declare class DicePF2e {
         speaker: foundry.data.ChatSpeakerSource;
         flavor?: any;
         onClose?: any;
-        dialogOptions?: object;
+        dialogOptions?: Partial<ApplicationOptions>;
         rollMode?: RollMode;
         rollType?: string;
     }): Promise<unknown>;
@@ -60,12 +62,13 @@ export declare class DicePF2e {
      * @param onClose       Callback for actions to take when the dialog form is closed
      * @param dialogOptions Modal dialog options
      */
-    static damageRoll({ event, partsCritOnly, parts, data, template, title, speaker, flavor, critical, onClose, dialogOptions, }: {
+    static damageRoll({ event, item, partsCritOnly, parts, data, template, title, speaker, flavor, critical, onClose, dialogOptions, combineTerms, }: {
         event: JQuery.Event;
+        item?: Embedded<ItemPF2e> | null;
         partsCritOnly?: any[];
-        parts: any[];
+        parts: (string | number)[];
         actor?: ActorPF2e;
-        data: any;
+        data: Record<string, any>;
         template?: string;
         title: string;
         speaker: foundry.data.ChatSpeakerSource;
@@ -73,6 +76,12 @@ export declare class DicePF2e {
         critical?: boolean;
         onClose?: any;
         dialogOptions?: object;
-    }): Promise<unknown> | Roll<any>;
+        combineTerms?: boolean;
+    }): Promise<unknown> | Roll<{
+        [x: string]: any;
+    }>;
+    /** Sum constant values and combine alike dice into single `NumericTerm` and `Die` terms, respectively */
+    static combineTerms(formula: string): Roll;
     alter(add: number, multiply: number): this;
+    private static getTraitMarkup;
 }

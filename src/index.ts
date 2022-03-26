@@ -1,3 +1,4 @@
+import { ActorPF2e } from "@pf2e/module/actor";
 import { ItemPF2e } from "@pf2e/module/item";
 import { MonsterImportApplication } from "./import-application";
 

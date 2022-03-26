@@ -1,2 +1,2 @@
-import { SkillActionOptions } from '../actions';
+import { SkillActionOptions } from "../actions";
 export declare function seek(options: SkillActionOptions): void;

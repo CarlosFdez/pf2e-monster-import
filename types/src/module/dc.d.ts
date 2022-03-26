@@ -2,23 +2,24 @@
  * Implementation of Difficulty Classes https://2e.aonprd.com/Rules.aspx?ID=552
  * and variant rule Proficiency Without Level https://2e.aonprd.com/Rules.aspx?ID=1370
  */
-import { ProficiencyRank } from '@item/data';
-import { Rarity } from './data';
-export declare type NegativeDCAdjustment = 'incredibly easy' | 'very easy' | 'easy' | 'normal';
-export declare type PositiveDCAdjustment = 'normal' | 'hard' | 'very hard' | 'incredibly hard';
+import { ProficiencyRank } from "@item/data";
+import { Rarity } from "./data";
+export declare type NegativeDCAdjustment = "incredibly easy" | "very easy" | "easy" | "normal";
+export declare type PositiveDCAdjustment = "normal" | "hard" | "very hard" | "incredibly hard";
 export declare type DCAdjustment = NegativeDCAdjustment | PositiveDCAdjustment;
 export declare function rarityToDCAdjustment(rarity?: Rarity): PositiveDCAdjustment;
 export declare function adjustDC(dc: number, adjustment?: DCAdjustment): number;
 export declare function adjustDCByRarity(dc: number, rarity?: Rarity): number;
 export interface DCOptions {
     proficiencyWithoutLevel?: boolean;
+    rarity?: Rarity;
 }
 /**
  * Normal Level Based DCs
  * @param level
  * @param proficiencyWithoutLevel
  */
-export declare function calculateDC(level: number, { proficiencyWithoutLevel }?: DCOptions): number;
+export declare function calculateDC(level: number, { proficiencyWithoutLevel, rarity }?: DCOptions): number;
 export declare function calculateSimpleDC(rank: ProficiencyRank, { proficiencyWithoutLevel }?: DCOptions): number;
 export declare function calculateSpellDC(spellLevel: number, { proficiencyWithoutLevel }?: DCOptions): number;
 /**

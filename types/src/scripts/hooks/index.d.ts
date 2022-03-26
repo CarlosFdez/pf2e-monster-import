@@ -1,5 +1,3 @@
-export declare namespace PF2E {
-    const Hooks: {
-        listen(): void;
-    };
-}
+export declare const HooksPF2e: {
+    listen(): void;
+};

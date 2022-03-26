@@ -117,45 +117,21 @@ declare global {
          * console.log(r.result); // 5 + 4 + 2
          * console.log(r.total);  // 11
          */
-        evaluate({
-            minimize,
-            maximize,
-            async,
-        }?: {
-            minimize?: boolean;
-            maximize?: boolean;
-            async?: false;
-        }): Rolled<this>;
-        evaluate({
-            minimize,
-            maximize,
-            async,
-        }: {
-            minimize?: boolean;
-            maximize?: boolean;
-            async: true;
-        }): Promise<Rolled<this>>;
-        evaluate({
-            minimize,
-            maximize,
-            async,
-        }?: {
-            minimize?: boolean;
-            maximize?: boolean;
-            async?: boolean;
-        }): Rolled<this> | Promise<Rolled<this>>;
+        evaluate({ minimize, maximize, async }: EvaluateRollParams & { async?: false }): Rolled<this>;
+        evaluate({ minimize, maximize, async }: EvaluateRollParams & { async: true }): Promise<Rolled<this>>;
+        evaluate({ minimize, maximize, async }: EvaluateRollParams): Rolled<this> | Promise<Rolled<this>>;
 
         /**
          * Evaluate the roll asynchronously.
          * A temporary helper method used to migrate behavior from 0.7.x (sync by default) to 0.9.x (async by default).
          */
-        protected _evaluate({ minimize, maximize }?: { minimize?: boolean; maximize?: boolean }): Promise<Rolled<this>>;
+        protected _evaluate({ minimize, maximize }?: Omit<EvaluateRollParams, "async">): Promise<Rolled<this>>;
 
         /**
          * Evaluate the roll synchronously.
          * A temporary helper method used to migrate behavior from 0.7.x (sync by default) to 0.9.x (async by default).
          */
-        protected _evaluateSync({ minimize, maximize }?: { minimize?: boolean; maximize?: boolean }): Rolled<this>;
+        protected _evaluateSync({ minimize, maximize }?: Omit<EvaluateRollParams, "async">): Rolled<this>;
 
         /**
          * Safely evaluate the final total result for the Roll using its component terms.
@@ -167,25 +143,9 @@ declare global {
          * Alias for evaluate.
          * @see {Roll#evaluate}
          */
-        roll({ minimize, maximize, async }?: { minimize?: boolean; maximize?: boolean; async?: false }): Rolled<this>;
-        roll({
-            minimize,
-            maximize,
-            async,
-        }: {
-            minimize?: boolean;
-            maximize?: boolean;
-            async: true;
-        }): Promise<Rolled<this>>;
-        roll({
-            minimize,
-            maximize,
-            async,
-        }?: {
-            minimize?: boolean;
-            maximize?: boolean;
-            async?: boolean;
-        }): Rolled<this> | Promise<Rolled<this>>;
+        roll({ minimize, maximize, async }: EvaluateRollParams & { async?: false }): Rolled<this>;
+        roll({ minimize, maximize, async }: EvaluateRollParams & { async: true }): Promise<Rolled<this>>;
+        roll({ minimize, maximize, async }: EvaluateRollParams): Rolled<this> | Promise<Rolled<this>>;
 
         /**
          * Create a new Roll object using the original provided formula and data.
@@ -193,15 +153,9 @@ declare global {
          * @param [options={}] Evaluation options passed to Roll#evaluate
          * @return A new Roll object, rolled using the same formula and data
          */
-        reroll({
-            minimize,
-            maximize,
-            async,
-        }?: {
-            minimize?: boolean;
-            maximize?: boolean;
-            async?: boolean;
-        }): ReturnType<this["roll"]>;
+        reroll({ minimize, maximize, async }: EvaluateRollParams & { async?: false }): Rolled<this>;
+        reroll({ minimize, maximize, async }: EvaluateRollParams & { async: true }): Promise<Rolled<this>>;
+        reroll({ minimize, maximize, async }: EvaluateRollParams): Rolled<this> | Promise<Rolled<this>>;
 
         /* -------------------------------------------- */
         /*  Static Class Methods                        */
@@ -302,7 +256,7 @@ declare global {
          * @param _formula The raw formula to split
          * @returns An array of terms, split on parenthetical terms
          */
-        protected static _splitPools(_formula: string): [PoolTerm];
+        protected static _splitPools(_formula: string): PoolTerm[];
 
         /**
          * Split a formula by identifying its outer-most groups using a certain group symbol like parentheses or brackets.
@@ -382,10 +336,10 @@ declare global {
 
         /**
          * Render a Roll instance to HTML
-         * @param [chatOptions] An object configuring the behavior of the resulting chat message.
-         * @return The rendered HTML template as a string
+         * @param [options={}] Options which affect how the Roll is rendered
+         * @returns The rendered HTML template as a string
          */
-        render(chatOptions?: DocumentRenderOptions): Promise<string>;
+        render(chatOptions?: RollRenderOptions): Promise<string>;
 
         /**
          * Transform a Roll instance into a ChatMessage, displaying the roll result.
@@ -436,15 +390,7 @@ declare global {
          * Represent the data of the Roll as an object suitable for JSON serialization.
          * @return Structured data which can be serialized into JSON
          */
-        toJSON(): {
-            class: string;
-            options: Record<string, unknown>;
-            dice: DiceTerm[];
-            formula: string;
-            terms: RollTerm[];
-            total?: number;
-            evaluated: boolean;
-        };
+        toJSON(): RollJSON;
 
         /**
          * Recreate a Roll instance using a provided data object
@@ -473,7 +419,11 @@ declare global {
          * const roll = Roll.fromTerms([t1, plus, t2]);
          * roll.formula; // 4d8 + 8
          */
-        static fromTerms<T extends Roll>(this: T, terms: RollTerm[], options?: Record<string, unknown>): T;
+        static fromTerms<T extends Roll>(
+            this: ConstructorOf<T>,
+            terms: RollTerm[],
+            options?: Record<string, unknown>
+        ): T;
     }
 
     interface RollData {
@@ -486,6 +436,26 @@ declare global {
         evaluated?: boolean;
     }
 
+    interface RollJSON {
+        class: string;
+        options: Record<string, unknown>;
+        data?: RollData;
+        dice: DiceTerm[];
+        formula: string;
+        terms: RollTerm[];
+        total?: number;
+        evaluated: boolean;
+    }
+
+    interface RollRenderOptions {
+        /** Flavor text to include */
+        flavor?: string;
+        /** A custom HTML template path */
+        template?: string;
+        /** Is the Roll displayed privately? */
+        isPrivate?: boolean;
+    }
+
     /** An evaluated Roll instance */
     type Rolled<T extends Roll> = T & {
         readonly result: string;
@@ -493,4 +463,10 @@ declare global {
         _evaluated: true;
         terms: RollTerm[];
     };
+
+    interface EvaluateRollParams {
+        minimize?: boolean;
+        maximize?: boolean;
+        async?: boolean;
+    }
 }

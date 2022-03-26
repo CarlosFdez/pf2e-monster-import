@@ -1,4 +1,4 @@
-import { UserPF2e } from '@module/user';
+import { UserPF2e } from "@module/user";
 export interface ItemTransferData {
     source: {
         tokenId?: string;
@@ -13,12 +13,12 @@ export interface ItemTransferData {
     containerId?: string;
 }
 export declare class ItemTransfer implements ItemTransferData {
-    source: ItemTransferData['source'];
-    target: ItemTransferData['target'];
+    source: ItemTransferData["source"];
+    target: ItemTransferData["target"];
     quantity: number;
     containerId?: string | undefined;
     private templatePaths;
-    constructor(source: ItemTransferData['source'], target: ItemTransferData['target'], quantity: number, containerId?: string | undefined);
+    constructor(source: ItemTransferData["source"], target: ItemTransferData["target"], quantity: number, containerId?: string | undefined);
     request(): Promise<void>;
     enact(requester: UserPF2e): Promise<void>;
     /** Retrieve the full actor from the source or target ID */

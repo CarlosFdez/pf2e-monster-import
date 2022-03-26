@@ -1,29 +1,28 @@
-import { ItemSystemData } from '@item/data/base';
-import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from '@item/data/non-physical';
-import { ActionPF2e } from '.';
-export declare type ActionType = keyof ConfigPF2e['PF2E']['actionTypes'];
-export declare type ActionSource = BaseNonPhysicalItemSource<'action', ActionSystemData>;
+import { ActionType, ItemSystemData, ItemTraits } from "@item/data/base";
+import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from "@item/data/non-physical";
+import { ActionPF2e } from ".";
+import { OneToThree } from "@module/data";
+export declare type ActionSource = BaseNonPhysicalItemSource<"action", ActionSystemData>;
 export declare class ActionData extends BaseNonPhysicalItemData<ActionPF2e> {
-    /** @override */
     static DEFAULT_ICON: ImagePath;
 }
-export interface ActionData extends Omit<ActionSource, '_id' | 'effects'> {
-    type: ActionSource['type'];
-    data: ActionSource['data'];
+export interface ActionData extends Omit<ActionSource, "effects" | "flags"> {
+    type: ActionSource["type"];
+    data: ActionSource["data"];
     readonly _source: ActionSource;
 }
+export declare type ActionTrait = keyof ConfigPF2e["PF2E"]["actionTraits"];
+export declare type ActionTraits = ItemTraits<ActionTrait>;
 interface ActionSystemData extends ItemSystemData {
+    traits: ActionTraits;
     actionType: {
         value: ActionType;
     };
     actionCategory: {
         value: string;
     };
-    weapon: {
-        value: string;
-    };
     actions: {
-        value: string;
+        value: OneToThree | null;
     };
     requirements: {
         value: string;

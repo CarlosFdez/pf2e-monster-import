@@ -1,1 +1,3 @@
-export declare function listen(): void;
+export declare const UpdateWorldTime: {
+    listen: () => void;
+};

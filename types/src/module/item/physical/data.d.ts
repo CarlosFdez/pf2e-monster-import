@@ -1,13 +1,16 @@
-import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemLevelData, ItemSystemData, ItemTraits } from '../data/base';
-import type { PhysicalItemPF2e } from '@item/physical';
-import type { PHYSICAL_ITEM_TYPES } from '../data/values';
-import { EquipmentTrait } from '@item/equipment/data';
-import { ArmorTrait } from '@item/armor/data';
-import { WeaponTrait } from '@item/weapon/data';
-import { ConsumableTrait } from '@item/consumable/data';
-import { Size } from '@module/data';
-export declare type BasePhysicalItemSource<TItemType extends PhysicalItemType = PhysicalItemType, TSystemData extends PhysicalSystemData = PhysicalSystemData> = BaseItemSourcePF2e<TItemType, TSystemData>;
-export declare class BasePhysicalItemData<TItem extends PhysicalItemPF2e = PhysicalItemPF2e, TSystemData extends PhysicalSystemData = PhysicalSystemData> extends BaseItemDataPF2e<TItem> {
+import { ActionCost, BaseItemDataPF2e, BaseItemSourcePF2e, ItemLevelData, ItemSystemData, ItemTraits } from "../data/base";
+import type { PhysicalItemPF2e } from "@item/physical";
+import type { ITEM_CARRY_TYPES, PHYSICAL_ITEM_TYPES, PRECIOUS_MATERIAL_TYPES } from "../data/values";
+import { EquipmentTrait } from "@item/equipment/data";
+import { ArmorTrait } from "@item/armor/data";
+import { WeaponTrait } from "@item/weapon/data";
+import { ConsumableTrait } from "@item/consumable/data";
+import { Size, ValuesList } from "@module/data";
+import { ActionTrait } from "@item/action/data";
+import { UsageDetails } from "./usage";
+declare type ItemCarryType = SetElement<typeof ITEM_CARRY_TYPES>;
+declare type BasePhysicalItemSource<TItemType extends PhysicalItemType = PhysicalItemType, TSystemData extends PhysicalSystemData = PhysicalSystemData> = BaseItemSourcePF2e<TItemType, TSystemData>;
+declare class BasePhysicalItemData<TItem extends PhysicalItemPF2e = PhysicalItemPF2e, TSystemData extends PhysicalSystemData = PhysicalSystemData> extends BaseItemDataPF2e<TItem> {
     /** Prepared data */
     readonly isPhysical: true;
     isEquipped: boolean;
@@ -16,81 +19,55 @@ export declare class BasePhysicalItemData<TItem extends PhysicalItemPF2e = Physi
     isMagical: boolean;
     isInvested: boolean | null;
     isCursed: boolean;
+    isTemporary: boolean;
+    usage: UsageDetails;
 }
-export interface BasePhysicalItemData<TItem extends PhysicalItemPF2e = PhysicalItemPF2e> extends Omit<BasePhysicalItemSource, 'effects'> {
+interface BasePhysicalItemData<TItem extends PhysicalItemPF2e = PhysicalItemPF2e> extends Omit<BasePhysicalItemSource, "effects" | "flags"> {
     type: PhysicalItemType;
-    data: BasePhysicalItemSource['data'];
+    data: BasePhysicalItemSource["data"];
     readonly document: TItem;
     readonly _source: BasePhysicalItemSource;
 }
-export declare type PhysicalItemType = typeof PHYSICAL_ITEM_TYPES[number];
-export interface MagicItemSystemData extends PhysicalSystemData {
-    invested: {
-        value: boolean | null;
+declare type PhysicalItemType = SetElement<typeof PHYSICAL_ITEM_TYPES>;
+declare type MagicItemSystemData = PhysicalSystemData & {
+    equipped: {
+        invested: boolean | null;
     };
-}
-export interface ActivatedEffectData {
+};
+declare type PreciousMaterialType = typeof PRECIOUS_MATERIAL_TYPES[number];
+declare type PreciousMaterialGrade = "low" | "standard" | "high";
+interface ActivatedEffectData {
     activation: {
         type: string;
         cost: number;
         condition: string;
     };
     duration: {
-        value: any;
+        value: unknown;
         units: string;
     };
     target: {
-        value: any;
+        value: unknown;
         units: string;
         type: string;
     };
     range: {
-        value: any;
-        long: any;
-        units: any;
+        value: unknown;
+        long: unknown;
+        units: unknown;
     };
     uses: {
         value: number;
         max: number;
-        per: any;
+        per: number;
     };
 }
-export declare type IdentificationStatus = 'identified' | 'unidentified' | 'misidentified';
-export interface MystifiedData {
-    name: string;
-    img: string;
-    data: {
-        description: {
-            value: string;
-        };
-    };
-}
-export declare type IdentifiedData = DeepPartial<MystifiedData>;
-export interface IdentificationData {
-    status: IdentificationStatus;
-    unidentified: MystifiedData;
-    misidentified: {};
-}
-export declare type PhysicalItemTrait = ArmorTrait | ConsumableTrait | EquipmentTrait | WeaponTrait;
-export declare type PhysicalItemTraits<T extends PhysicalItemTrait = PhysicalItemTrait> = ItemTraits<T>;
-export interface PhysicalSystemData extends ItemSystemData, ItemLevelData {
+interface PhysicalSystemData extends ItemSystemData, ItemLevelData {
     traits: PhysicalItemTraits;
-    quantity: {
-        value: number;
-    };
+    quantity: number;
     baseItem: string | null;
-    hp: {
-        value: number;
-    };
-    maxHp: {
-        value: number;
-    };
-    hardness: {
-        value: number;
-    };
-    brokenThreshold: {
-        value: number;
-    };
+    hp: PhysicalItemHitPoints;
+    hardness: number;
     weight: {
         value: number;
     };
@@ -101,37 +78,76 @@ export interface PhysicalSystemData extends ItemSystemData, ItemLevelData {
         value: string;
     };
     price: {
-        value: number;
+        value: string;
     };
-    equipped: {
-        value: boolean;
-    };
+    equipped: EquippedData;
     identification: IdentificationData;
-    stackGroup: {
-        value: string;
-    };
-    bulkCapacity: {
-        value: string;
-    };
+    stackGroup: string | null;
     negateBulk: {
         value: string;
     };
-    containerId: {
-        value: string | null;
-    };
+    containerId: string | null;
     preciousMaterial: {
-        value: string;
+        value: Exclude<PreciousMaterialType, "dragonhide" | "grisantian-pelt"> | null;
     };
     preciousMaterialGrade: {
+        value: PreciousMaterialGrade | null;
+    };
+    size: Size;
+    usage: {
         value: string;
     };
-    collapsed: {
-        value: boolean;
-    };
-    size: {
-        value: Size;
-    };
-    invested?: {
-        value: boolean | null;
+    activations?: Record<string, ItemActivation>;
+    temporary?: boolean;
+}
+declare type IdentificationStatus = "identified" | "unidentified";
+interface MystifiedData {
+    name: string;
+    img: string;
+    data: {
+        description: {
+            value: string;
+        };
     };
 }
+declare type IdentifiedData = DeepPartial<MystifiedData>;
+interface IdentificationData {
+    status: IdentificationStatus;
+    identified: MystifiedData;
+    unidentified: MystifiedData;
+    misidentified: {};
+}
+declare type EquippedData = {
+    carryType: ItemCarryType;
+    inSlot?: boolean;
+    handsHeld?: number;
+    invested?: boolean | null;
+};
+declare type PhysicalItemTrait = ArmorTrait | ConsumableTrait | EquipmentTrait | WeaponTrait;
+declare type PhysicalItemTraits<T extends PhysicalItemTrait = PhysicalItemTrait> = ItemTraits<T>;
+interface ItemActivation {
+    id: string;
+    description: {
+        value: string;
+    };
+    actionCost: ActionCost;
+    components: {
+        command: boolean;
+        envision: boolean;
+        interact: boolean;
+        cast: boolean;
+    };
+    frequency: {
+        value: number;
+        max: number;
+        /** Gap between recharges as an ISO8601 duration, or "day" for daily prep. */
+        duration: null | keyof ConfigPF2e["PF2E"]["frequencies"];
+    };
+    traits: ValuesList<ActionTrait>;
+}
+interface PhysicalItemHitPoints {
+    value: number;
+    max: number;
+    brokenThreshold: number;
+}
+export { ActivatedEffectData, BasePhysicalItemData, BasePhysicalItemSource, EquippedData, IdentificationData, IdentificationStatus, IdentifiedData, ItemActivation, ItemCarryType, MagicItemSystemData, MystifiedData, PhysicalItemHitPoints, PhysicalItemTrait, PhysicalItemTraits, PhysicalItemType, PhysicalSystemData, PreciousMaterialGrade, PreciousMaterialType, };

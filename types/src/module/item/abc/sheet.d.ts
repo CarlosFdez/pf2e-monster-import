@@ -1,9 +1,9 @@
 /// <reference types="jquery" />
 /// <reference types="tooltipster" />
-import { AbilityString } from '@actor/data';
-import { AncestryPF2e, BackgroundPF2e, ClassPF2e } from '@item/index';
-import { ItemSheetPF2e } from '../sheet/base';
-import { ABCSheetData } from '../sheet/data-types';
+import { AbilityString } from "@actor/data";
+import { AncestryPF2e, BackgroundPF2e, ClassPF2e } from "@item/index";
+import { ItemSheetPF2e } from "../sheet/base";
+import { ABCSheetData } from "../sheet/data-types";
 declare type ABCItem = AncestryPF2e | BackgroundPF2e | ClassPF2e;
 export declare abstract class ABCSheetPF2e<TItem extends ABCItem> extends ItemSheetPF2e<TItem> {
     static get defaultOptions(): {
@@ -14,23 +14,23 @@ export declare abstract class ABCSheetPF2e<TItem extends ABCItem> extends ItemSh
         classes: string[];
         template: string;
         viewPermission: number;
-        editable?: boolean | undefined;
-        closeOnSubmit?: boolean | undefined;
-        submitOnClose?: boolean | undefined;
-        submitOnChange?: boolean | undefined;
-        baseApplication?: string | undefined;
-        width?: string | number | undefined;
-        height?: string | number | undefined;
-        top?: number | undefined;
-        left?: number | undefined;
-        popOut?: boolean | undefined;
-        minimizable?: boolean | undefined;
-        resizable?: boolean | undefined;
-        id?: string | undefined;
-        tabs?: TabsOptions[] | undefined;
-        title?: string | undefined;
+        editable: boolean;
+        closeOnSubmit: boolean;
+        submitOnClose: boolean;
+        submitOnChange: boolean;
+        baseApplication: string | null;
+        width: string | number | null;
+        height: string | number | null;
+        top: number | null;
+        left: number | null;
+        popOut: boolean;
+        minimizable: boolean;
+        resizable: boolean | null;
+        id: string;
+        tabs: TabsOptions[];
+        title: string;
     };
-    getData(): ABCSheetData<TItem>;
+    getData(): Promise<ABCSheetData<TItem>>;
     protected getLocalizedAbilities(traits: {
         value: AbilityString[];
     }): {
@@ -40,6 +40,6 @@ export declare abstract class ABCSheetPF2e<TItem extends ABCItem> extends ItemSh
     private isValidDrop;
     protected _onDrop(event: ElementDragEvent): Promise<void>;
     private removeItem;
-    activateListeners(html: JQuery): void;
+    activateListeners($html: JQuery): void;
 }
 export {};

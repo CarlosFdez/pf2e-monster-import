@@ -1,48 +1,62 @@
-import { BaseCreatureAttributes, BaseCreatureData, BaseCreatureSource, CreatureSystemData } from '@actor/creature/data';
-import { AbilityString, RawSkillData, Rollable } from '@actor/data/base';
-import { LabeledValue } from '@module/data';
-import type { FamiliarPF2e } from '.';
-export declare type FamiliarSource = BaseCreatureSource<'familiar', FamiliarSystemData>;
+import { CreatureAttributes, BaseCreatureData, BaseCreatureSource, CreatureSystemData, SkillAbbreviation, CreatureSystemSource, CreatureTraitsData } from "@actor/creature/data";
+import { AbilityString, Rollable } from "@actor/data/base";
+import { StatisticModifier } from "@actor/modifiers";
+import type { FamiliarPF2e } from ".";
+export declare type FamiliarSource = BaseCreatureSource<"familiar", FamiliarSystemSource>;
 export declare class FamiliarData extends BaseCreatureData<FamiliarPF2e, FamiliarSystemData> {
     static DEFAULT_ICON: ImagePath;
 }
-export interface FamiliarData extends Omit<FamiliarSource, 'effects' | 'items' | 'token'> {
-    readonly type: FamiliarSource['type'];
-    data: FamiliarSource['data'];
+export interface FamiliarData extends Omit<FamiliarSource, "effects" | "flags" | "items" | "token"> {
+    readonly type: FamiliarSource["type"];
+    data: FamiliarSystemData;
     readonly _source: FamiliarSource;
 }
-interface FamiliarAttributes extends BaseCreatureAttributes {
+export interface FamiliarSystemSource extends Pick<CreatureSystemSource, "schema"> {
+    details: {
+        creature: {
+            value: string;
+        };
+    };
+    attributes: {
+        hp: {
+            value: number;
+        };
+    };
+    master: {
+        id: string | null;
+        ability: AbilityString | null;
+    };
+}
+/** The raw information contained within the actor data object for familiar actors. */
+export interface FamiliarSystemData extends Omit<FamiliarSystemSource, "toggles" | "traits">, CreatureSystemData {
+    details: CreatureSystemData["details"] & {
+        creature: {
+            value: string;
+        };
+    };
+    actions?: undefined;
+    attack: StatisticModifier & Rollable;
+    attributes: FamiliarAttributes;
+    skills: FamiliarSkills;
+    master: {
+        id: string | null;
+        ability: AbilityString | null;
+    };
+    traits: CreatureTraitsData;
+}
+interface FamiliarAttributes extends CreatureAttributes {
     ac: {
         value: number;
         breakdown: string;
         check?: number;
     };
-    perception: {
-        value: number;
-    } & Partial<RawSkillData> & Rollable;
-    /** The movement speeds that this Familiar has. */
-    speed: {
-        /** The land speed for this actor. */
-        value: string;
-        /** A list of other movement speeds the actor possesses. */
-        otherSpeeds: LabeledValue[];
-    };
+    perception: FamiliarPerception;
 }
-/** The raw information contained within the actor data object for familiar actors. */
-interface FamiliarSystemData extends CreatureSystemData {
-    details: {
-        level: {
-            value: number;
-        };
-        creature: {
-            value: string;
-        };
-    };
-    attributes: FamiliarAttributes;
-    master: {
-        id: string | null;
-        ability: AbilityString | null;
-    };
-    [key: string]: any;
-}
+declare type FamiliarPerception = {
+    value: number;
+} & StatisticModifier & Rollable;
+declare type FamiliarSkill = StatisticModifier & Rollable & {
+    value: number;
+};
+declare type FamiliarSkills = Record<SkillAbbreviation, FamiliarSkill>;
 export {};

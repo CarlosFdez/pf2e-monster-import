@@ -1,24 +1,26 @@
-/// <reference types="jquery" />
-/// <reference types="tooltipster" />
-import { ActorPF2e } from '@actor/base';
+import { ActorPF2e } from "@actor/base";
 interface MoveLootOptions extends FormApplicationOptions {
     maxQuantity: number;
+    newStack: boolean;
+    lockStack: boolean;
 }
 interface MoveLootFormData extends FormData {
     quantity: number;
+    newStack: boolean;
 }
-declare type MoveLootCallback = (quantity: number) => void;
+declare type MoveLootCallback = (quantity: number, newStack: boolean) => void;
 export declare class MoveLootPopup extends FormApplication<{}, MoveLootOptions> {
     onSubmitCallback: MoveLootCallback;
-    constructor(object: ActorPF2e, options: MoveLootOptions, callback: MoveLootCallback);
-    getData(): {
+    constructor(object: ActorPF2e, options: Partial<MoveLootOptions>, callback: MoveLootCallback);
+    getData(): Promise<{
         maxQuantity: number;
-        object?: {} | undefined;
-        options?: FormApplicationOptions | undefined;
+        newStack: boolean;
+        lockStack: boolean;
+        object?: object | {} | undefined;
+        options?: Partial<FormApplicationOptions> | undefined;
         title?: string | undefined;
-    };
-    static get defaultOptions(): FormApplicationOptions;
-    activateListeners(html: JQuery): void;
-    _updateObject(_event: ElementDragEvent, formData: MoveLootFormData): Promise<void>;
+    }>;
+    static get defaultOptions(): MoveLootOptions;
+    _updateObject(_event: ElementDragEvent, formData: Record<string, unknown> & MoveLootFormData): Promise<void>;
 }
 export {};

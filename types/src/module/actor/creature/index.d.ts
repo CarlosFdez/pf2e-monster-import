@@ -1,77 +1,103 @@
-/// <reference types="jquery" />
-import { ActorPF2e } from '@actor/base';
-import { CreatureData } from '@actor/data';
-import { ModifierPF2e } from '@module/modifiers';
-import { ItemPF2e, ArmorPF2e } from '@item';
-import { RuleElementPF2e } from '@module/rules/rule-element';
-import { RollNotePF2e } from '@module/notes';
-import { RuleElementSyntheticsPF2e } from '@module/rules/rules-data-definitions';
-import { ActiveEffectPF2e } from '@module/active-effect';
-import { DegreeOfSuccessAdjustment, PF2CheckDC } from '@system/check-degree-of-success';
-import { VisionLevel } from './data';
-import { Statistic } from '@system/statistic';
+import { ActorPF2e } from "@actor";
+import { CreatureData, SaveType } from "@actor/data";
+import { ModifierPF2e, StatisticModifier } from "@actor/modifiers";
+import { ItemPF2e, ArmorPF2e, PhysicalItemPF2e } from "@item";
+import { RuleElementSynthetics } from "@module/rules";
+import { RollNotePF2e } from "@module/notes";
+import { ActiveEffectPF2e } from "@module/active-effect";
+import { CreatureSkills, CreatureSpeeds, LabeledSpeed, MovementType, SenseData, VisionLevel } from "./data";
+import { Statistic } from "@system/statistic";
+import { RawPredicate } from "@system/predication";
+import { UserPF2e } from "@module/user";
+import { CreatureSensePF2e } from "./sense";
+import { HitPointsSummary } from "@actor/base";
+import { Rarity } from "@module/data";
+import { DeferredModifier } from "@module/rules/rule-element/data";
+import { DamageType } from "@system/damage";
+import { Alignment, AttackItem, AttackRollContext, GetReachParameters, IsFlatFootedParams, StrikeRollContext, StrikeRollContextParams } from "./types";
+import { ItemCarryType } from "@item/physical/data";
 /** An "actor" in a Pathfinder sense rather than a Foundry one: all should contain attributes and abilities */
 export declare abstract class CreaturePF2e extends ActorPF2e {
-    /** Used as a lock to prevent multiple asynchronous redraw requests from triggering an error */
-    redrawingTokenEffects: boolean;
+    /** Saving throw rolls for the creature, built during data prep */
+    saves: Record<SaveType, Statistic>;
+    /** Skill check rolls for the creature. */
+    get skills(): CreatureSkills;
+    /** The creature's position on the alignment axes */
+    get alignment(): Alignment;
+    get rarity(): Rarity;
+    /**
+     * A currently naive measurement of this creature's reach
+     * @param [context.action] The action context of the reach measurement. Interact actions don't consider weapons.
+     * @param [context.weapon] The "weapon," literal or otherwise, used in an attack-reach measurement
+     */
+    getReach({ action, weapon }?: GetReachParameters): number;
     get visionLevel(): VisionLevel;
     get hasDarkvision(): boolean;
     get hasLowLightVision(): boolean;
     get canSee(): boolean;
-    get hitPoints(): {
-        current: number;
-        max: number;
-    };
-    get attributes(): this['data']['data']['attributes'];
+    get canAct(): boolean;
+    get canAttack(): boolean;
+    get isDead(): boolean;
+    get isSpellcaster(): boolean;
     get perception(): Statistic;
-    get fortitude(): Statistic;
-    get reflex(): Statistic;
-    get will(): Statistic;
     get deception(): Statistic;
     get stealth(): Statistic;
     get wornArmor(): Embedded<ArmorPF2e> | null;
     /** Get the held shield of most use to the wielder */
     get heldShield(): Embedded<ArmorPF2e> | null;
-    /** Refresh the vision of any controlled tokens linked to this creature */
-    protected refreshVision(): void;
+    /** Whether the actor is flat-footed in the current scene context: currently only handles flanking */
+    isFlatFooted({ dueTo }: IsFlatFootedParams): boolean;
+    /** Construct a range penalty for this creature when making a ranged attack */
+    protected getRangePenalty(increment: number | null, selectors: string[], rollOptions: string[]): ModifierPF2e | null;
     /** Setup base ephemeral data to be modified by active effects and derived-data preparation */
     prepareBaseData(): void;
-    protected _onUpdate(changed: DeepPartial<this['data']['_source']>, options: DocumentModificationContext, userId: string): void;
-    /** Compute custom stat modifiers provided by users or given by conditions. */
-    protected prepareCustomModifiers(rules: RuleElementPF2e[]): RuleElementSyntheticsPF2e;
+    /** Apply ActiveEffect-Like rule elements immediately after application of actual `ActiveEffect`s */
+    prepareEmbeddedDocuments(): void;
+    prepareDerivedData(): void;
+    protected setNumericRollOptions(): void;
+    protected prepareInitiative(statisticsModifiers: Record<string, DeferredModifier[]>, rollNotes: Record<string, RollNotePF2e[] | undefined>): void;
+    protected prepareSynthetics(): void;
+    /** Add a circumstance bonus if this creature has a raised shield */
+    protected getShieldBonus(): ModifierPF2e | null;
     /**
-     * Roll a Recovery Check
-     * Prompt the user for input regarding Advantage/Disadvantage and any Situational Bonus
+     * Changes the carry type of an item (held/worn/stowed/etc) and/or regrips/reslots
+     * @param item       The item
+     * @param carryType  Location to be set to
+     * @param handsHeld  Number of hands being held
+     * @param inSlot     Whether the item is in the slot or not. Equivilent to "equipped" previously
      */
-    rollRecovery(): void;
-    /** Redraw token effect icons after adding/removing partial ActiveEffects to Actor#temporaryEffects */
-    redrawTokenEffects(): void;
-    protected buildStatistic(stat: {
-        adjustments?: DegreeOfSuccessAdjustment[];
-        modifiers: readonly ModifierPF2e[];
-        notes?: RollNotePF2e[];
-    }, name: string, label: string, type: string): Statistic;
-    private buildSavingThrowStatistic;
-    protected createAttackRollContext(event: JQuery.Event, rollNames: string[]): {
-        event: JQuery.Event;
-        options: string[];
-        targets: Set<ActorPF2e | null>;
-        dc: PF2CheckDC | undefined;
-    };
-    protected createDamageRollContext(event: JQuery.Event): {
-        event: JQuery.Event;
-        options: string[];
-        targets: Set<ActorPF2e | null>;
-    };
-    private createStrikeRollContext;
+    adjustCarryType(item: Embedded<PhysicalItemPF2e>, carryType: ItemCarryType, handsHeld?: number, inSlot?: boolean): Promise<void>;
+    /**
+     * Adds a custom modifier that will be included when determining the final value of a stat. The slug generated by
+     * the name parameter must be unique for the custom modifiers for the specified stat, or it will be ignored.
+     */
+    addCustomModifier(stat: string, name: string, value: number, type: string, predicate?: RawPredicate, damageType?: DamageType, damageCategory?: string): Promise<void>;
+    /** Removes a custom modifier by slug */
+    removeCustomModifier(stat: string, modifier: number | string): Promise<void>;
+    /** Prepare derived creature senses from Rules Element synthetics */
+    prepareSenses(data: SenseData[], synthetics: RuleElementSynthetics): CreatureSensePF2e[];
+    prepareSpeed(movementType: "land"): CreatureSpeeds;
+    prepareSpeed(movementType: Exclude<MovementType, "land">): LabeledSpeed & StatisticModifier;
+    prepareSpeed(movementType: MovementType): CreatureSpeeds | (LabeledSpeed & StatisticModifier);
+    /** Create a deep copy of a synthetics record of the form Record<string, object[]> */
+    protected cloneSyntheticsRecord<T extends {
+        clone(): T;
+    }>(record: Record<string, T[]>): Record<string, T[]>;
+    /**
+     * Calculates attack roll target data including the target's DC.
+     * All attack rolls have the "all" and "attack-roll" domains and the "attack" trait,
+     * but more can be added via the options.
+     */
+    getAttackRollContext<I extends AttackItem>(params: StrikeRollContextParams<I>): AttackRollContext<this, I>;
+    protected getDamageRollContext<I extends AttackItem>(params: StrikeRollContextParams<I>): StrikeRollContext<this, I>;
+    protected getStrikeRollContext<I extends AttackItem>(params: StrikeRollContextParams<I>): StrikeRollContext<this, I>;
+    protected _preUpdate(changed: DeepPartial<this["data"]["_source"]>, options: DocumentUpdateContext<this>, user: UserPF2e): Promise<void>;
 }
 export interface CreaturePF2e {
     readonly data: CreatureData;
-    /**
-     * See implementation in class
-     * @override
-     */
-    updateEmbeddedDocuments(embeddedName: 'ActiveEffect', updateData: EmbeddedDocumentUpdateData<this>[], options?: DocumentModificationContext): Promise<ActiveEffectPF2e[]>;
-    updateEmbeddedDocuments(embeddedName: 'Item', updateData: EmbeddedDocumentUpdateData<this>[], options?: DocumentModificationContext): Promise<ItemPF2e[]>;
-    updateEmbeddedDocuments(embeddedName: 'ActiveEffect' | 'Item', updateData: EmbeddedDocumentUpdateData<this>[], options?: DocumentModificationContext): Promise<ActiveEffectPF2e[] | ItemPF2e[]>;
+    get hitPoints(): HitPointsSummary;
+    /** See implementation in class */
+    updateEmbeddedDocuments(embeddedName: "ActiveEffect", updateData: EmbeddedDocumentUpdateData<this>[], options?: DocumentModificationContext): Promise<ActiveEffectPF2e[]>;
+    updateEmbeddedDocuments(embeddedName: "Item", updateData: EmbeddedDocumentUpdateData<this>[], options?: DocumentModificationContext): Promise<ItemPF2e[]>;
+    updateEmbeddedDocuments(embeddedName: "ActiveEffect" | "Item", updateData: EmbeddedDocumentUpdateData<this>[], options?: DocumentModificationContext): Promise<ActiveEffectPF2e[] | ItemPF2e[]>;
 }

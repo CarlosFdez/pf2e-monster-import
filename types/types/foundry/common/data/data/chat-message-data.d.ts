@@ -12,10 +12,10 @@ declare module foundry {
             speaker: ChatSpeakerSource;
             whisper: string[];
             blind: boolean;
-            roll: object | string;
+            roll: string | RollJSON;
             sound: AudioPath;
             emote?: boolean;
-            flags: Record<string, Record<string, unknown>>;
+            flags: ChatMessageFlags;
         }
 
         class ChatMessageData<
@@ -23,8 +23,19 @@ declare module foundry {
         > extends abstract.DocumentData<TDocument> {
             static override defineSchema(): abstract.DocumentSchema;
         }
+
         interface ChatMessageData extends ChatMessageSource {
             readonly _source: ChatMessageSource;
+
+            roll: string;
         }
+
+        type ChatMessageFlags = Record<string, Record<string, unknown>> & {
+            core?: {
+                canPopout?: boolean;
+                initiativeRoll?: boolean;
+                RollTable?: string;
+            };
+        };
     }
 }

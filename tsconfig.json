@@ -24,6 +24,8 @@
             "@system/*": ["types/src/module/system/*"],
             "@module/*": ["types/src/module/*"],
             "@scripts/*": ["types/src/scripts/*"],
+            "@util": ["types/src/util"],
+            "@util/*": ["types/src/util/*"],
             // https://github.com/Hypercubed/mini-signals/issues/20
             "mini-signals": [
                 "node_modules/resource-loader/typings/mini-signals.d.ts"

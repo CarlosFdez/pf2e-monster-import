@@ -1,6 +1,19 @@
-import { Size } from '@module/data';
-import { Optional } from '@module/utils';
-import { ItemDataPF2e, PhysicalItemData } from '../data';
+import { Size } from "@module/data";
+import { Optional } from "@util";
+import { ItemDataPF2e, PhysicalItemData } from "../data";
+interface StackDefinition {
+    size: number;
+    lightBulk: number;
+}
+declare type StackDefinitions = Record<string, StackDefinition>;
+/**
+ * hard coded for now but could be made configurable later on.
+ * Describes each stack group by how much items belong in a stack
+ * and how much bulk a single stack produces. Bulk type has to be
+ * included because coins don't add light bulk below 1000, just 1
+ * bulk per 1000 coins
+ */
+export declare const stackDefinitions: StackDefinitions;
 export declare class Bulk {
     normal: number;
     light: number;
@@ -50,12 +63,7 @@ export declare class Bulk {
  * @param actorSize
  */
 export declare function convertBulkToSize(bulk: Bulk, itemSize: Size, actorSize: Size): Bulk;
-/**
- * Produces strings like: "-", "L", "2L", "3", "3; L", "4; 3L" to display bulk in the frontend
- * bulk comlumn
- * @param bulk
- * @return
- */
+/** Produces strings like: "-", "L", "2L", "3", "3; L", "4; 3L" to display bulk in the frontend bulk column */
 export declare function formatBulk(bulk: Bulk): string;
 /**
  * @category Other
@@ -65,7 +73,7 @@ export declare class BulkItem {
     bulk: Bulk;
     size: Size;
     quantity: number;
-    stackGroup?: string;
+    stackGroup: string | null;
     isEquipped: boolean;
     unequippedBulk?: Bulk;
     equippedBulk?: Bulk;
@@ -76,7 +84,7 @@ export declare class BulkItem {
         id?: string;
         bulk?: Bulk;
         quantity?: number;
-        stackGroup?: string;
+        stackGroup?: string | null;
         isEquipped?: boolean;
         unequippedBulk?: Bulk;
         equippedBulk?: Bulk;

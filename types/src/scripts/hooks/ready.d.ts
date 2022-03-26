@@ -1,1 +1,3 @@
-export declare function listen(): void;
+export declare const Ready: {
+    listen: () => void;
+};

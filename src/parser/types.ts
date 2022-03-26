@@ -3,6 +3,7 @@ import malfunctioningRepairDrone from "../examples/malfunctioning-repair-drone.j
 import cillianCreed from "../examples/CillianCreed1646282563.json";
 import kateGlenn from "../examples/KateGlenn1645159516.json";
 import { ItemSourcePF2e } from "@pf2e/module/item/data";
+import { NPCPF2e } from "@pf2e/module/actor";
 
 export type MonsterDataExample = typeof malfunctioningRepairDrone & typeof example & typeof cillianCreed;
 
@@ -16,11 +17,19 @@ interface MonsterDataGood {
         id: string;
         name: string;
         traits: string;
-        actions: string;
+        actions: "none" | "one" | "two" | "three";
         type: SpecialType;
         description: string;
     }[];
     morespells?: typeof kateGlenn["morespells"];
+    strikes: {
+        id: string;
+        name: string;
+        traits: string;
+        attack: number | string;
+        damage: string;
+        type: string;
+    }[];
 }
 
 export interface MonsterSpellStats {
@@ -37,7 +46,7 @@ export interface MonsterSpellStats {
 export type MonsterData = MonsterDataGood & MonsterSpellStats & Omit<MonsterDataExample, keyof MonsterDataGood>;
 
 export interface MonsterParseResults {
-    updates: unknown;
+    updates: DocumentUpdateData<NPCPF2e>;
     items: DeepPartial<ItemSourcePF2e>[];
-    parsedSpells: unknown[];
+    parsedSpells: DeepPartial<ItemSourcePF2e>[];
 }

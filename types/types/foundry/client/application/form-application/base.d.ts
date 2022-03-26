@@ -14,7 +14,7 @@ declare global {
      * @param options   Additional options which modify the rendering of the sheet.
      */
     abstract class FormApplication<
-        TObject extends {} = {},
+        TObject extends object = object,
         TOptions extends FormApplicationOptions = FormApplicationOptions
     > extends Application<TOptions> {
         constructor(object?: TObject, options?: Partial<TOptions>);
@@ -47,7 +47,7 @@ declare global {
         /** Is the Form Application currently editable? */
         get isEditable(): boolean;
 
-        getData(options?: TOptions): FormApplicationData<TObject> | Promise<FormApplicationData<TObject>>;
+        getData(options?: Partial<TOptions>): FormApplicationData<TObject> | Promise<FormApplicationData<TObject>>;
 
         protected override _render(force?: boolean, options?: RenderOptions): Promise<void>;
 
@@ -152,7 +152,7 @@ declare global {
     }
 
     interface FormApplicationData<O extends {} = {}> {
-        object?: O;
+        object?: O | object;
         options?: Partial<FormApplicationOptions>;
         title?: string;
     }

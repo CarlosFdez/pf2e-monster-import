@@ -10,6 +10,9 @@ import { SpellParser } from "./spells";
 import { sluggify } from "../util";
 import { MonsterData, MonsterParseResults, SpecialType } from "./types";
 import { ALIGNMENTS } from "./values";
+import { NPCSystemData } from "@pf2e/module/actor/npc/data";
+import { CreatureSpeeds } from "@pf2e/module/actor/creature/data";
+import { ImmunityType, LabeledResistance, LabeledWeakness } from "@pf2e/module/actor/data/base";
 
 type Language = keyof typeof CONFIG.PF2E.languages;
 
@@ -101,15 +104,36 @@ export class MonsterParser {
         };
     }
 
-    private readAttributes(data: MonsterData) {
-        const speed = this.readSpeed(data);
+    private readAttributes(data: MonsterData): DeepPartial<NPCSystemData["attributes"]> {
+        const speeds = data.speed.split(",");
+
+        const otherSpeeds: Partial<CreatureSpeeds>[] = [];
+        const formattedSpeeds: DeepPartial<NPCSystemData["attributes"]["speed"]> = {
+            value: "",
+            details: "",
+            otherSpeeds,
+        };
+
+        for (const speed of speeds.map((s) => s.replace("feet", "").trim())) {
+            const splitSpeed = speed.split(";");
+            const value = String(splitSpeed[0]?.match(/[0-9]+/g)?.[0]) ?? "";
+
+            // If there's no type, then it's walking speed.
+            const type = splitSpeed[0].match(/[A-Za-z]+/g)?.[0];
+            if (type && objectHasKey(CONFIG.PF2E.speedTypes, type)) {
+                otherSpeeds.push({ type, value });
+            } else {
+                formattedSpeeds.value = String(value);
+                formattedSpeeds.details = splitSpeed[1] ?? "walking";
+            }
+        }
 
         return {
             ac: { value: Number(data.ac.value) },
             perception: { value: Number(data.perception.value) },
             hp: { value: Number(data.hp.value), max: Number(data.hp.value) },
             allSaves: { value: data.savenote },
-            speed: speed,
+            speed: formattedSpeeds,
         };
     }
 
@@ -135,36 +159,25 @@ export class MonsterParser {
         };
     }
 
-    private readSpeed(data: MonsterData): {} {
-        const speeds = data.speed.split(",");
+    private readWeaknesses(data: MonsterData): Partial<LabeledWeakness>[] {
+        const weaknesses = data.weakness.value.split(",");
 
-        const formattedSpeeds = {
-            value: "",
-            details: "",
-            otherSpeeds: [],
-        };
+        const formattedWeaknesses: Partial<LabeledWeakness>[] = [];
+        for (const weakness of weaknesses) {
+            // extract number value from weakness
+            const value = Number(weakness.match(/[0-9]+/g)?.[0]);
 
-        for (let speed of speeds) {
-            speed = speed.replace("feet", "").trim();
-
-            const splitSpeed = speed.split(";");
-
-            const value = splitSpeed[0].match(/[0-9]+/g)[0];
-
-            // If there's no type, then it's walking speed.
-            const type = splitSpeed[0].match(/[A-Za-z]+/g)?.[0];
-            if (type && objectHasKey(CONFIG.PF2E.speedTypes, type)) {
-                formattedSpeeds.otherSpeeds.push({ type, value });
-            } else {
-                formattedSpeeds.value = value;
-                formattedSpeeds.details = splitSpeed[1] ?? "walking";
+            // extract string from weakness
+            const type = sluggify(weakness.match(/[A-Za-z]+/g)?.[0] ?? "");
+            if (objectHasKey(CONFIG.PF2E.weaknessTypes, type)) {
+                formattedWeaknesses.push({ type, value });
             }
         }
 
-        return formattedSpeeds;
+        return formattedWeaknesses;
     }
 
-    private readResistances(data: MonsterData) {
+    private readResistances(data: MonsterData): Partial<LabeledResistance>[] {
         const resistances = data.resistance.value.split("");
 
         const splitArray = [];
@@ -198,61 +211,47 @@ export class MonsterParser {
             }
         }
 
-        const formattedResistances = [];
+        const formattedResistances: Partial<LabeledResistance>[] = [];
         for (let item of splitArray) {
-            item = item.replace("or", "");
-            item = item.trim("");
+            item = item.replace("or", "").trim();
 
-            const typeSlug = sluggify(item.split("(")[0].match(/[A-Za-z]+/g)[0]);
-            formattedResistances.push({
-                type: typeSlug === "all-damage" ? "all" : typeSlug,
-                value: item.match(/[0-9]+/g)[0],
-                exceptions: item.match(/(?<=\().*(?=\))/g),
-            });
+            const typeSlug = sluggify(item.split("(")[0]?.match(/[A-Za-z]+/g)?.[0] ?? "");
+            const type = typeSlug === "all-damage" ? "all" : typeSlug;
+            if (objectHasKey(CONFIG.PF2E.resistanceTypes, type)) {
+                formattedResistances.push({
+                    type,
+                    value: Number(item.match(/[0-9]+/g)?.[0]),
+                    exceptions: item.match(/(?<=\().*(?=\))/g)?.[0],
+                });
+            }
         }
 
         return formattedResistances;
     }
 
-    private readWeaknesses(data: MonsterData) {
-        const weaknesses = data.weakness.value.split(",");
-
-        const formattedWeaknesses = [];
-        for (const weakness of weaknesses) {
-            // extract number value from weakness
-            const value = weakness.match(/[0-9]+/g);
-
-            // extract string from weakness
-            const type = sluggify(weakness.match(/[A-Za-z]+/g)?.[0] ?? "");
-            if (type) {
-                formattedWeaknesses.push({ type, value });
-            }
-        }
-
-        return formattedWeaknesses;
-    }
-
-    private readImmunities(data: MonsterData) {
+    private readImmunities(data: MonsterData): ImmunityType[] {
         const immunities = data.immunity.value.split(",");
 
-        const formattedImmunity = [];
+        const formattedImmunity: ImmunityType[] = [];
         for (const immunity of immunities) {
             // extract string from weakness
-            const type = immunity.match(/[A-Za-z]+/g);
-
-            if (type) {
-                formattedImmunity.push(type.join("-").toLowerCase());
+            const type = immunity
+                .match(/[A-Za-z]+/g)
+                ?.join("-")
+                .toLowerCase();
+            if (objectHasKey(CONFIG.PF2E.immunityTypes, type)) {
+                formattedImmunity.push(type);
             }
         }
         return formattedImmunity;
     }
 
     private readAction(data: MonsterData["specials"][number]): DeepPartial<ActionSource> {
-        const actionCostMap = {
+        const actionCostMap: Record<string, 1 | 2 | 3 | undefined> = {
             one: 1,
             two: 2,
             three: 3,
-        } as const;
+        };
 
         const actionTypeMap = {
             none: "passive",
@@ -264,7 +263,7 @@ export class MonsterParser {
             if (data.actions in actionCostMap) {
                 return {
                     actionType: { value: "action" },
-                    actions: { value: actionCostMap[data.actions] },
+                    actions: { value: actionCostMap[data.actions] ?? null },
                 };
             }
 
@@ -316,7 +315,7 @@ export class MonsterParser {
             name: data.name,
             type: "melee",
             data: {
-                bonus: { value: Number(data.attack) },
+                bonus: { value: Number(data.attack) || 0 },
                 weaponType: { value: type === "melee" ? "melee" : "ranged" },
                 damageRolls,
             },
@@ -344,33 +343,25 @@ export class MonsterParser {
             "Thievery",
         ];
 
-        const skillModel = {
-            _id: "",
-            type: "lore",
-            name: data.name,
-            data: {
-                mod: {
-                    value: "",
-                },
-                proficient: {
-                    value: 0,
-                },
-            },
-        };
-
-        const skillsList = [];
+        const skillsList: DeepPartial<LoreSource>[] = [];
 
         for (const [key, value] of Object.entries(data)) {
             const capitalizedSkill = key.charAt(0).toUpperCase() + key.slice(1);
             if (skills.includes(capitalizedSkill)) {
                 if (value.value) {
-                    const newSkill = Object.assign({}, skillModel);
-
-                    newSkill._id = randomID();
-                    newSkill.name = capitalizedSkill;
-                    newSkill.data.mod.value = value.value;
-
-                    skillsList.push(newSkill);
+                    skillsList.push({
+                        _id: randomID(),
+                        type: "lore",
+                        name: capitalizedSkill,
+                        data: {
+                            mod: {
+                                value: value.value,
+                            },
+                            proficient: {
+                                value: 0,
+                            },
+                        },
+                    });
                 }
             }
         }
