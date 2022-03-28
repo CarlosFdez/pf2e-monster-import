@@ -105,7 +105,7 @@ export class MonsterParser {
     }
 
     private readAttributes(data: MonsterData): DeepPartial<NPCSystemData["attributes"]> {
-        const speeds = data.speed.split(",");
+        const speeds = String(data.speed).split(",");
 
         const otherSpeeds: Partial<CreatureSpeeds>[] = [];
         const formattedSpeeds: DeepPartial<NPCSystemData["attributes"]["speed"]> = {

@@ -30,6 +30,7 @@ interface MonsterDataGood {
         damage: string;
         type: string;
     }[];
+    speed: number | string;
 }
 
 export interface MonsterSpellStats {
