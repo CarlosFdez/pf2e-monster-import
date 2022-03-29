@@ -3,7 +3,7 @@
     "title": "PF2E Monster Import",
     "description": "Import monsters from monster.pf2.tools",
     "author": "Supe",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "compatibleCoreVersion": "0.8.9",
     "minimumCoreVersion": "0.8.6",
     "minimumSystemVersion": "2.10.1",
@@ -20,5 +20,5 @@
     ],
     "url": "https://github.com/CarlosFdez/pf2e-monster-import",
     "manifest": "https://github.com/CarlosFdez/pf2e-monster-import/releases/latest/download/module.json",
-    "download": "https://github.com/CarlosFdez/pf2e-monster-import/releases/download/v0.2.0/module.zip"
+    "download": "https://github.com/CarlosFdez/pf2e-monster-import/releases/download/v0.2.1/module.zip"
 }
