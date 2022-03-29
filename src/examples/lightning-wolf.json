@@ -1,0 +1,278 @@
+{
+    "id": "e034bd8855401c4db709ca5e9",
+    "name": "Lightning Wolf",
+    "traits": "",
+    "tags": [],
+    "level": 4,
+    "specials": [
+      {
+        "id": "_49owftg3qg",
+        "name": "Pack Attack",
+        "traits": "",
+        "range": "",
+        "actions": "none",
+        "type": "offense",
+        "description": "The wolf's Strikes deal 1d4 extra piercing damage to creatures within reach of at least two of the wolf's allies."
+      },
+      {
+        "id": "_36mcqajkmz",
+        "name": "Lightning Armor",
+        "traits": "",
+        "range": "",
+        "actions": "none",
+        "type": "general",
+        "description": "While raining, a creature that touches the lightning wolf or strikes it with a melee attack takes 2 electricity damage as lighting lashes out towards the attacker"
+      },
+      {
+        "id": "_21lc90564ma",
+        "name": "Lightning Howl",
+        "traits": "Evocation, Primal",
+        "range": "",
+        "actions": "two",
+        "type": "offense",
+        "description": "The wolf faces upwards and howls towards the skies, summoning several bolts of lighting to rain down. Each creature in a 15-foot emanation takes 4d6 electricity damage (DC 18 basic Reflex save). The wolf can't use Lightning Howl for 1d4 rounds."
+      }
+    ],
+    "morespells": [],
+    "alignment": "n",
+    "size": "large",
+    "type": "animal",
+    "adjust": 0,
+    "description": "",
+    "items": "",
+    "spellattack": {
+      "value": 10,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "spelldc": {
+      "value": 18,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "savenote": "",
+    "creature": "Wolf",
+    "speed": 35,
+    "imgurl": "",
+    "spelltype": "",
+    "focuspoints": 0,
+    "cantriplevel": "",
+    "ritualtype": "",
+    "rituals": "",
+    "spells": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "Horizon Thunder Sphere, Shocking Grasp",
+      "Electric Arc"
+    ],
+    "constant": "",
+    "minprof": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "strength": {
+      "value": 2,
+      "benchmark": "low",
+      "note": ""
+    },
+    "dexterity": {
+      "value": 4,
+      "benchmark": "high",
+      "note": ""
+    },
+    "constitution": {
+      "value": 2,
+      "benchmark": "low",
+      "note": ""
+    },
+    "intelligence": {
+      "value": -4,
+      "benchmark": "terrible",
+      "note": ""
+    },
+    "wisdom": {
+      "value": 3,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "charisma": {
+      "value": 3,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "perception": {
+      "value": 11,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "acrobatics": {
+      "value": 12,
+      "benchmark": "high",
+      "note": ""
+    },
+    "arcana": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "athletics": {
+      "value": 10,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "crafting": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "deception": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "diplomacy": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "intimidation": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "medicine": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "nature": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "occultism": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "performance": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "religion": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "society": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "stealth": {
+      "value": 12,
+      "benchmark": "high",
+      "note": ""
+    },
+    "survival": {
+      "value": 15,
+      "benchmark": "extreme",
+      "note": ""
+    },
+    "thievery": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "lore": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": "",
+      "name": "lore"
+    },
+    "lorealt": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": "",
+      "name": "lore"
+    },
+    "ac": {
+      "value": 20,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "hp": {
+      "value": 60,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "fortitude": {
+      "value": 11,
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "reflex": {
+      "value": 14,
+      "benchmark": "high",
+      "note": ""
+    },
+    "will": {
+      "value": 8,
+      "benchmark": "low",
+      "note": ""
+    },
+    "resistance": {
+      "value": "5 electricity",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "weakness": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "immunity": {
+      "value": "",
+      "benchmark": "moderate",
+      "note": ""
+    },
+    "roadmap": "",
+    "info": "",
+    "strikes": [
+      {
+        "id": "_2fizoevt1nq",
+        "name": "Jaws",
+        "traits": "",
+        "attack": 14,
+        "damage": "1d6+5 piercing plus 1d6 electricity plus Knockdown",
+        "type": "Melee"
+      }
+    ],
+    "hints": [
+      "perception",
+      "strength",
+      "dexterity",
+      "constitution",
+      "intelligence",
+      "wisdom",
+      "charisma",
+      "ac",
+      "fortitude",
+      "reflex",
+      "will",
+      "hp"
+    ],
+    "meta": {
+      "public": 0,
+      "url": "6mZOXjJs"
+    }
+  }

@@ -9,7 +9,7 @@ import { MeleeDamageRoll } from "@pf2e/module/item/melee/data";
 import { SpellParser } from "./spells";
 import { sluggify } from "../util";
 import { MonsterData, MonsterParseResults, SpecialType } from "./types";
-import { ALIGNMENTS } from "./values";
+import { ALIGNMENTS, SKILLS } from "./values";
 import { NPCSystemData } from "@pf2e/module/actor/npc/data";
 import { CreatureSpeeds } from "@pf2e/module/actor/creature/data";
 import { ImmunityType, LabeledResistance, LabeledWeakness } from "@pf2e/module/actor/data/base";
@@ -323,31 +323,11 @@ export class MonsterParser {
     }
 
     private readSkill(data: MonsterData): DeepPartial<LoreSource>[] {
-        const skills = [
-            "Acrobatics",
-            "Arcana",
-            "Athletics",
-            "Crafting",
-            "Deception",
-            "Diplomacy",
-            "Intimidation",
-            "Lore",
-            "Medicine",
-            "Nature",
-            "Occultism",
-            "Performance",
-            "Religion",
-            "Society",
-            "Stealth",
-            "Survival",
-            "Thievery",
-        ];
-
         const skillsList: DeepPartial<LoreSource>[] = [];
 
         for (const [key, value] of Object.entries(data)) {
             const capitalizedSkill = key.charAt(0).toUpperCase() + key.slice(1);
-            if (skills.includes(capitalizedSkill)) {
+            if (tupleHasValue(SKILLS, capitalizedSkill)) {
                 if (value.value) {
                     skillsList.push({
                         _id: randomID(),
@@ -403,56 +383,22 @@ function parseDescription(text: string) {
     string = string.replace(/Activate \?/, "</p><p><strong>Activate</strong> <span class='pf2-icon'>1</span>");
 
     // // Skills and saves
-    string = string.replace(
-        /DC (\d+) basic (\w+) save/,
-        "<span data-pf2-check='$2' data-pf2-traits='damaging-effect' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>basic $2</span> save",
-    );
-    string = string.replace(
-        /DC (\d+) (Reflex|Will|Fortitude)/,
-        "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span>",
-    );
-    string = string.replace(
-        /(Reflex|Will|Fortitude) DC (\d+)/,
-        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
-    );
-    string = string.replace(
-        /(Reflex|Will|Fortitude) \(DC (\d+)\)/,
-        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
-    );
-    string = string.replace(
-        /(Reflex|Will|Fortitude) save \(DC (\d+)\)/,
-        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
-    );
+    string = string.replace(/DC (\d+) basic (\w+) save/, "@Check[type:$2|dc:$1|basic:true]");
+    string = string.replace(/DC (\d+) (Reflex|Will|Fortitude)/, "@Check[type:$2|dc:$1]");
+    string = string.replace(/(Reflex|Will|Fortitude) DC (\d+)/, "@Check[type:$1|dc:$2]");
+    string = string.replace(/(Reflex|Will|Fortitude) \(DC (\d+)\)/, "@Check[type:$1|dc:$2]");
+    string = string.replace(/(Reflex|Will|Fortitude) save \(DC (\d+)\)/, "@Check[type:$1|dc:$2]");
 
-    string = string.replace(
-        /DC (\d+) (Reflex|Will|Fortitude)/,
-        "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span>",
-    );
-    string = string.replace(
-        /(Reflex|Will|Fortitude) DC (\d+)/,
-        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
-    );
-    string = string.replace(
-        /(Reflex|Will|Fortitude) \(DC (\d+)\)/,
-        "<span data-pf2-check='$1' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$2' data-pf2-show-dc='gm'>$1</span>",
-    );
+    string = string.replace(/DC (\d+) (Reflex|Will|Fortitude)/, "@Check[type:$2|dc:$1]");
+    string = string.replace(/(\w+) DC (\d+)/, "@Check[type:$1|dc:$2]");
+    string = string.replace(/(Reflex|Will|Fortitude) \(DC (\d+)\)/, "@Check[type:$1|dc:$2]");
 
-    string = string.replace(
-        /(\w+) Lore DC (\d+)/,
-        "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2 Lore</span>",
-    );
-    string = string.replace(
-        /DC (\d+) (\w+) save/,
-        "<span data-pf2-check='$2' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='gm'>$2</span> save",
-    );
-    string = string.replace(
-        /DC (\d+) flat check/,
-        "<span data-pf2-check='flat' data-pf2-traits='' data-pf2-label='' data-pf2-dc='$1' data-pf2-show-dc='owner'>Flat Check</span>",
-    );
+    string = string.replace(/(\w+) Lore DC (\d+)/, "@Check[type:$2|dc:$1]");
+    string = string.replace(/DC (\d+) (\w+) save/, "@Check[type:$2|dc:$1]");
+    string = string.replace(/DC (\d+) flat check/, "@Check[type:flat|dc:$1]");
 
-    // Catch capitalized saves
-    //string = string.replace(/check='(Reflex|Will|Fortitude)'/, convert_to_lower)
-    //string = string.replace(/check='%s'/ % SKILLS, convert_to_lower)
+    // Catch capitalized saves and skills
+    string = string.replace(/@Check\[type:(\w+)\|/, (_, match) => `@Check[type:${match.toLowerCase()}|`);
 
     // Damage rolls
     string = string.replace(/ (\d)d(\d) (rounds|minutes|hours|days)/, " [[/r $1d$2 #$3]]{$1d$2 $3}");
