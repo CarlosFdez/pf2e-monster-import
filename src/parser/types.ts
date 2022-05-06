@@ -1,4 +1,4 @@
-import example from "../examples/example.json";
+import example from "../examples/monstrous-dandelion.json";
 import malfunctioningRepairDrone from "../examples/malfunctioning-repair-drone.json";
 import cillianCreed from "../examples/CillianCreed1646282563.json";
 import kateGlenn from "../examples/KateGlenn1645159516.json";

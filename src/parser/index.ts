@@ -288,27 +288,34 @@ export class MonsterParser {
     private readStrike(data: MonsterData["strikes"][number]): DeepPartial<MeleeSource> {
         const type = data.type?.toLowerCase() ?? "melee";
         const damageRolls: Record<string, MeleeDamageRoll> = {};
+        const attackEffects: string[] = [];
         const rollStrings = data.damage.split(" plus ");
         for (const rollString of rollStrings) {
             const match = rollString?.trim().match(/(\d+?d\d+[+-]?\d*)+(.*)?/);
-            console.warn("roll string", rollString);
-            console.warn("match", match);
 
-            const damage = match ? match[1] : rollString;
-            const damageType = (() => {
-                if (match && match[2]) {
-                    const parts = match[2].split(" ").map((part) => part.toLowerCase());
-                    for (const part of parts) {
-                        if (part in this.reverseDamageTypes) {
-                            return this.reverseDamageTypes[part];
+            if (match) {
+                const damage = match ? match[1] : rollString;
+                const damageType = (() => {
+                    if (match && match[2]) {
+                        const parts = match[2].split(" ").map((part) => part.toLowerCase());
+                        for (const part of parts) {
+                            if (part in this.reverseDamageTypes) {
+                                return this.reverseDamageTypes[part];
+                            }
                         }
                     }
+
+                    return "untyped";
+                })();
+
+                damageRolls[randomID()] = { damage, damageType };
+            } else {
+                // It might be something like knockdown
+                const slug = sluggify(rollString.toLowerCase());
+                if (objectHasKey(CONFIG.PF2E.attackEffects, slug)) {
+                    attackEffects.push(slug);
                 }
-
-                return "untyped";
-            })();
-
-            damageRolls[randomID()] = { damage, damageType };
+            }
         }
 
         return {
@@ -318,6 +325,7 @@ export class MonsterParser {
                 bonus: { value: Number(data.attack) || 0 },
                 weaponType: { value: type === "melee" ? "melee" : "ranged" },
                 damageRolls,
+                attackEffects: { value: attackEffects },
             },
         };
     }
