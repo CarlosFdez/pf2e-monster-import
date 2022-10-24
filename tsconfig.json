@@ -21,6 +21,8 @@
             "@actor/*": ["types/src/module/actor/*"],
             "@item": ["types/src/module/item/index"],
             "@item/*": ["types/src/module/item/*"],
+            "@scene": ["types/src/module/scene"],
+            "@scene/*": ["types/src/module/scene/*"],
             "@system/*": ["types/src/module/system/*"],
             "@module/*": ["types/src/module/*"],
             "@scripts/*": ["types/src/scripts/*"],

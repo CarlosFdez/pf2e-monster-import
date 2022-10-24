@@ -56,10 +56,7 @@ interface VehicleSystemData extends ActorSystemData {
     [key: string]: any;
 }
 export declare type VehicleTrait = keyof ConfigPF2e["PF2E"]["vehicleTraits"];
-declare type VehicleTraits = ValuesList<VehicleTrait>;
-interface VehicleTraitsData extends BaseTraitsData {
-    traits: VehicleTraits;
-}
+type VehicleTraitsData = BaseTraitsData<VehicleTrait>;
 export interface TokenDimensions {
     width: number;
     height: number;

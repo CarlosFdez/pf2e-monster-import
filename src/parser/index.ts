@@ -11,7 +11,7 @@ import { sluggify } from "../util";
 import { MonsterData, MonsterParseResults, SpecialType } from "./types";
 import { ALIGNMENTS, SKILLS } from "./values";
 import { NPCSystemData } from "@pf2e/module/actor/npc/data";
-import { CreatureSpeeds } from "@pf2e/module/actor/creature/data";
+import { CreatureSpeeds, CreatureTrait } from "@pf2e/module/actor/creature/data";
 import { ImmunityType, LabeledResistance, LabeledWeakness } from "@pf2e/module/actor/data/base";
 
 type Language = keyof typeof CONFIG.PF2E.languages;
@@ -152,7 +152,7 @@ export class MonsterParser {
             size: { value: SizesMap[data.size] ?? "med" },
             rarity: (rarity ?? "common") as Rarity,
             languages: { value: languages },
-            traits: { value: traits.filter((trait) => objectHasKey(CONFIG.PF2E.creatureTraits, trait)) },
+            value: traits.filter((trait): trait is CreatureTrait => objectHasKey(CONFIG.PF2E.creatureTraits, trait)),
             dv: weaknesses,
             dr: resistances,
             di: { value: immunities },

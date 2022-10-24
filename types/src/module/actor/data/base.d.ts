@@ -81,14 +81,14 @@ export interface BaseActorAttributes {
         flatFootable: FlatFootableCircumstance;
     };
 }
-declare type FlatFootableCircumstance = 
+declare type FlatFootableCircumstance =
 /** Flat-footable in all flanking situations */
 true
 /** Flat-footable if the flanker's level is less than or equal to the actor's own */
  | number
 /** Never flat-footable */
  | false;
-export declare type GangUpCircumstance = 
+export declare type GangUpCircumstance =
 /** Requires at least `number` allies within melee reach of the target */
 number
 /** Requires the actor's animal companion to be adjacent to the target */
@@ -104,7 +104,7 @@ export declare type ResistanceType = SetElement<typeof RESISTANCE_TYPES>;
 export interface LabeledResistance extends LabeledNumber {
     type: ResistanceType;
 }
-export interface BaseTraitsSource {
+export interface BaseTraitsSource<TTrait extends string> {
     /** The rarity of the actor (common, uncommon, etc.) */
     rarity: Rarity;
     /** The character size (such as 'med'). */
@@ -112,7 +112,7 @@ export interface BaseTraitsSource {
         value: Size;
     };
     /** Actual Pathfinder traits */
-    traits: ValuesList;
+    value: TTrait[];
     /** Damage immunities this actor has. */
     di: ValuesList<ImmunityType>;
     /** Damage resistances that this actor has. */
@@ -120,7 +120,7 @@ export interface BaseTraitsSource {
     /** Damage vulnerabilities that this actor has. */
     dv: LabeledWeakness[];
 }
-export interface BaseTraitsData extends BaseTraitsSource {
+export interface BaseTraitsData<TTrait extends string> extends BaseTraitsSource<TTrait> {
     size: ActorSizePF2e;
 }
 export declare type AbilityString = SetElement<typeof ABILITY_ABBREVIATIONS>;

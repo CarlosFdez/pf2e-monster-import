@@ -49,7 +49,7 @@ export interface HazardSystemData extends ActorSystemData {
     attributes: HazardAttributes;
     saves: HazardSaves;
     /** Traits, languages, and other information. */
-    traits: BaseTraitsData;
+    traits: BaseTraitsData<string>;
 }
 declare type HazardSaves = Record<SaveType, SaveData>;
 export {};

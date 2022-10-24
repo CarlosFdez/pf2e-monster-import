@@ -27,17 +27,18 @@ export interface LootSystemSource extends ActorSystemSource {
     };
     lootSheetType: "Merchant" | "Loot";
     hiddenWhenEmpty: boolean;
-    traits: BaseTraitsSource;
+    traits: BaseTraitsSource<string>;
 }
-export declare type LootSystemData = Omit<ActorSystemData, "attributes"> & LootSystemSource & {
-    attributes: {
-        flanking: {
-            canFlank: false;
-            canGangUp: GangUpCircumstance[];
-            flankable: false;
-            flatFootable: false;
+export declare type LootSystemData = Omit<ActorSystemData, "attributes"> &
+    LootSystemSource & {
+        attributes: {
+            flanking: {
+                canFlank: false;
+                canGangUp: GangUpCircumstance[];
+                flankable: false;
+                flatFootable: false;
+            };
         };
+        traits: BaseTraitsData<string>;
+        [key: string]: any;
     };
-    traits: BaseTraitsData;
-    [key: string]: any;
-};

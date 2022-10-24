@@ -1,4 +1,17 @@
-import { AbilityString, ActorSystemData, ActorSystemSource, BaseActorDataPF2e, BaseActorSourcePF2e, BaseTraitsData, HitPointsData, AbilityBasedStatistic, Rollable, StrikeData, InitiativeData, BaseActorAttributes } from "@actor/data/base";
+import {
+    AbilityString,
+    ActorSystemData,
+    ActorSystemSource,
+    BaseActorDataPF2e,
+    BaseActorSourcePF2e,
+    BaseTraitsData,
+    HitPointsData,
+    AbilityBasedStatistic,
+    Rollable,
+    StrikeData,
+    InitiativeData,
+    BaseActorAttributes,
+} from "@actor/data/base";
 import type { CREATURE_ACTOR_TYPES, SKILL_ABBREVIATIONS } from "@actor/data/values";
 import { CheckModifier, DamageDicePF2e, ModifierPF2e, RawModifier, StatisticModifier } from "@actor/modifiers";
 import { LabeledValue, ValueAndMax, ValuesList, ZeroToThree, ZeroToTwo } from "@module/data";
@@ -8,11 +21,15 @@ import { CreatureSensePF2e, SenseAcuity, SenseType } from "./sense";
 import { RollDataPF2e, RollParameters } from "@system/rolls";
 import { CombatantPF2e } from "@module/encounter";
 import { Statistic, StatisticCompatData } from "@system/statistic";
-import { CreatureTraits } from "@item/ancestry/data";
 import { Alignment, AlignmentTrait } from "./types";
-export declare type BaseCreatureSource<TCreatureType extends CreatureType = CreatureType, TSystemSource extends CreatureSystemSource = CreatureSystemSource> = BaseActorSourcePF2e<TCreatureType, TSystemSource>;
-export declare class BaseCreatureData<TActor extends CreaturePF2e = CreaturePF2e, TSystemData extends CreatureSystemData = CreatureSystemData> extends BaseActorDataPF2e<TActor> {
-}
+export declare type BaseCreatureSource<
+    TCreatureType extends CreatureType = CreatureType,
+    TSystemSource extends CreatureSystemSource = CreatureSystemSource,
+> = BaseActorSourcePF2e<TCreatureType, TSystemSource>;
+export declare class BaseCreatureData<
+    TActor extends CreaturePF2e = CreaturePF2e,
+    TSystemData extends CreatureSystemData = CreatureSystemData,
+> extends BaseActorDataPF2e<TActor> {}
 export interface BaseCreatureData extends Omit<BaseCreatureSource, "effects" | "flags" | "items" | "token"> {
     readonly type: CreatureType;
     data: CreatureSystemData;
@@ -27,10 +44,7 @@ export interface CreatureSystemSource extends ActorSystemSource {
     /** Maps roll types -> a list of modifiers which should affect that roll type. */
     customModifiers?: Record<string, RawModifier[]>;
     /** Saving throw data */
-    saves?: Record<SaveType, {
-        value?: number;
-        mod?: number;
-    }>;
+    saves?: Record<SaveType, { value?: number; mod?: number }>;
 }
 export interface CreatureSystemData extends CreatureSystemSource, ActorSystemData {
     details: {
@@ -72,11 +86,7 @@ export declare type Abilities = Record<AbilityString, AbilityData>;
 export declare type Language = keyof ConfigPF2e["PF2E"]["languages"];
 export declare type Attitude = keyof ConfigPF2e["PF2E"]["attitude"];
 export declare type CreatureTrait = keyof ConfigPF2e["PF2E"]["creatureTraits"] | AlignmentTrait;
-export interface CreatureTraitsData extends BaseTraitsData {
-    traits: BaseTraitsData["traits"] & {
-        /** Actual Pathfinder traits */
-        traits: CreatureTraits;
-    };
+export interface CreatureTraitsData extends BaseTraitsData<CreatureTrait> {
     /** A list of special senses this character has. */
     senses: CreatureSensePF2e[];
     /** Languages which this actor knows and can speak. */
