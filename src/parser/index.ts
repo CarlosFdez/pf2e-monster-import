@@ -343,7 +343,7 @@ export class MonsterParser {
                         name: capitalizedSkill,
                         data: {
                             mod: {
-                                value: value.value,
+                                value: Number(value.value),
                             },
                             proficient: {
                                 value: 0,
