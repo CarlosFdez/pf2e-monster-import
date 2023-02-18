@@ -7,7 +7,8 @@ import "./styles/styles.scss";
 
 Hooks.on("renderActorSheet", async (sheet: ActorSheet<ActorPF2e, ItemPF2e>, $html: JQuery) => {
     const actor = sheet.actor;
-    if (!game.user.isGM || !(actor instanceof CONFIG.PF2E.Actor.documentClasses.npc)) {
+    const isNPC = actor instanceof CONFIG.PF2E.Actor.documentClasses.npc;
+    if (!game.user.isGM || !isNPC || actor.token) {
         return;
     }
 
