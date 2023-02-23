@@ -58,7 +58,7 @@ export class MonsterParser {
 
         mergeObject(updates, {
             name: data.name,
-            data: {
+            system: {
                 abilities: this.readAbilities(data),
                 attributes: this.readAttributes(data),
                 details: {
