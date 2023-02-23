@@ -356,5 +356,3 @@ export class MonsterParser {
         return skillsList;
     }
 }
-
-//const CONDITION_COMPENDIUM = "@Compendium[pf2e.conditionitems.";
