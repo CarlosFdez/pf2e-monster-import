@@ -1,4 +1,4 @@
-import { NPCPF2e } from "@pf2e/module/actor";
+import { NPCPF2e } from "@actor";
 import { MonsterParser } from "./parser";
 
 interface MonsterImportOptions extends ApplicationOptions {

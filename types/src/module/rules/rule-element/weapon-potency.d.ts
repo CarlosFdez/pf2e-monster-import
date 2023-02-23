@@ -1,19 +1,17 @@
-import { RuleElementPF2e } from "./";
 import { ActorType } from "@actor/data";
-import { PredicatePF2e } from "@system/predication";
+import { ItemPF2e } from "@item";
+import { RuleElementOptions, RuleElementPF2e, RuleElementSource } from ".";
 /**
  * Copies potency runes from the weapon its attached to, to another weapon based on a predicate.
  * @category RuleElement
  */
-declare class WeaponPotencyRuleElement extends RuleElementPF2e {
+export declare class WeaponPotencyRuleElement extends RuleElementPF2e {
     protected static validActorTypes: ActorType[];
+    selector: string;
+    constructor(data: WeaponPotencySource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
     beforePrepareData(): void;
 }
-interface WeaponPotencyPF2e {
-    label: string;
-    bonus: number;
-    type: "item" | "potency";
-    predicate?: PredicatePF2e;
-    property?: string[];
+interface WeaponPotencySource extends RuleElementSource {
+    selector?: unknown;
 }
-export { WeaponPotencyRuleElement, WeaponPotencyPF2e };
+export {};

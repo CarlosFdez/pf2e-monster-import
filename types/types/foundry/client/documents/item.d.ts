@@ -12,8 +12,7 @@ declare global {
         /** A convenience alias of Item#parent which is more semantically intuitive */
         get actor(): this["parent"];
 
-        /** A convenience reference to the image path (data.img) used to represent this Item */
-        get img(): ImagePath;
+        img: ImageFilePath;
 
         /** A convenience alias of Item#isEmbedded which is preserves legacy support */
         get isOwned(): boolean;
@@ -50,17 +49,18 @@ declare global {
 
         readonly parent: TParent | null;
 
+        // V10 shim
+        readonly flags: this["data"]["flags"];
+
         get collection(): Items<this>;
 
         get uuid(): ItemUUID;
 
-        _sheet: ItemSheet<Item> | null;
+        _sheet: ItemSheet<this> | null;
 
-        get sheet(): ItemSheet<Item>;
-
-        getFlag(scope: string, key: string): any;
-        getFlag(scope: "core", key: "sourceId"): string | undefined;
+        get sheet(): ItemSheet<this>;
     }
 
-    type ItemUUID = `Item.${string}` | `Actor.${string}.Item.${string}` | CompendiumUUID;
+    type EmbeddedItemUUID = `Actor.${string}.Item.${string}`;
+    type ItemUUID = WorldDocumentUUID<Item> | EmbeddedItemUUID | CompendiumUUID;
 }

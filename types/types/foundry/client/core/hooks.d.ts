@@ -43,6 +43,7 @@ declare global {
         "renderChatMessage",
         [ChatMessage, JQuery, foundry.data.ChatMessageSource]
     >;
+    type HookParamsTargetToken = HookParameters<"targetToken", [User, Token, boolean]>;
     type HookParamsUpdate<T extends ClientDocument, N extends string> = HookParameters<
         `update${N}`,
         [T, DocumentUpdateData<T>, DocumentModificationContext]
@@ -76,11 +77,14 @@ declare global {
         static on(...args: HookParamsRender<CombatTrackerConfig, "CombatTrackerConfig">): number;
         static on(...args: HookParamsRender<CompendiumDirectory, "CompendiumDirectory">): number;
         static on(...args: HookParamsRender<Dialog, "Dialog">): number;
-        static on(...args: HookParamsRender<ActorDirectory, "ActorDirectory">): number;
-        static on(...args: HookParamsRender<ItemDirectory, "ItemDirectory">): number;
+        static on(...args: HookParamsRender<ActorDirectory<Actor>, "ActorDirectory">): number;
+        static on(...args: HookParamsRender<ItemDirectory<Item>, "ItemDirectory">): number;
         static on(...args: HookParamsRender<SceneControls, "SceneControls">): number;
         static on(...args: HookParamsRender<Settings, "Settings">): number;
         static on(...args: HookParamsRender<TokenHUD, "TokenHUD">): number;
+        static on(...args: HookParamsRender<JournalPageSheet, "JournalPageSheet">): number;
+        static on(...args: HookParamsRender<JournalTextPageSheet, "JournalTextPageSheet">): number;
+        static on(...args: HookParamsTargetToken): number;
         static on(...args: HookParamsUpdate<Combat, "Combat">): number;
         static on(...args: HookParamsUpdate<Scene, "Scene">): number;
         static on(...args: HookParamsUpdateWorldTime): number;
@@ -107,16 +111,19 @@ declare global {
         static once(...args: HookParamsPreCreateItem): number;
         static once(...args: HookParamsPreUpdateToken): number;
         static once(...args: HookParamsRenderChatMessage): number;
-        static once(...args: HookParamsRender<ActorDirectory, "ActorDirectory">): number;
+        static once(...args: HookParamsRender<ActorDirectory<Actor>, "ActorDirectory">): number;
         static once(...args: HookParamsRender<ChatLog, "ChatLog">): number;
         static once(...args: HookParamsRender<ChatPopout, "ChatPopout">): number;
         static once(...args: HookParamsRender<CombatTrackerConfig, "CombatTrackerConfig">): number;
         static once(...args: HookParamsRender<CompendiumDirectory, "CompendiumDirectory">): number;
         static once(...args: HookParamsRender<Dialog, "Dialog">): number;
-        static once(...args: HookParamsRender<ItemDirectory, "ItemDirectory">): number;
+        static once(...args: HookParamsRender<ItemDirectory<Item>, "ItemDirectory">): number;
+        static once(...args: HookParamsRender<JournalPageSheet, "JournalPageSheet">): number;
+        static once(...args: HookParamsRender<JournalTextPageSheet, "JournalTextPageSheet">): number;
         static once(...args: HookParamsRender<SceneControls, "SceneControls">): number;
         static once(...args: HookParamsRender<Settings, "Settings">): number;
         static once(...args: HookParamsRender<TokenHUD, "TokenHUD">): number;
+        static once(...args: HookParamsTargetToken): number;
         static once(...args: HookParamsUpdate<Combat, "Combat">): number;
         static once(...args: HookParamsUpdate<Scene, "Scene">): number;
         static once(...args: HookParamsUpdateWorldTime): number;
@@ -137,7 +144,6 @@ declare global {
          * @param hook  The hook being triggered
          * @param args  Arguments passed to the hook callback functions
          */
-
         static callAll(hook: string, ...args: unknown[]): boolean;
 
         /**
@@ -155,7 +161,8 @@ declare global {
 
     interface DropCanvasData<T extends string = string, D extends object = object> {
         type?: T;
-        data?: D extends foundry.abstract.Document ? D["data"]["_source"] : D;
+        data?: D extends foundry.abstract.Document ? D["_source"] : D;
+        uuid?: string;
         id?: string;
         pack?: string;
         x: number;

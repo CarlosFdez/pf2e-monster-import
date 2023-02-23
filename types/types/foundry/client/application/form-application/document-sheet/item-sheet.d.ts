@@ -1,6 +1,6 @@
 declare interface ItemSheetData<I extends Item> extends DocumentSheetData<I> {
-    item: any;
-    data: any;
+    item: object;
+    data: object;
 }
 
 /**
@@ -19,7 +19,7 @@ declare class ItemSheet<TItem extends Item = Item> extends DocumentSheet<TItem> 
 
     static override get defaultOptions(): DocumentSheetOptions;
 
-    override get id(): `item-${string}` | `actor-${string}-item-{string}`;
+    override get id(): string;
 
     /**
      * A convenience reference to the Item entity

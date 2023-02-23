@@ -93,20 +93,22 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
 
     /**
      * Return the permission level that the current game User has over this Document.
-     * See the CONST.ENTITY_PERMISSIONS object for an enumeration of these levels.
+     * See the CONST.DOCUMENT_OWNERSHIP_LEVELS object for an enumeration of these levels.
      *
-     * @example
+     * @example Get the permission level the current user has for a document
+     * ```js
      * game.user.id; // "dkasjkkj23kjf"
      * actor.data.permission; // {default: 1, "dkasjkkj23kjf": 2};
      * actor.permission; // 2
+     * ```
      */
-    get permission(): PermissionLevel;
+    get permission(): DocumentOwnershipLevel;
 
     /** Lazily obtain a FormApplication instance used to configure this Document, or null if no sheet is available. */
-    get sheet(): FormApplication;
+    get sheet(): FormApplication<this> | null;
 
     /** A Universally Unique Identifier (uuid) for this Document instance. */
-    get uuid(): string;
+    get uuid(): DocumentUUID;
 
     /**
      * A boolean indicator for whether or not the current game User has at least limited visibility for this Document.
@@ -173,14 +175,14 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     /* -------------------------------------------- */
 
     protected override _onCreate(
-        data: this["data"]["_source"],
-        options: DocumentModificationContext,
+        data: this["_source"],
+        options: DocumentModificationContext<this>,
         userId: string
     ): void;
 
     protected override _onUpdate(
-        changed: DeepPartial<this["data"]["_source"]>,
-        options: DocumentModificationContext,
+        changed: DeepPartial<this["_source"]>,
+        options: DocumentModificationContext<this>,
         userId: string
     ): void;
 
@@ -195,7 +197,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
      */
     protected _preCreateEmbeddedDocuments(
         embeddedName: string,
-        result: ClientDocument["data"]["_source"][],
+        result: ClientDocument["_source"][],
         options: DocumentModificationContext,
         userId: string
     ): void;
@@ -211,7 +213,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     protected _onCreateEmbeddedDocuments(
         embeddedName: string,
         documents: ClientDocument[],
-        result: ClientDocument["data"]["_source"][],
+        result: ClientDocument["_source"][],
         options: DocumentModificationContext,
         userId: string
     ): void;
@@ -225,7 +227,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
      */
     protected _preUpdateEmbeddedDocuments(
         embeddedName: string,
-        result: ClientDocument["data"]["_source"][],
+        result: ClientDocument["_source"][],
         options: DocumentModificationContext,
         userId: string
     ): void;
@@ -241,7 +243,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     protected _onUpdateEmbeddedDocuments(
         embeddedName: string,
         documents: ClientDocument[],
-        result: ClientDocument["data"]["_source"][],
+        result: ClientDocument["_source"][],
         options: DocumentModificationContext,
         userId: string
     ): void;
@@ -255,7 +257,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
      */
     protected _preDeleteEmbeddedDocuments(
         embeddedName: string,
-        result: ClientDocument["data"]["_source"][],
+        result: ClientDocument["_source"][],
         options: DocumentModificationContext,
         userId: string
     ): void;
@@ -271,7 +273,7 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
     protected _onDeleteEmbeddedDocuments(
         embeddedName: string,
         documents: ClientDocument[],
-        result: ClientDocument["data"]["_source"][],
+        result: ClientDocument["_source"][],
         options: DocumentModificationContext,
         userId: string
     ): void;
@@ -303,5 +305,11 @@ declare class ClientDocument<TDocument extends foundry.abstract.Document = found
      * @param [pack] A specific pack being exported to
      * @return A data object of cleaned data suitable for compendium import
      */
-    toCompendium(pack: CompendiumCollection<any>): this["data"]["_source"];
+    toCompendium(pack: CompendiumCollection<any>): this["_source"];
+
+    /**
+     * Serialize salient information about this Document when dragging it.
+     * @return An object of drag data.
+     */
+    toDragData(): { type: string; [key: string]: unknown };
 }

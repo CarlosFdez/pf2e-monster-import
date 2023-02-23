@@ -1,11 +1,12 @@
-import { BracketedValue, RuleElementSource } from "../";
 import { CreatureTrait, MovementType, SkillAbbreviation } from "@actor/creature/data";
 import { SenseAcuity, SenseType } from "@actor/creature/sense";
-import { AbilityString } from "@actor/data";
-import { ImmunityType, ResistanceType, WeaknessType } from "@actor/data/base";
-import { BaseWeaponType, WeaponCategory, WeaponDamage, WeaponGroup, WeaponTrait } from "@item/weapon/data";
+import { ImmunityType, ResistanceType, WeaknessType } from "@actor/types";
+import { AbilityString } from "@actor/types";
+import { WeaponDamage } from "@item/weapon/data";
+import { BaseWeaponType, WeaponCategory, WeaponGroup, WeaponTrait } from "@item/weapon/types";
 import { Size } from "@module/data";
-export interface BattleFormSource extends RuleElementSource {
+import { BracketedValue, RuleElementSource } from "../";
+interface BattleFormSource extends RuleElementSource {
     overrides?: BattleFormOverrides;
     canCast?: boolean;
     canSpeak?: boolean;
@@ -14,7 +15,7 @@ export interface BattleFormSource extends RuleElementSource {
     /** Can the character utilize its own unarmed strikes? */
     ownUnarmed?: boolean;
 }
-export interface BattleFormOverrides {
+interface BattleFormOverrides {
     traits?: CreatureTrait[];
     armorClass?: BattleFormAC;
     tempHP?: number | null;
@@ -42,7 +43,7 @@ export interface BattleFormOverrides {
         value: number | BracketedValue<number>;
     }[];
 }
-export interface BattleFormAC {
+interface BattleFormAC {
     modifier?: string | number;
     ignoreCheckPenalty?: boolean;
     ignoreSpeedPenalty?: boolean;
@@ -55,19 +56,25 @@ interface BattleFormSkill {
     modifier: string | number;
     ownIfHigher?: boolean;
 }
-export declare type BattleFormSkills = {
+type BattleFormSkills = {
     [K in SkillAbbreviation]?: BattleFormSkill;
 };
 interface BattleFormStrike {
     label: string;
-    img?: ImagePath;
+    img?: ImageFilePath;
     ability: AbilityString;
     category: WeaponCategory;
-    group: WeaponGroup;
-    baseType?: BaseWeaponType;
+    group: WeaponGroup | null;
+    baseType?: BaseWeaponType | null;
     traits: WeaponTrait[];
     modifier: string | number;
     damage: WeaponDamage;
     ownIfHigher?: boolean;
 }
-export {};
+interface BattleFormStrikeQuery {
+    pack: string;
+    query: string;
+    modifier: number;
+    ownIfHigher: boolean;
+}
+export { BattleFormAC, BattleFormOverrides, BattleFormSkills, BattleFormSource, BattleFormStrike, BattleFormStrikeQuery, };

@@ -22,17 +22,7 @@ declare module foundry {
 
         class EffectDurationData<
             TDocument extends documents.BaseActiveEffect = documents.BaseActiveEffect
-        > extends abstract.DocumentData<TDocument> {
-            static override defineSchema(): {
-                startTime: typeof fields.TIMESTAMP_FIELD;
-                seconds: typeof fields.NONNEGATIVE_INTEGER_FIELD;
-                combat: typeof fields.STRING_FIELD;
-                rounds: typeof fields.NONNEGATIVE_INTEGER_FIELD;
-                turns: typeof fields.NONNEGATIVE_INTEGER_FIELD;
-                startRound: typeof fields.NONNEGATIVE_INTEGER_FIELD;
-                startTurn: typeof fields.NONNEGATIVE_INTEGER_FIELD;
-            };
-        }
+        > extends abstract.DocumentData<TDocument> {}
 
         interface EffectDurationData extends EffectDurationSource {
             readonly _source: EffectDurationSource;
@@ -42,7 +32,7 @@ declare module foundry {
         }
 
         namespace EffectDurationData {
-            const schema: ReturnType<typeof EffectDurationData["defineSchema"]>;
+            const schema: ReturnType<(typeof EffectDurationData)["defineSchema"]>;
         }
     }
 }

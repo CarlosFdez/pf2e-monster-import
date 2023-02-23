@@ -1,16 +1,29 @@
-import { RuleElementPF2e, RuleElementData, RuleElementSource } from "./";
 import { CharacterPF2e, NPCPF2e } from "@actor";
 import { ActorType } from "@actor/data";
-import { ItemPF2e, WeaponPF2e } from "@item";
-import { BaseWeaponType, WeaponCategory, WeaponDamage, WeaponGroup, WeaponRangeIncrement, WeaponTrait } from "@item/weapon/data";
+import { ItemPF2e } from "@item";
+import { WeaponDamage } from "@item/weapon/data";
+import { BaseWeaponType, OtherWeaponTag, WeaponCategory, WeaponGroup, WeaponTrait } from "@item/weapon/types";
+import { RuleElementData, RuleElementPF2e, RuleElementSource } from "./";
 import { RuleElementOptions } from "./base";
 /**
  * Create an ephemeral strike on an actor
  * @category RuleElement
  */
 declare class StrikeRuleElement extends RuleElementPF2e {
+    #private;
     protected static validActorTypes: ActorType[];
-    weapon: Embedded<WeaponPF2e>;
+    slug: string;
+    category: WeaponCategory;
+    group: WeaponGroup;
+    baseType: BaseWeaponType | null;
+    traits: WeaponTrait[];
+    otherTags: OtherWeaponTag[];
+    range: {
+        increment: number;
+        max: number | null;
+    } | null;
+    /** Whether this attack is from a battle form */
+    battleForm: boolean;
     constructor(data: StrikeSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
     beforePrepareData(): void;
     /** Exclude other strikes if this rule element specifies that its strike replaces all others */
@@ -28,22 +41,20 @@ interface StrikeSource extends RuleElementSource {
     baseType?: unknown;
     damage?: unknown;
     range?: unknown;
+    maxRange?: unknown;
     traits?: unknown;
+    otherTags?: unknown;
     replaceAll?: unknown;
     replaceBasicUnarmed?: unknown;
+    battleForm?: unknown;
     options?: unknown;
 }
 interface StrikeData extends RuleElementData {
     slug?: string;
-    img?: ImagePath;
-    category: WeaponCategory;
-    group: WeaponGroup;
-    baseType: BaseWeaponType | null;
+    img?: ImageFilePath;
     damage?: {
         base?: WeaponDamage;
     };
-    range: WeaponRangeIncrement | null;
-    traits: WeaponTrait[];
     replaceAll: boolean;
     replaceBasicUnarmed: boolean;
     options?: string[];

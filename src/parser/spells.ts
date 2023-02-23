@@ -1,15 +1,15 @@
-import { capitalizeWords, objectHasKey } from "../util";
+import { SpellPF2e } from "@item";
+import { ItemSourcePF2e, SpellSource } from "@item/data";
+import { MagicTradition } from "@item/spell/types";
 import {
-    MagicTradition,
     PreparationType,
     SlotKey,
     SpellcastingEntrySource,
     SpellcastingEntrySystemData,
-} from "@pf2e/module/item/spellcasting-entry/data";
-import { ItemSourcePF2e, SpellSource } from "@pf2e/module/item/data";
-import { SpellPF2e } from "@pf2e/module/item";
+} from "@item/spellcasting-entry/data";
+import { OneToTen } from "@module/data";
+import { capitalizeWords, objectHasKey } from "../util";
 import { MonsterData, MonsterSpellStats } from "./types";
-import { OneToTen } from "@pf2e/module/data";
 
 interface SpellMetadata {
     id: string;
@@ -90,14 +90,13 @@ export class SpellParser {
             _id: traditionId,
             name: capitalizeWords(`${traditionName} ${preparedType} Spells`),
             type: "spellcastingEntry",
-            data: {
+            system: {
                 ability: {
                     value: cha,
                 },
                 spelldc: {
                     value: data.spelldc.value ? Number(data.spelldc.value) : 0,
                     dc: data.spelldc.value ? Number(data.spelldc.value) : 0,
-                    mod: 0,
                 },
                 tradition: {
                     value: traditionName as MagicTradition,
@@ -105,13 +104,9 @@ export class SpellParser {
                 prepared: {
                     value: preparedType as PreparationType,
                 },
-                showUnpreparedSpells: {
-                    value: true,
-                },
                 proficiency: {
                     value: 1,
                 },
-                displayLevels: [],
                 slots,
             },
         };
@@ -136,7 +131,7 @@ export class SpellParser {
 
         spellLevels = spellLevels.reverse();
 
-        const spellList = [];
+        const spellList: SpellMetadata[][] = [];
 
         for (let level = 0; level <= spellLevels.length; level++) {
             const levelSpellList = spellLevels[level];
@@ -165,12 +160,12 @@ export class SpellParser {
                         if (isSpell(spellEntry)) {
                             const spellData = spellEntry.toObject();
 
-                            if (level > 0 && preparedType !== "prepared" && spellData.data) {
-                                spellData.data.location.heightenedLevel = level;
+                            if (level > 0 && preparedType !== "prepared" && spellData.system) {
+                                spellData.system.location.heightenedLevel = level;
                             }
 
                             spellData["_id"] = spellID;
-                            spellData.data.location = { value: traditionId };
+                            spellData.system.location = { value: traditionId };
 
                             parsedLevelSpells.push({
                                 id: spellID,

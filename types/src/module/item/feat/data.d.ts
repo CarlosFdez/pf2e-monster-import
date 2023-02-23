@@ -1,24 +1,16 @@
-import { ActionType, ItemLevelData, ItemSystemData, ItemTraits } from "@item/data/base";
-import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from "@item/data/non-physical";
+import { ActionType, BaseItemDataPF2e, BaseItemSourcePF2e, Frequency, FrequencySource, ItemLevelData, ItemSystemSource, ItemTraits } from "@item/data/base";
 import { OneToThree } from "@module/data";
 import { FeatPF2e } from ".";
 import { FEAT_TYPES } from "./values";
-export declare type FeatSource = BaseNonPhysicalItemSource<"feat", FeatSystemSource>;
-export declare class FeatData extends BaseNonPhysicalItemData<FeatPF2e> {
-    static DEFAULT_ICON: ImagePath;
-}
-export interface FeatData extends Omit<FeatSource, "effects" | "flags"> {
-    type: "feat";
-    data: FeatSystemData;
-    readonly _source: FeatSource;
-}
-export declare type FeatTrait = keyof ConfigPF2e["PF2E"]["featTraits"];
-export declare type FeatTraits = ItemTraits<FeatTrait>;
-export declare type FeatType = SetElement<typeof FEAT_TYPES>;
+type FeatSource = BaseItemSourcePF2e<"feat", FeatSystemSource>;
+type FeatData = Omit<FeatSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<FeatPF2e, "feat", FeatSystemData, FeatSource>;
+export type FeatTrait = keyof ConfigPF2e["PF2E"]["featTraits"];
+export type FeatTraits = ItemTraits<FeatTrait>;
+export type FeatType = SetElement<typeof FEAT_TYPES>;
 export interface PrerequisiteTagData {
     value: string;
 }
-export interface FeatSystemSource extends ItemSystemData, ItemLevelData {
+export interface FeatSystemSource extends ItemSystemSource, ItemLevelData {
     traits: FeatTraits;
     featType: {
         value: FeatType;
@@ -30,9 +22,6 @@ export interface FeatSystemSource extends ItemSystemData, ItemLevelData {
     actionType: {
         value: ActionType;
     };
-    actionCategory: {
-        value: string;
-    };
     actions: {
         value: OneToThree | null;
     };
@@ -40,8 +29,11 @@ export interface FeatSystemSource extends ItemSystemData, ItemLevelData {
         value: PrerequisiteTagData[];
     };
     location: string | null;
+    frequency?: FrequencySource;
 }
-export interface FeatSystemData extends Omit<FeatSystemSource, "maxTaken"> {
+interface FeatSystemData extends Omit<FeatSystemSource, "maxTaken"> {
     /** `null` is set to `Infinity` during data preparation */
     maxTakable: number;
+    frequency?: Frequency;
 }
+export { FeatData, FeatSource, FeatSystemData };

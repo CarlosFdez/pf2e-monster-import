@@ -4,15 +4,15 @@ declare module foundry {
             _id: string;
             name: string;
             type: "chat" | "script";
-            img: ImagePath;
+            img: ImageFilePath;
             actorIds: string[];
             author: string;
             command: string;
             scope: string;
             folder?: string | null;
             sort: number;
-            permission: Record<string, PermissionLevel>;
-            flags: Record<string, unknown>;
+            ownership: Record<string, DocumentOwnershipLevel>;
+            flags: Record<string, Record<string, unknown>>;
         }
 
         class MacroData<

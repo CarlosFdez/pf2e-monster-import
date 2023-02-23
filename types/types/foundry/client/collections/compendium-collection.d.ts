@@ -17,7 +17,12 @@ declare global {
         /** A subsidiary collection which contains the more minimal index of the pack */
         index: CompendiumIndex;
 
+        /** A debounced function which will clear the contents of the Compendium pack if it is not accessed frequently. */
         protected _flush: () => unknown;
+
+        /** Has this Compendium pack been fully indexed? */
+        indexed: boolean;
+
         /**
          * The amount of time that Document instances within this CompendiumCollection are held in memory.
          * Accessing the contents of the Compendium pack extends the duration of this lifetime.
@@ -26,6 +31,9 @@ declare global {
 
         /** The named game setting which contains Compendium configurations. */
         static CONFIG_SETTING: "compendiumConfiguration";
+
+        /** The default index fields which should be retrieved for each Compendium document type */
+        static INDEX_FIELDS: Record<CompendiumDocumentType, string[]>;
 
         /**
          * Create a new Compendium Collection using provided metadata.
@@ -135,21 +143,21 @@ declare global {
 
         protected override _onCreateDocuments(
             documents: TDocument[],
-            result: TDocument["data"]["_source"][],
+            result: TDocument["_source"][],
             options: DocumentModificationContext,
             userId: string
         ): void;
 
         protected override _onUpdateDocuments(
             documents: TDocument[],
-            result: TDocument["data"]["_source"][],
+            result: TDocument["_source"][],
             options: DocumentModificationContext,
             userId: string
         ): void;
 
         protected override _onDeleteDocuments(
             documents: TDocument[],
-            result: TDocument["data"]["_source"][],
+            result: TDocument["_source"][],
             options: DocumentModificationContext,
             userId: string
         ): void;
@@ -158,33 +166,75 @@ declare global {
         protected _onModifyContents(documents: TDocument[], options: DocumentModificationContext, userId: string): void;
     }
 
-    type CompendiumDocumentType = typeof CONST.COMPENDIUM_ENTITY_TYPES[number];
+    type CompendiumDocumentType = (typeof CONST.COMPENDIUM_DOCUMENT_TYPES)[number];
     type CompendiumUUID = `Compendium.${string}.${string}`;
-    type DocumentUUID = `${CompendiumDocumentType}.${string}` | CompendiumUUID | TokenDocumentUUID;
-    function fromUuid<T extends ClientDocument = ClientDocument>(uuid: string): Promise<T | null>;
+    type DocumentUUID = WorldDocumentUUID | CompendiumUUID | TokenDocumentUUID;
+
+    function fromUuid<T extends CompendiumDocument = CompendiumDocument>(
+        uuid: CompendiumUUID,
+        relative?: CompendiumDocument
+    ): Promise<T | null>;
+    function fromUuid<T extends ClientDocument = ClientDocument>(
+        uuid: string,
+        relative?: ClientDocument
+    ): Promise<T | null>;
+
+    /**
+     * Retrieve a Document by its Universally Unique Identifier (uuid) synchronously. If the uuid resolves to a compendium
+     * document, that document's index entry will be returned instead.
+     * @param uuid The uuid of the Document to retrieve.
+     * @param {} [relative]  A document to resolve relative UUIDs against.
+     * @returns The Document or its index entry if it resides in a Compendium, otherwise null.
+     * @throws If the uuid resolves to a Document that cannot be retrieved synchronously.
+     */
+    function fromUuidSync(
+        uuid: WorldDocumentUUID,
+        relative?: ClientDocument | CompendiumIndexData | null
+    ): ClientDocument | null;
+    function fromUuidSync(
+        uuid: string,
+        relative?: ClientDocument | CompendiumIndexData | null
+    ): ClientDocument | CompendiumIndexData | null;
+
+    /**
+     * Parse a UUID into its constituent parts.
+     * @param uuid The UUID to parse.
+     * @param relative A document to resolve relative UUIDs against.
+     * @returns The Collection and the Document ID to resolve the parent document, as
+     *          well as the remaining Embedded Document parts, if any.
+     */
+    function _parseUuid(uuid: string, relative?: ClientDocument): ResolvedUUID;
+
+    interface ResolvedUUID {
+        /** The parent collection. */
+        collection?: DocumentCollection<ClientDocument>;
+        /** The parent document. */
+        documentId: string;
+        /** An already-resolved document. */
+        doc: ClientDocument | null;
+        /** Any remaining Embedded Document parts. */
+        embedded: string[];
+    }
+
+    /**
+     * Resolve a series of embedded document UUID parts against a parent Document.
+     * @param parent The parent Document.
+     * @param parts A series of Embedded Document UUID parts.
+     * @returns The resolved Embedded Document.
+     */
+    function _resolveEmbedded(parent: ClientDocument, parts: string[]): ClientDocument | undefined;
 
     interface CompendiumMetadata<T extends CompendiumDocument = CompendiumDocument> {
-        readonly type: T extends Actor
-            ? "Actor"
-            : T extends Item
-            ? "Item"
-            : T extends JournalEntry
-            ? "JournalEntry"
-            : T extends Macro
-            ? "Macro"
-            : T extends Playlist
-            ? "Playlist"
-            : T extends RollTable
-            ? "RollTable"
-            : T extends Scene
-            ? "Scene"
-            : CompendiumDocumentType;
+        readonly type: T["documentName"];
+        id: string;
         name: string;
         label: string;
         path: string;
         private?: string;
         module?: string;
         package?: string;
+        packageName: string;
+        packageType: "world" | "system" | "module";
         system: string;
     }
 
@@ -192,10 +242,12 @@ declare global {
         _id: string;
         type: string;
         name: string;
+        img: ImageFilePath;
+        pack?: string;
         [key: string]: any;
     }
 
     type CompendiumIndex = Collection<CompendiumIndexData>;
 
-    type CompendiumDocument = Actor | Item | JournalEntry | Macro | Playlist | RollTable | Scene;
+    type CompendiumDocument = Exclude<WorldDocument, Combat | ChatMessage | Folder | User>;
 }

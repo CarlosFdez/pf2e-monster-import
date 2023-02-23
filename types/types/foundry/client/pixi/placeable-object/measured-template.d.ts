@@ -40,7 +40,7 @@ declare class MeasuredTemplate<
     /*  Properties                                  */
     /* -------------------------------------------- */
 
-    override get bounds(): NormalizedRectangle;
+    override get bounds(): PIXI.Rectangle;
 
     /** A convenience accessor for the border color as a numeric hex code */
     get borderColor(): number;
@@ -51,11 +51,17 @@ declare class MeasuredTemplate<
     /** A flag for whether the current User has full ownership over the MeasuredTemplate document. */
     get owner(): boolean;
 
+    /** Is this MeasuredTemplate currently visible on the Canvas? */
+    get isVisible(): boolean;
+
+    /** A unique identifier which is used to uniquely identify related objects like a template effect or grid highlight. */
+    get highlightId(): string;
+
     /* -------------------------------------------- */
     /*  Rendering                                   */
     /* -------------------------------------------- */
 
-    override draw(): Promise<this>;
+    protected _draw(): Promise<void>;
 
     override destroy(options?: boolean | PIXI.IDestroyOptions): void;
 
@@ -111,13 +117,13 @@ declare class MeasuredTemplate<
     /*  Socket Listeners and Handlers               */
     /* -------------------------------------------- */
 
-    protected override _onUpdate(
-        changed: DeepPartial<this["document"]["data"]["_source"]>,
-        options: DocumentModificationContext,
+    override _onUpdate(
+        changed: DeepPartial<TDocument["_source"]>,
+        options: DocumentModificationContext<TDocument>,
         userId: string
     ): void;
 
-    protected override _onDelete(options: DocumentModificationContext, userId: string): void;
+    override _onDelete(options: DocumentModificationContext<TDocument>, userId: string): void;
 }
 
 declare interface MeasuredTemplate<TDocument extends MeasuredTemplateDocument = MeasuredTemplateDocument>

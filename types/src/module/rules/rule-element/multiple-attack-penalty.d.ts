@@ -1,13 +1,16 @@
-import { PredicatePF2e } from "@system/predication";
+import { ItemPF2e } from "@item";
+import { RuleElementOptions } from "./";
 import { RuleElementPF2e } from "./";
+import { RuleElementSource } from "./data";
 /**
  * @category RuleElement
  */
 export declare class MultipleAttackPenaltyRuleElement extends RuleElementPF2e {
+    private selector;
+    constructor(data: MAPSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
     beforePrepareData(): void;
 }
-export interface MultipleAttackPenaltyPF2e {
-    label: string;
-    penalty: number;
-    predicate?: PredicatePF2e;
+interface MAPSource extends RuleElementSource {
+    selector?: unknown;
 }
+export {};

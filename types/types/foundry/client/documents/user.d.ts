@@ -36,7 +36,7 @@ declare global {
         get character(): TActor | undefined;
 
         /** A convenience shortcut for the permissions object of the current User */
-        get permissions(): Record<string, PermissionLevel>;
+        get permissions(): Record<string, DocumentOwnershipLevel>;
 
         /** A flag for whether the current User is a Trusted Player */
         get isTrusted(): boolean;
@@ -93,7 +93,7 @@ declare global {
         updateTokenTargets(targetIds?: string[]): void;
 
         protected override _onUpdate(
-            changed: DeepPartial<this["data"]["_source"]>,
+            changed: DeepPartial<this["_source"]>,
             options: DocumentModificationContext,
             userId: string
         ): void;

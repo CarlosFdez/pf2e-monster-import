@@ -1,11 +1,14 @@
-import { ConditionSlug } from "@item/condition/data";
-export interface FlattenedCondition {
+import { EffectBadge } from "@item/abstract-effect/data";
+interface FlattenedCondition {
     id: string;
     active: boolean;
     name: string;
+    badge: EffectBadge | null;
     value: number | null;
     description: string;
-    img: ImagePath;
+    enrichedDescription?: string;
+    img: ImageFilePath;
+    unidentified: boolean;
     locked: boolean;
     references: boolean;
     breakdown?: string;
@@ -15,12 +18,14 @@ export interface FlattenedCondition {
     overriddenBy: ConditionReference[];
     immunityFrom: ConditionReference[];
 }
-export interface ConditionReference {
+interface ConditionReference {
     id: {
         id: string;
-        type: "status" | "condition" | "feat" | "weapon" | "armor" | "consumable" | "equipment" | "spell";
+        type: string;
     } | undefined;
     name: string;
-    base: ConditionSlug;
+    base: string;
     text: string;
+    enrichedText?: string;
 }
+export { ConditionReference, FlattenedCondition };

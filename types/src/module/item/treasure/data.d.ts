@@ -1,20 +1,11 @@
-import { BasePhysicalItemData, BasePhysicalItemSource, PhysicalSystemData } from "@item/physical/data";
+import { BasePhysicalItemData, BasePhysicalItemSource, PhysicalSystemData, PhysicalSystemSource } from "@item/physical/data";
 import { TreasurePF2e } from ".";
-export declare type TreasureSource = BasePhysicalItemSource<"treasure", TreasureSystemData>;
-export declare class TreasureData extends BasePhysicalItemData<TreasurePF2e> {
-    static DEFAULT_ICON: ImagePath;
-}
-export interface TreasureData extends Omit<TreasureSource, "effects" | "flags"> {
-    type: TreasureSource["type"];
-    data: TreasureSource["data"];
-    readonly _source: TreasureSource;
-    isInvested: null;
-}
-export interface TreasureSystemData extends PhysicalSystemData {
-    denomination: {
-        value: "pp" | "gp" | "sp" | "cp";
+type TreasureSource = BasePhysicalItemSource<"treasure", TreasureSystemSource>;
+type TreasureData = Omit<TreasureSource, "system" | "effects" | "flags"> & BasePhysicalItemData<TreasurePF2e, "treasure", TreasureSystemData, TreasureSource>;
+type TreasureSystemSource = PhysicalSystemSource;
+type TreasureSystemData = PhysicalSystemData & {
+    equipped: {
+        invested?: never;
     };
-    value: {
-        value: number;
-    };
-}
+};
+export { TreasureData, TreasureSource, TreasureSystemData, TreasureSystemSource };

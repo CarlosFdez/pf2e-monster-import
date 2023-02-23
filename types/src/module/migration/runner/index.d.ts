@@ -10,12 +10,11 @@ export declare class MigrationRunner extends MigrationRunnerBase {
     private migrateWorldDocuments;
     private migrateWorldItem;
     private migrateWorldActor;
+    private migrateWorldJournalEntry;
     private migrateWorldMacro;
     private migrateWorldTable;
     private migrateSceneToken;
     private migrateUser;
     runMigrations(migrations: MigrationBase[]): Promise<void>;
-    /** Migrate actors and items in world compendia */
-    private runPackMigrations;
     runMigration(force?: boolean): Promise<void>;
 }

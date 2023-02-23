@@ -1,17 +1,25 @@
 /// <reference types="jquery" />
+/// <reference types="jquery" />
 /// <reference types="tooltipster" />
 import { ActorPF2e } from "@actor";
 import { SelectableTagField, TagSelectorOptions } from ".";
-import { TagSelectorBase } from "./base";
-export declare class SpeedSelector extends TagSelectorBase<ActorPF2e> {
-    objectProperty: string;
+import { BaseTagSelector } from "./base";
+export declare class SpeedSelector<TActor extends ActorPF2e> extends BaseTagSelector<TActor> {
+    protected objectProperty: string;
     static get defaultOptions(): TagSelectorOptions;
     protected get configTypes(): readonly SelectableTagField[];
-    getData(): any;
+    getData(): Promise<SpeedSelectorData<TActor>>;
     activateListeners($html: JQuery): void;
     protected _updateObject(_event: Event, formData: Record<string, unknown>): Promise<void>;
-    protected getUpdateData(formData: Record<string, unknown>): {
-        type: string;
-        value: string;
-    }[];
 }
+interface SpeedSelectorData<TActor extends ActorPF2e> extends FormApplicationData<TActor> {
+    hasExceptions: boolean;
+    choices: Record<string, ChoiceData>;
+}
+interface ChoiceData {
+    selected: boolean;
+    disabled: boolean;
+    label: string;
+    value: number | string;
+}
+export {};

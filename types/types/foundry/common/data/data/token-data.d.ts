@@ -14,8 +14,6 @@ declare module foundry {
          * @property actorId              The _id of an Actor document which this Token represents
          * @property [actorLink=false]    Does this Token uniquely represent a singular Actor, or is it one of many?
          * @property [actorData]          Token-level data which overrides the base data of the associated Actor
-         * @property img                  A file path to an image or video file used to depict the Token
-         * @property [tint=null]          An optional color tint applied to the Token image
          * @property [width=1]            The width of the Token in grid units
          * @property [height=1]           The height of the Token in grid units
          * @property [scale=1]            A scale factor applied to the Token image, between 0.25 and 3
@@ -44,7 +42,7 @@ declare module foundry {
          * @property [bar2]               The configuration of the Token's secondary resource bar
          * @property [flags={}]           An object of optional key/value flags
          */
-        interface TokenSource extends PrototypeTokenSource, TokenLightData {
+        interface TokenSource extends TokenLightData {
             _id: string;
             name: string;
 
@@ -54,11 +52,9 @@ declare module foundry {
             navOrder: number;
             navName: string;
 
-            img: VideoPath;
             actorId: string | null;
             actorLink: boolean;
             actorData: DeepPartial<ActorSource>;
-            scale: number;
             mirrorX: boolean;
             mirrorY: boolean;
             height: number;
@@ -67,7 +63,7 @@ declare module foundry {
             y: number;
             elevation: number;
             lockRotation: boolean;
-            effects: string[];
+            effects: VideoFilePath[];
             overlayEffect: string | null;
             vision: boolean;
             dimSight: number;
@@ -75,6 +71,16 @@ declare module foundry {
             sightAngle: number;
             light: LightSource;
             hidden: boolean;
+            texture: {
+                src: VideoFilePath;
+                scaleX: number;
+                scaleY: number;
+                offsetX: number;
+                offsetY: number;
+                rotation: number | null;
+                tint: `#${string}`;
+            };
+
             lightAnimation: AnimationSource;
             disposition: TokenDisposition;
             displayName: TokenDisplayMode;
@@ -87,95 +93,6 @@ declare module foundry {
         class TokenData<
             TDocument extends documents.BaseToken = documents.BaseToken
         > extends abstract.DocumentData<TDocument> {
-            static override defineSchema(): {
-                _id: typeof fields.DOCUMENT_ID;
-                name: typeof fields.STRING_FIELD;
-                displayName: {
-                    type: typeof Number;
-                    required: true;
-                    default: TokenDisplayMode;
-                    validate: (m: unknown) => boolean;
-                    validationError: string;
-                };
-                actorId: fields.ForeignDocumentField<{ type: typeof documents.BaseActor; required: true }>;
-                actorLink: typeof fields.BOOLEAN_FIELD;
-                actorData: typeof fields.OBJECT_FIELD;
-                img: typeof fields.VIDEO_FIELD & { default: () => VideoPath };
-                tint: typeof fields.COLOR_FIELD;
-                width: typeof fields.REQUIRED_POSITIVE_NUMBER & { default: 1 };
-                height: typeof fields.REQUIRED_POSITIVE_NUMBER & { default: 1 };
-                scale: {
-                    type: typeof Number;
-                    required: true;
-                    default: 1;
-                    validate: (s: number) => boolean;
-                    validationError: string;
-                };
-                mirrorX: typeof fields.BOOLEAN_FIELD;
-                mirrorY: typeof fields.BOOLEAN_FIELD;
-                x: typeof fields.REQUIRED_NUMBER;
-                y: typeof fields.REQUIRED_NUMBER;
-                elevation: typeof fields.REQUIRED_NUMBER;
-                lockRotation: typeof fields.BOOLEAN_FIELD;
-                rotation: typeof fields.ANGLE_FIELD & { default: 0 };
-                effects: {
-                    type: [typeof String];
-                    required: true;
-                    default: string[];
-                };
-                overlayEffect: typeof fields.STRING_FIELD;
-                alpha: typeof fields.ALPHA_FIELD;
-                hidden: typeof fields.BOOLEAN_FIELD;
-                vision: {
-                    type: typeof Boolean;
-                    required: true;
-                    default: (data: object) => boolean;
-                };
-                dimSight: typeof fields.REQUIRED_NUMBER;
-                brightSight: typeof fields.REQUIRED_NUMBER;
-                dimLight: typeof fields.REQUIRED_NUMBER;
-                brightLight: typeof fields.REQUIRED_NUMBER;
-                sightAngle: typeof fields.ANGLE_FIELD;
-                light: {
-                    type: typeof LightData;
-                    required: true;
-                    default: Partial<LightSource>;
-                };
-                lightAngle: typeof fields.ANGLE_FIELD;
-                lightColor: typeof fields.COLOR_FIELD;
-                lightAlpha: typeof fields.ALPHA_FIELD & { default: 0.25 };
-                lightAnimation: {
-                    type: typeof AnimationData;
-                    required: true;
-                    default: {};
-                };
-                disposition: {
-                    type: typeof Number;
-                    required: true;
-                    default: typeof CONST.TOKEN_DISPOSITIONS.HOSTILE;
-                    validate: (n: unknown) => boolean;
-                    validationError: string;
-                };
-                displayBars: {
-                    type: typeof Number;
-                    required: true;
-                    default: TokenDisplayMode;
-                    validate: (m: unknown) => boolean;
-                    validationError: string;
-                };
-                bar1: {
-                    type: typeof TokenBarData;
-                    required: true;
-                    default: () => string | null;
-                };
-                bar2: {
-                    type: typeof TokenBarData;
-                    required: true;
-                    default: () => string | null;
-                };
-                flags: typeof fields.OBJECT_FIELD;
-            };
-
             lightAnimation: AnimationData<TDocument>;
 
             bar1: TokenBarData<TDocument>;
@@ -188,13 +105,13 @@ declare module foundry {
 
             light: LightData<NonNullable<this["document"]>>;
 
-            get schema(): ReturnType<typeof ItemData["defineSchema"]>;
+            get schema(): ReturnType<(typeof ItemData)["defineSchema"]>;
         }
 
         namespace TokenData {
-            const schema: ReturnType<typeof TokenData["defineSchema"]>;
+            const schema: ReturnType<(typeof TokenData)["defineSchema"]>;
 
-            const _schema: ReturnType<typeof TokenData["defineSchema"]> | undefined;
+            const _schema: ReturnType<(typeof TokenData)["defineSchema"]> | undefined;
         }
     }
 }

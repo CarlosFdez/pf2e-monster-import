@@ -1,24 +1,18 @@
-import { CONDITION_SLUGS } from "@actor/data/values";
-import { ItemSystemData } from "@item/data/base";
-import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from "@item/data/non-physical";
+import { CONDITION_SLUGS } from "@actor/values";
+import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemSystemData, ItemSystemSource } from "@item/data/base";
+import { DamageType } from "@system/damage";
+import { DamageRoll } from "@system/damage/roll";
 import { ConditionPF2e } from ".";
-export declare type ConditionSource = BaseNonPhysicalItemSource<"condition", ConditionSystemData>;
-export declare class ConditionData extends BaseNonPhysicalItemData<ConditionPF2e> {
-    static DEFAULT_ICON: ImagePath;
-}
-export interface ConditionData extends Omit<ConditionSource, "effects" | "flags"> {
-    type: ConditionSource["type"];
-    data: ConditionSource["data"];
-    readonly _source: ConditionSource;
-}
-export interface ConditionSystemData extends ItemSystemData {
+type ConditionSource = BaseItemSourcePF2e<"condition", ConditionSystemSource>;
+type ConditionData = Omit<ConditionSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<ConditionPF2e, "condition", ConditionSystemData, ConditionSource>;
+interface ConditionSystemSource extends ItemSystemSource {
     slug: ConditionSlug;
     active: boolean;
     removable: boolean;
     references: {
         parent?: {
             id: string;
-            type: "status" | "condition" | "feat" | "weapon" | "armor" | "consumable" | "equipment" | "spell";
+            type: string;
         };
         children: {
             id: string;
@@ -37,14 +31,15 @@ export interface ConditionSystemData extends ItemSystemData {
          */
         immunityFrom: {
             id: string;
-            type: "status" | "condition" | "feat" | "weapon" | "armor" | "consumable" | "equipment" | "spell";
+            type: string;
         }[];
     };
+    persistent?: PersistentSourceData;
     hud: {
         statusName: string;
         img: {
             useStatusName: boolean;
-            value: ImagePath;
+            value: ImageFilePath;
         };
         selectable: boolean;
     };
@@ -53,37 +48,39 @@ export interface ConditionSystemData extends ItemSystemData {
         value: number;
         text: string;
     };
-    modifiers: [
-        {
-            type: "ability" | "proficiency" | "status" | "circumstance" | "item" | "untyped";
-            name: string;
-            group: string;
-            value?: number;
-        }
-    ];
-    base: string;
+    modifiers: {
+        type: string;
+        name: string;
+        group: string;
+        value?: number;
+    }[];
+    base: ConditionSlug;
     group: string;
     value: ConditionValueData;
     sources: {
         hud: boolean;
     };
     alsoApplies: {
-        linked: [
-            {
-                condition: string;
-                value?: number;
-            }
-        ];
-        unlinked: [
-            {
-                condition: string;
-                value?: number;
-            }
-        ];
+        linked: {
+            condition: ConditionSlug;
+            value?: number;
+        }[];
+        unlinked: {
+            condition: ConditionSlug;
+            value?: number;
+        }[];
     };
     overrides: string[];
+    traits?: never;
 }
-declare type ConditionValueData = {
+interface ConditionSystemData extends ConditionSystemSource, Omit<ItemSystemData, "traits" | "slug"> {
+    persistent?: PersistentDamageData;
+}
+interface PersistentDamageData extends PersistentSourceData {
+    damage: DamageRoll;
+    expectedValue: number;
+}
+type ConditionValueData = {
     isValued: true;
     immutable: boolean;
     value: number;
@@ -104,5 +101,11 @@ declare type ConditionValueData = {
         }
     ];
 };
-export declare type ConditionSlug = SetElement<typeof CONDITION_SLUGS>;
-export {};
+type ConditionSlug = SetElement<typeof CONDITION_SLUGS>;
+type ConditionKey = ConditionSlug | `persistent-damage-${string}`;
+interface PersistentSourceData {
+    formula: string;
+    damageType: DamageType;
+    dc: number;
+}
+export { ConditionData, ConditionKey, ConditionSlug, ConditionSource, ConditionSystemData, PersistentDamageData, PersistentSourceData, };

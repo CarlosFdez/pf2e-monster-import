@@ -1,109 +1,17 @@
 /// <reference types="jquery" />
+/// <reference types="jquery" />
 /// <reference types="tooltipster" />
-import { ActorSheetPF2e } from "../sheet/base";
+import { ActorSheetPF2e } from "@actor/sheet/base";
 import { HazardPF2e } from ".";
+import { HazardSheetData } from "./types";
 export declare class HazardSheetPF2e extends ActorSheetPF2e<HazardPF2e> {
     static get defaultOptions(): ActorSheetOptions;
-    /** Get the HTML template path to use depending on whether this sheet is in edit mode */
     get template(): string;
-    getData(): Promise<{
-        flags: any;
-        hazardTraits: {
-            aquatic: string;
-            alchemical: string;
-            auditory: string;
-            clockwork: string;
-            consumable: string;
-            curse: string;
-            environmental: string;
-            fungus: string;
-            haunt: string;
-            inhaled: string;
-            kaiju: string;
-            magical: string;
-            mechanical: string;
-            steam: string;
-            summoned: string;
-            technological: string;
-            teleportation: string;
-            trap: string;
-            virulent: string;
-            arcane: string;
-            divine: string;
-            occult: string;
-            primal: string;
-            abjuration: string;
-            conjuration: string;
-            divination: string;
-            enchantment: string;
-            evocation: string;
-            illusion: string;
-            necromancy: string;
-            transmutation: string;
-            light: string;
-            mental: string;
-            nonlethal: string;
-            plant: string;
-            radiation: string;
-            acid: string;
-            cold: string;
-            electricity: string;
-            fire: string;
-            force: string;
-            negative: string;
-            positive: string;
-            sonic: string;
-            air: string;
-            earth: string;
-            water: string;
-            chaotic: string;
-            evil: string;
-            good: string;
-            lawful: string;
-        };
-        actorTraits: string[];
-        actorRarities: {
-            common: string;
-            uncommon: string;
-            rare: string;
-            unique: string;
-        };
-        actorRarity: string;
-        stealthDC: number;
-        hasStealthDescription: string | boolean;
-        hasResistances: boolean;
-        hasWeaknesses: boolean;
-        hasDescription: string | boolean;
-        hasDisable: string | boolean;
-        hasRoutineDetails: string | boolean;
-        hasResetDetails: string | boolean;
-        hasHPDetails: string | boolean;
-        hasWillSave: boolean;
-        brokenThreshold: number;
-        traits: import("../../sheet/helpers").SheetOptions;
-        isTargetFlatFooted: boolean;
-        user: {
-            isGM: boolean;
-        };
-        hasRealContainers?: boolean | undefined;
-        totalCoinage: import("../sheet/data-types").CoinageSummary;
-        totalCoinageGold: string;
-        totalWealth: import("../../item/treasure/helpers").Coins;
-        totalWealthGold: string;
-        immunities: import("../../sheet/helpers").SheetOptions;
-        hasImmunities: boolean;
-        actor: any;
-        data: any;
-        items: any;
-        cssClass: "editable" | "locked";
-        effects: RawObject<foundry.data.ActiveEffectData<foundry.documents.BaseActiveEffect>>[];
-        limited: boolean;
-        options: ActorSheetOptions;
-        editable: boolean;
-        document: HazardPF2e;
-        owner: boolean;
-        title: string;
-    }>;
-    prepareItems(sheetData: any): void;
+    get title(): string;
+    get editing(): boolean;
+    getData(): Promise<HazardSheetData>;
+    private prepareActions;
+    private prepareSaves;
     activateListeners($html: JQuery): void;
+    protected _updateObject(event: Event, formData: Record<string, unknown>): Promise<void>;
 }

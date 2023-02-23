@@ -1,17 +1,19 @@
-import { ItemLevelData, ItemSystemData } from "@item/data/base";
-import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from "@item/data/non-physical";
-import { OneToFour } from "@module/data";
+import { EffectBadge } from "@item/abstract-effect";
+import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemFlagsPF2e, ItemLevelData, ItemSystemData, ItemSystemSource } from "@item/data/base";
+import { CheckRoll } from "@system/check";
 import { EffectPF2e } from ".";
-export declare type EffectSource = BaseNonPhysicalItemSource<"effect", EffectSystemSource>;
-export declare class EffectData extends BaseNonPhysicalItemData<EffectPF2e> {
-    static DEFAULT_ICON: ImagePath;
-}
-export interface EffectData extends Omit<EffectSource, "effects" | "flags"> {
-    type: EffectSource["type"];
-    data: EffectSystemData;
-    readonly _source: EffectSource;
-}
-interface EffectSystemSource extends ItemSystemData, ItemLevelData {
+type EffectSource = BaseItemSourcePF2e<"effect", EffectSystemSource> & {
+    flags: DeepPartial<EffectFlags>;
+};
+type EffectData = Omit<EffectSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<EffectPF2e, "effect", EffectSystemData, EffectSource> & {
+    flags: EffectFlags;
+};
+type EffectFlags = ItemFlagsPF2e & {
+    pf2e: {
+        aura?: EffectAuraData;
+    };
+};
+interface EffectSystemSource extends ItemSystemSource, ItemLevelData {
     start: {
         value: number;
         initiative: number | null;
@@ -25,20 +27,33 @@ interface EffectSystemSource extends ItemSystemData, ItemLevelData {
     tokenIcon: {
         show: boolean;
     };
+    unidentified: boolean;
     target: string | null;
     expired?: boolean;
+    /** A numeric value or dice expression of some rules significance to the effect */
     badge: EffectBadge | null;
+    /** Origin, target, and roll context of the action that spawned this effect */
+    context: EffectContextData | null;
 }
-export interface EffectBadge {
-    value: number | DiceExpression;
-    tickRule: EffectTickType;
-}
-export declare type EffectExpiryType = "turn-start" | "turn-end";
-export declare type EffectTickType = "turn-start";
-declare type DieFaceCount = 4 | 6 | 8 | 10 | 12 | 20;
-export declare type DiceExpression = `${OneToFour | ""}d${DieFaceCount}`;
-export interface EffectSystemData extends ItemSystemData, EffectSystemSource {
+interface EffectSystemData extends EffectSystemSource, ItemSystemData {
     expired: boolean;
     remaining: string;
 }
-export {};
+type EffectExpiryType = "turn-start" | "turn-end";
+interface EffectAuraData {
+    slug: string;
+    origin: ActorUUID | TokenDocumentUUID;
+    removeOnExit: boolean;
+}
+interface EffectContextData {
+    origin: {
+        actor: ActorUUID | TokenDocumentUUID;
+        token: TokenDocumentUUID | null;
+    };
+    target: {
+        actor: ActorUUID | TokenDocumentUUID;
+        token: TokenDocumentUUID | null;
+    } | null;
+    roll: Pick<CheckRoll, "total" | "degreeOfSuccess"> | null;
+}
+export { EffectData, EffectExpiryType, EffectFlags, EffectContextData, EffectSource, EffectSystemData };

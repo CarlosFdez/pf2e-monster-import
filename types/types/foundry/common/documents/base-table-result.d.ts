@@ -11,7 +11,7 @@ declare module foundry {
 
             override testUserPermission(
                 user: BaseUser,
-                permission: DocumentPermission | DocumentPermissionNumber,
+                permission: DocumentOwnershipString | DocumentOwnershipLevel,
                 { exact }?: { exact?: boolean }
             ): boolean;
         }
@@ -28,7 +28,7 @@ declare module foundry {
             label: "DOCUMENT.TableResult";
             types: typeof CONST.TABLE_RESULT_TYPES;
             permissions: Omit<foundry.abstract.DocumentMetadata["permissions"], "update"> & {
-                update: typeof BaseTableResult["_canUpdate"];
+                update: (typeof BaseTableResult)["_canUpdate"];
             };
         }
     }

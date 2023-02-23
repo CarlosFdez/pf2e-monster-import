@@ -5,17 +5,17 @@ declare global {
      * A specialized subclass of the PointSource abstraction which is used to control the rendering of light sources.
      * @param object The light-emitting object that generates this light source
      */
-    class LightSource<TObject extends AmbientLight | Token> extends PointSource<TObject> {
+    class LightSource<TObject extends AmbientLight | Token | undefined> extends PointSource<TObject> {
         constructor(object: TObject);
 
         /** The light or darkness container for this source */
-        background: PIXI.Mesh<AdaptiveBackgroundShader>;
+        background: PIXI.Mesh;
 
         /** The light or darkness container for this source */
-        illumination: PIXI.Mesh<AdaptiveIlluminationShader>;
+        illumination: PIXI.Mesh;
 
         /** This visible color container for this source */
-        coloration: PIXI.Mesh<AdaptiveColorationShader>;
+        coloration: PIXI.Mesh;
 
         static sourceType: string;
 
@@ -23,18 +23,7 @@ declare global {
         static BLUR_STRENGTH: number;
 
         /** Keys in the LightSourceData structure which, when modified, change the appearance of the light */
-        protected static _appearanceKeys: [
-            "dim",
-            "bright",
-            "gradual",
-            "alpha",
-            "coloration",
-            "color",
-            "contrast",
-            "saturation",
-            "shadows",
-            "luminosity"
-        ];
+        protected static _appearanceKeys: string[];
 
         /* -------------------------------------------- */
         /*  Light Source Attributes                     */
@@ -84,6 +73,15 @@ declare global {
          */
         initialize(data?: Partial<LightSourceData>): this;
 
+        protected _getPolygonConfiguration(): {
+            type: "light" | "universal";
+            angle: number;
+            density: number;
+            radius: number;
+            rotation: number;
+            source: LightSource<TObject>;
+        };
+
         /**
          * Initialize the PointSource with new input data
          * @param data Initial data provided to the light source
@@ -108,19 +106,19 @@ declare global {
          * Draw the display of this source for background container.
          * @return The rendered light container
          */
-        drawBackground(): PIXI.Mesh<AdaptiveBackgroundShader> | null;
+        drawBackground(): PIXI.Mesh | null;
 
         /**
          * Draw the display of this source for the darkness/light container of the SightLayer.
          * @return The rendered light container
          */
-        drawLight(): PIXI.Mesh<AdaptiveIlluminationShader> | null;
+        drawLight(): PIXI.Mesh | null;
 
         /**
          * Draw and return a container used to depict the visible color tint of the light source on the LightingLayer
          * @return An updated color container for the source
          */
-        drawColor(): PIXI.Mesh<AdaptiveColorationShader> | null;
+        drawColor(): PIXI.Mesh | null;
 
         /* -------------------------------------------- */
         /*  Shader Management                           */
@@ -130,24 +128,24 @@ declare global {
          * Update shader uniforms by providing data from this PointSource
          * @param shader The shader being updated
          */
-        protected _updateColorationUniforms(shader: AdaptiveColorationShader): void;
+        protected _updateColorationUniforms(shader: PIXI.Shader): void;
         /**
          * Update shader uniforms by providing data from this PointSource
          * @param shader The shader being updated
          */
-        _updateIlluminationUniforms(shader: AdaptiveIlluminationShader): void;
+        _updateIlluminationUniforms(shader: PIXI.Shader): void;
 
         /**
          * Update shader uniforms by providing data from this PointSource
          * @param shader The shader being updated
          */
-        protected _updateBackgroundUniforms(shader: AdaptiveBackgroundShader): void;
+        protected _updateBackgroundUniforms(shader: PIXI.Shader): void;
 
         /**
          * Update shader uniforms shared by all shader types
          * @param shader The shader being updated
          */
-        protected _updateCommonUniforms(shader: AdaptiveLightingShader): void;
+        protected _updateCommonUniforms(shader: PIXI.Shader): void;
 
         /**
          * Map luminosity value to exposure value
@@ -258,9 +256,9 @@ declare global {
     }
 
     interface LightSourceMeshes {
-        background: PIXI.Mesh<AdaptiveBackgroundShader> | null;
-        light: PIXI.Mesh<AdaptiveIlluminationShader> | null;
-        color: PIXI.Mesh<AdaptiveColorationShader> | null;
+        background: PIXI.Mesh | null;
+        light: PIXI.Mesh | null;
+        color: PIXI.Mesh | null;
     }
 }
 
@@ -268,11 +266,11 @@ interface LightAnimationConfiguration {
     label: string;
     animation: Function;
     /* A custom illumination shader used by this animation */
-    illuminationShader: AdaptiveIlluminationShader;
+    illuminationShader: PIXI.Shader;
     /* A custom coloration shader used by this animation */
-    colorationShader: AdaptiveColorationShader;
+    colorationShader: PIXI.Shader;
     /* A custom background shader used by this animation */
-    backgroundShader: AdaptiveBackgroundShader;
+    backgroundShader: PIXI.Shader;
     /** The animation seed */
     seed?: number;
     /** The animation time */

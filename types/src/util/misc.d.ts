@@ -8,35 +8,19 @@ import { ActionCost } from "@item/data/base";
  * @return
  */
 declare function groupBy<T, R>(array: T[], criterion: (value: T) => R): Map<R, T[]>;
+/** Sorts an array given the natural sorting behavior of the result of a mapping function */
+declare function sortBy<T, J>(array: T[], mapping: (value: T) => J): T[];
 /**
  * Given an array, adds a certain amount of elements to it
  * until the desired length is being reached
  */
 declare function padArray<T>(array: T[], requiredLength: number, padWith: T): T[];
-/**
- * Return a new object that combines all the keys and values from
- * both. If both have the same key, assign the value of the merge function.
- * Example:
- *     // returns {a: 3, b: 5, c: 0}
- *     combineObjects({a: 3, b: 4}, {b: 1, c: 0}, (a, b) => a+b)
- * @param first
- * @param second
- * @param mergeFunction if duplicate keys exist, both values
- * are passed into this function to return the result
- * @return
- */
-declare function combineObjects<V>(first: Record<RecordKey, V>, second: Record<RecordKey, V>, mergeFunction: (first: V, second: V) => V): Record<RecordKey, V>;
-declare type RecordKey = string | number;
-declare type Optional<T> = T | null | undefined;
+type Optional<T> = T | null | undefined;
 /**
  * Returns true if the string is null, undefined or only consists of 1..n spaces
  */
 declare function isBlank(text: Optional<string>): text is null | undefined | "";
-/** Used as a function reference */
-declare function add(x: number, y: number): number;
-/**
- * Adds a + if positive, nothing if 0 or - if negative
- */
+/** Returns a formatted number string with a preceding + if non-negative */
 declare function addSign(number: number): string;
 /**
  * No idea why this isn't built in
@@ -72,18 +56,23 @@ declare function objectHasKey<O extends object>(obj: O, key: unknown): key is ke
 declare function tupleHasValue<A extends readonly unknown[]>(array: A, value: unknown): value is A[number];
 /** Check if an element is present in the provided set. Especially useful for checking against literal sets */
 declare function setHasElement<T extends Set<unknown>>(set: T, value: unknown): value is SetElement<T>;
+/** Returns a subset of an object with explicitly defined keys */
+declare function pick<T extends object, K extends keyof T>(obj: T, keys: Iterable<K>): Pick<T, K>;
+/** Returns a subset of an object with explicitly excluded keys */
+declare function omit<T extends object, K extends keyof T>(obj: T, keys: Iterable<K>): Omit<T, K>;
 /**
  * The system's sluggification algorithm for labels and other terms.
- * @param [camel=null] The sluggification style to use: null is default, and there are otherwise two camel options.
+ * @param text The text to sluggify
+ * @param [options.camel=null] The sluggification style to use
  */
-declare function sluggify(str: string, { camel }?: {
+declare function sluggify(text: string, { camel }?: {
     camel?: "dromedary" | "bactrian" | null;
 }): string;
 /** Parse a string containing html */
 declare function parseHTML(unparsed: string): HTMLElement;
-declare function getActionIcon(actionType: string | ActionCost | null, fallback: ImagePath): ImagePath;
-declare function getActionIcon(actionType: string | ActionCost | null, fallback: ImagePath | null): ImagePath | null;
-declare function getActionIcon(actionType: string | ActionCost | null): ImagePath;
+declare function getActionIcon(actionType: string | ActionCost | null, fallback: ImageFilePath): ImageFilePath;
+declare function getActionIcon(actionType: string | ActionCost | null, fallback: ImageFilePath | null): ImageFilePath | null;
+declare function getActionIcon(actionType: string | ActionCost | null): ImageFilePath;
 /**
  * Returns a character that can be used with the Pathfinder action font
  * to display an icon. If null it returns empty string.
@@ -98,13 +87,24 @@ declare function ordinal(value: number): string;
 /** Localizes a list of strings into a comma delimited list for the current language */
 declare function localizeList(items: string[]): string;
 /** Generate and return an HTML element for a FontAwesome icon */
-declare function fontAwesomeIcon(glyph: string, style?: "solid" | "regular"): HTMLElement;
+type FontAwesomeStyle = "solid" | "regular" | "duotone";
+declare function fontAwesomeIcon(glyph: string, { style, fixedWidth }?: {
+    style?: FontAwesomeStyle;
+    fixedWidth?: boolean;
+}): HTMLElement;
 /** Short form of type and non-null check */
 declare function isObject<T extends object>(value: unknown): value is DeepPartial<T>;
 declare function isObject<T extends string>(value: unknown): value is {
     [K in T]?: unknown;
 };
+/** Create a copy of a record with its insertion order sorted by label */
+declare function sortLabeledRecord<T extends Record<string, {
+    label: string;
+}>>(record: T): T;
+declare function sortStringRecord<T extends Record<string, string>>(record: T): T;
 /** JSON.stringify with recursive key sorting */
 declare function sortObjByKey(value: unknown): unknown;
 declare function sortedStringify(obj: object): string;
-export { ErrorPF2e, Fraction, add, addSign, applyNTimes, combineObjects, fontAwesomeIcon, getActionGlyph, getActionIcon, groupBy, isBlank, isObject, localizeList, objectHasKey, ordinal, Optional, padArray, parseHTML, setHasElement, sluggify, sortObjByKey, sortedStringify, sum, tupleHasValue, zip, };
+/** Walk an object tree and replace any string values found according to a provided function */
+declare function recursiveReplaceString<T>(source: T, replace: (s: string) => string): T;
+export { ErrorPF2e, Fraction, Optional, addSign, applyNTimes, fontAwesomeIcon, getActionGlyph, getActionIcon, groupBy, isBlank, isObject, localizeList, objectHasKey, omit, ordinal, padArray, parseHTML, pick, recursiveReplaceString, setHasElement, sluggify, sortBy, sortLabeledRecord, sortObjByKey, sortStringRecord, sortedStringify, sum, tupleHasValue, zip, };

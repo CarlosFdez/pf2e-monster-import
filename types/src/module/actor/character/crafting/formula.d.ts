@@ -1,4 +1,5 @@
 import { PhysicalItemPF2e } from "@item";
+import { Coins, Price } from "@item/physical/data";
 import { Rarity } from "@module/data";
 export declare class CraftingFormula implements CraftingFormulaData {
     item: PhysicalItemPF2e;
@@ -14,11 +15,12 @@ export declare class CraftingFormula implements CraftingFormulaData {
         deletable?: boolean;
     });
     get uuid(): ItemUUID;
-    get img(): ImagePath;
+    get img(): ImageFilePath;
     get name(): string;
     get level(): number;
     get rarity(): Rarity;
-    get price(): string;
+    get price(): Price;
+    get cost(): Coins;
     get minimumBatchSize(): number;
     get defaultBatchSize(): number;
     get description(): string;

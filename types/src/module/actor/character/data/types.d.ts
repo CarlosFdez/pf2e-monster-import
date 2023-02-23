@@ -1,51 +1,60 @@
-import { Abilities, CreatureAttributes, BaseCreatureData, BaseCreatureSource, CreatureHitPoints, CreatureSystemData, SaveData, SkillAbbreviation, SkillData, CreatureInitiative, HeldShieldData } from "@actor/creature/data";
-import { AbilityString, ActorFlagsPF2e, ArmorClassData, DexterityModifierCapData, PerceptionData, AbilityBasedStatistic, StrikeData } from "@actor/data/base";
-import { ArmorCategory } from "@item/armor/data";
-import { BaseWeaponType, WeaponCategory, WeaponGroup } from "@item/weapon/data";
-import { StatisticModifier } from "@actor/modifiers";
-import { ZeroToFour } from "@module/data";
-import type { CharacterPF2e } from "..";
-import { SaveType } from "@actor/data";
-import { MagicTradition } from "@item/spellcasting-entry/data";
-import { CraftingFormulaData } from "@actor/character/crafting/formula";
-import { DegreeOfSuccessAdjustment } from "@system/degree-of-success";
 import { CraftingEntryData } from "@actor/character/crafting/entry";
-import { PredicatePF2e } from "@system/predication";
+import { CraftingFormulaData } from "@actor/character/crafting/formula";
+import { AbilityData, BaseCreatureData, BaseCreatureSource, CreatureAttributes, CreatureDetails, CreatureHitPoints, CreatureInitiative, CreatureSystemData, CreatureTraitsData, HeldShieldData, SaveData, SkillAbbreviation, SkillData } from "@actor/creature/data";
+import { CreatureSensePF2e } from "@actor/creature/sense";
+import { AbilityBasedStatistic, ActorFlagsPF2e, ArmorClassData, PerceptionData, StrikeData, TraitViewData } from "@actor/data/base";
+import { StatisticModifier } from "@actor/modifiers";
+import { AbilityString, SaveType } from "@actor/types";
+import { FeatPF2e, WeaponPF2e } from "@item";
+import { ArmorCategory } from "@item/armor/types";
 import { ProficiencyRank } from "@item/data";
-import { WeaponPF2e } from "@item";
-import { CharacterSheetTabVisibility } from "./sheet";
 import { DeitySystemData } from "@item/deity/data";
-import { Alignment } from "@actor/creature/types";
-export interface CharacterSource extends BaseCreatureSource<"character", CharacterSystemData> {
+import { DeityDomain } from "@item/deity/types";
+import { MagicTradition } from "@item/spell/types";
+import { BaseWeaponType, WeaponCategory, WeaponGroup } from "@item/weapon/types";
+import { ZeroToFour } from "@module/data";
+import { PredicatePF2e } from "@system/predication";
+import { StatisticTraceData } from "@system/statistic";
+import type { CharacterPF2e } from "..";
+import { CharacterSheetTabVisibility } from "./sheet";
+interface CharacterSource extends BaseCreatureSource<"character", CharacterSystemData> {
     flags: DeepPartial<CharacterFlags>;
 }
-export declare class CharacterData extends BaseCreatureData<CharacterPF2e, CharacterSystemData> {
-    static DEFAULT_ICON: ImagePath;
+interface CharacterData extends Omit<CharacterSource, "data" | "flags" | "effects" | "items" | "prototypeToken" | "system" | "type">, BaseCreatureData<CharacterPF2e, "character", CharacterSystemData, CharacterSource> {
 }
-export interface CharacterData extends Omit<CharacterSource, "effects" | "flags" | "items" | "token"> {
-    readonly type: CharacterSource["type"];
-    data: CharacterSystemData;
-    flags: CharacterFlags;
-    readonly _source: CharacterSource;
-}
-declare type CharacterFlags = ActorFlagsPF2e & {
+type CharacterFlags = ActorFlagsPF2e & {
     pf2e: {
+        /** If applicable, the character's proficiency rank in their deity's favored weapon */
+        favoredWeaponRank: number;
+        /** Whether items are crafted without consuming resources */
         freeCrafting: boolean;
+        /** Whether the alchemist's (and related dedications) Quick Alchemy ability is enabled */
+        quickAlchemy: boolean;
+        /** Whether ABP should be disabled despite it being on for the world */
         disableABP?: boolean;
+        /** Which sheet tabs are displayed */
         sheetTabs: CharacterSheetTabVisibility;
+        /** Whether the basic unarmed attack is shown on the Actions tab */
+        showBasicUnarmed: boolean;
     };
 };
-export interface CharacterSkillData extends SkillData {
+interface CharacterSkillData extends SkillData {
     ability: AbilityString;
     /** The proficiency rank ("TEML") */
     rank: ZeroToFour;
     /** Whether this skill is subject to an armor check penalty */
     armor: boolean;
+    /** Is this skill a Lore skill? */
+    lore?: boolean;
 }
 /** The raw information contained within the actor data object for characters. */
-export interface CharacterSystemData extends CreatureSystemData {
+interface CharacterSystemData extends CreatureSystemData {
     /** The six primary ability scores. */
-    abilities: Abilities;
+    abilities: CharacterAbilities;
+    /** Character build data, currently containing ability boosts and flaws */
+    build: {
+        abilities: CharacterBuildingAbilitySystemData;
+    };
     /** The three save types. */
     saves: CharacterSaves;
     /** Tracks proficiencies for martial (weapon and armor) skills. */
@@ -55,14 +64,16 @@ export interface CharacterSystemData extends CreatureSystemData {
     attributes: CharacterAttributes;
     /** A catch-all for character proficiencies */
     proficiencies: {
+        /** Zero or more class DCs, used for saves related to class abilities. */
+        classDCs: Record<string, ClassDCData>;
+        /** Spellcasting attack modifiers and DCs for each magical tradition */
         traditions: MagicTraditionProficiencies;
         /** Aliased path components for use by rule element during property injection */
         aliases?: Record<string, string | undefined>;
     };
     /** Player skills, used for various skill checks. */
-    skills: {
-        [K in SkillAbbreviation]: CharacterSkillData;
-    };
+    skills: Record<SkillAbbreviation, CharacterSkillData>;
+    traits: CharacterTraitsData;
     /** Pathfinder Society Organized Play */
     pfs: PathfinderSocietyData;
     /** Special strikes which the character can take. */
@@ -71,16 +82,55 @@ export interface CharacterSystemData extends CreatureSystemData {
     /** Crafting-related data, including known formulas */
     crafting: {
         formulas: CraftingFormulaData[];
-        entries: Record<string, CraftingEntryData>;
+        entries: Record<string, Partial<CraftingEntryData>>;
     };
 }
+interface CharacterAbilityData extends AbilityData {
+    /** An ability score prior to modification by items */
+    base: number;
+}
+interface CharacterBuildingAbilitySourceData {
+    /** Whether this PC's ability scores are being manually entered (aka custom) */
+    manual: boolean;
+    boosts: {
+        1: AbilityString[];
+        5: AbilityString[];
+        10: AbilityString[];
+        15: AbilityString[];
+        20: AbilityString[];
+    };
+}
+/**
+ * Prepared system data for character ability scores. This is injected by ABC classes to complete it.
+ */
+interface CharacterBuildingAbilitySystemData extends CharacterBuildingAbilitySourceData {
+    /** Key ability score options drawn from class and class features */
+    keyOptions: AbilityString[];
+    boosts: CharacterBuildingAbilitySourceData["boosts"] & {
+        ancestry: AbilityString[];
+        background: AbilityString[];
+        class: AbilityString | null;
+    };
+    /** Number of remaining allowed boosts (UI and gradual ability boosts only) */
+    allowedBoosts: {
+        1: number;
+        5: number;
+        10: number;
+        15: number;
+        20: number;
+    };
+    flaws: {
+        ancestry: AbilityString[];
+    };
+}
+type CharacterAbilities = Record<AbilityString, CharacterAbilityData>;
 interface CharacterSaveData extends SaveData {
     ability: AbilityString;
     /** The proficiency rank ("TEML") */
     rank: ZeroToFour;
 }
-export declare type CharacterSaves = Record<SaveType, CharacterSaveData>;
-export interface CharacterProficiency {
+type CharacterSaves = Record<SaveType, CharacterSaveData>;
+interface CharacterProficiency {
     /** The actual modifier for this martial type. */
     value: number;
     /** Describes how the value was computed. */
@@ -92,7 +142,7 @@ export interface CharacterProficiency {
     custom?: true;
 }
 /** A proficiency with a rank that depends on another proficiency */
-export interface MartialProficiency extends Omit<CharacterProficiency, "custom"> {
+interface MartialProficiency extends Omit<CharacterProficiency, "custom"> {
     /** A predicate to match against weapons and unarmed attacks */
     definition: PredicatePF2e;
     /** Can this proficiency be edited or deleted? */
@@ -102,58 +152,53 @@ export interface MartialProficiency extends Omit<CharacterProficiency, "custom">
     /** The maximum rank this proficiency can reach */
     maxRank?: Exclude<ProficiencyRank, "untrained">;
 }
-export interface LinkedProficiency extends MartialProficiency {
+interface LinkedProficiency extends MartialProficiency {
     sameAs: WeaponCategory;
 }
-export declare type MagicTraditionProficiencies = Record<MagicTradition, CharacterProficiency>;
-export declare type CategoryProficiencies = Record<ArmorCategory | WeaponCategory, CharacterProficiency>;
-export declare type BaseWeaponProficiencyKey = `weapon-base-${BaseWeaponType}`;
-declare type BaseWeaponProficiencies = Record<BaseWeaponProficiencyKey, CharacterProficiency>;
-export declare type WeaponGroupProficiencyKey = `weapon-group-${WeaponGroup}`;
-declare type WeaponGroupProfiencies = Record<WeaponGroupProficiencyKey, CharacterProficiency>;
-declare type LinkedProficiencies = Record<string, MartialProficiency>;
-export declare type MartialProficiencies = CategoryProficiencies & BaseWeaponProficiencies & WeaponGroupProfiencies & LinkedProficiencies;
-export declare type MartialProficiencyKey = keyof Required<MartialProficiencies>;
+type MagicTraditionProficiencies = Record<MagicTradition, CharacterProficiency>;
+type CategoryProficiencies = Record<ArmorCategory | WeaponCategory, CharacterProficiency>;
+type BaseWeaponProficiencyKey = `weapon-base-${BaseWeaponType}`;
+type BaseWeaponProficiencies = Record<BaseWeaponProficiencyKey, CharacterProficiency>;
+type WeaponGroupProficiencyKey = `weapon-group-${WeaponGroup}`;
+type WeaponGroupProfiencies = Record<WeaponGroupProficiencyKey, CharacterProficiency>;
+type LinkedProficiencies = Record<string, MartialProficiency>;
+type MartialProficiencies = CategoryProficiencies & BaseWeaponProficiencies & WeaponGroupProfiencies & LinkedProficiencies;
+type MartialProficiencyKey = keyof Required<MartialProficiencies>;
 /** The full data for the class DC; similar to SkillData, but is not rollable. */
-export interface ClassDCData extends StatisticModifier, AbilityBasedStatistic {
+interface ClassDCData extends Required<AbilityBasedStatistic>, StatisticTraceData {
+    label: string;
     rank: ZeroToFour;
+    primary: boolean;
 }
 /** The full data for a character action (used primarily for strikes.) */
-export declare type CharacterStrike = StatisticModifier & Omit<StrikeData, "item"> & {
+interface CharacterStrike extends StrikeData {
     item: Embedded<WeaponPF2e>;
-    slug: string | null;
-    adjustments?: DegreeOfSuccessAdjustment[];
-    meleeUsage: CharacterStrike | null;
+    slug: string;
+    /** Whether this attack is visible on the sheet */
+    visible: boolean;
+    altUsages: CharacterStrike[];
     auxiliaryActions: AuxiliaryAction[];
-};
-export interface AuxiliaryAction {
+    weaponTraits: TraitViewData[];
+}
+interface AuxiliaryAction {
     label: string;
     img: string;
     execute: () => Promise<void>;
 }
 /** A Pathfinder Society Faction */
-declare type PFSFaction = "EA" | "GA" | "HH" | "VS" | "RO" | "VW";
+type PFSFaction = "EA" | "GA" | "HH" | "VS" | "RO" | "VW";
 /** A Pathfinder Society School */
-declare type PFSSchool = "none" | "scrolls" | "spells" | "swords";
+type PFSSchool = "scrolls" | "spells" | "swords" | null;
 /** PFS faction reputation values */
-interface PathfinderSocietyReputation {
-    EA: number;
-    GA: number;
-    HH: number;
-    VS: number;
-    RO: number;
-    VW: number;
-}
+type PathfinderSocietyReputation = Record<PFSFaction, number | null>;
 /** Pathfinder Society Organized Play data fields */
 interface PathfinderSocietyData {
     /** Number assigned to the player. */
-    playerNumber: string;
+    playerNumber: number | null;
     /** Number assigned to the character. */
-    characterNumber: string;
+    characterNumber: number | null;
     /** Is the character currently affected by a level bump? */
     levelBump: boolean;
-    /** Character's current fame */
-    fame: number;
     /** Character's currently slotted faction */
     currentFaction: PFSFaction;
     /** Character's Pathfinder school */
@@ -161,12 +206,13 @@ interface PathfinderSocietyData {
     /** Character's Reputation with all the factions */
     reputation: PathfinderSocietyReputation;
 }
-export declare type CharacterArmorClass = StatisticModifier & Required<ArmorClassData>;
+type CharacterArmorClass = StatisticModifier & Required<ArmorClassData>;
 interface CharacterResources {
     /** The current number of focus points and pool size */
     focus: {
         value: number;
         max: number;
+        cap: number;
     };
     /** The current and maximum number of hero points */
     heroPoints: {
@@ -188,19 +234,10 @@ interface CharacterResources {
 interface CharacterPerception extends PerceptionData {
     rank: ZeroToFour;
 }
-export declare type CharacterDetails = {
+type CharacterDetails = Omit<CreatureDetails, "creature"> & {
     /** The key ability which class saves (and other class-related things) scale off of. */
     keyability: {
         value: AbilityString;
-    };
-    /** Character alignment (LN, N, NG, etc.) */
-    alignment: {
-        value: Alignment;
-    };
-    /** The diety that the character worships (and an image of the diety symbol). */
-    deity: {
-        value: string;
-        image: ImagePath;
     };
     /** How old the character is (user-provided field). */
     age: {
@@ -264,11 +301,6 @@ export declare type CharacterDetails = {
         /** COMPUTED: The percentage completion of the current level (value / max). */
         pct: number;
     };
-    /** Information about the current character level. */
-    level: {
-        /** The current level of this character. */
-        value: number;
-    };
     /** Convenience information for easy access when the item class instance isn't available */
     ancestry: {
         name: string;
@@ -287,57 +319,45 @@ export declare type CharacterDetails = {
 interface CharacterDeities {
     primary: DeityDetails | null;
     secondary: null;
+    domains: {
+        [K in DeityDomain]?: string;
+    };
 }
-declare type DeityDetails = Pick<DeitySystemData, "alignment" | "skill"> & {
-    weapons: {
-        option: string;
-        label: string;
-    }[];
+type DeityDetails = Pick<DeitySystemData, "alignment" | "skill"> & {
+    weapons: BaseWeaponType[];
 };
-export interface CharacterAttributes extends CreatureAttributes {
-    /** The perception skill. */
+interface CharacterAttributes extends CreatureAttributes {
+    /** The perception statistic */
     perception: CharacterPerception;
-    /** The class DC, used for saves related to class abilities. */
-    classDC: ClassDCData;
+    /** Used for saves related to class abilities */
+    classDC: ClassDCData | null;
+    /** The best spell DC, used for certain saves related to feats */
+    spellDC: {
+        rank: number;
+        value: number;
+    } | null;
+    /** The higher between highest spellcasting DC and (if present) class DC */
+    classOrSpellDC: {
+        rank: number;
+        value: number;
+    };
     /** Creature armor class, used to defend against attacks. */
     ac: CharacterArmorClass;
     /** Initiative, used to determine turn order in combat. */
     initiative: CreatureInitiative;
-    /** Dexterity modifier cap to AC. Undefined means no limit. */
-    dexCap: DexterityModifierCapData[];
     /** The amount of HP provided per level by the character's class. */
     classhp: number;
     /** The amount of HP provided at level 1 by the character's ancestry. */
     ancestryhp: number;
+    /** The number of hands this character has free */
+    handsFree: number;
     /** A bonus to the maximum amount of bulk that this character can carry. */
     bonusLimitBulk: number;
     /** A bonus to the maximum amount of bulk that this character can carry without being encumbered. */
     bonusEncumbranceBulk: number;
-    /** The current dying level (and maximum) for this character. */
-    dying: {
-        value: number;
-        max: number;
-        recoveryMod: number;
-    };
-    /** The current wounded level (and maximum) for this character. */
-    wounded: {
-        value: number;
-        max: number;
-    };
-    /** The current doomed level (and maximum) for this character. */
-    doomed: {
-        value: number;
-        max: number;
-    };
     /** The number of familiar abilities this character's familiar has access to. */
     familiarAbilities: {
         value: number;
-    };
-    /** The character's natural reach */
-    reach: {
-        value: number;
-        /** Its reach for the purpose of manipulate actions */
-        manipulate: number | null;
     };
     /** Data related to character hitpoints. */
     hp: CharacterHitPoints;
@@ -369,5 +389,23 @@ export interface CharacterAttributes extends CreatureAttributes {
 }
 interface CharacterHitPoints extends CreatureHitPoints {
     recoveryMultiplier: number;
+    recoveryAddend: number;
 }
-export {};
+interface CharacterTraitsData extends CreatureTraitsData {
+    senses: CreatureSensePF2e[];
+}
+interface GrantedFeat {
+    feat: FeatPF2e;
+    grants: GrantedFeat[];
+}
+interface SlottedFeat {
+    id: string;
+    level: number | string;
+    feat?: FeatPF2e;
+    grants: GrantedFeat[];
+}
+interface BonusFeat {
+    feat: FeatPF2e;
+    grants: GrantedFeat[];
+}
+export { AuxiliaryAction, BaseWeaponProficiencyKey, BonusFeat, CategoryProficiencies, CharacterArmorClass, CharacterAttributes, CharacterData, CharacterDetails, CharacterFlags, CharacterProficiency, CharacterResources, CharacterSaveData, CharacterSaves, CharacterSkillData, CharacterSource, CharacterStrike, CharacterSystemData, CharacterTraitsData, ClassDCData, GrantedFeat, LinkedProficiency, MagicTraditionProficiencies, MartialProficiencies, MartialProficiency, MartialProficiencyKey, SlottedFeat, WeaponGroupProficiencyKey, };

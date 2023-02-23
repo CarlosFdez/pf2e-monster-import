@@ -1,23 +1,9 @@
-import { BasePhysicalItemData, BasePhysicalItemSource, MagicItemSystemData, PhysicalItemTraits } from "@item/physical/data";
-import { ZeroToFour, ZeroToThree } from "@module/data";
-import type { LocalizePF2e } from "@module/system/localize";
-import type { ArmorPF2e } from ".";
-export declare type ArmorSource = BasePhysicalItemSource<"armor", ArmorSystemSource>;
-export declare class ArmorData extends BasePhysicalItemData<ArmorPF2e> {
-    static DEFAULT_ICON: ImagePath;
-}
-export interface ArmorData extends Omit<ArmorSource, "effects" | "flags"> {
-    type: ArmorSource["type"];
-    data: ArmorSystemData;
-    readonly _source: ArmorSource;
-}
-export declare type ArmorTrait = keyof ConfigPF2e["PF2E"]["armorTraits"];
-declare type ArmorTraits = PhysicalItemTraits<ArmorTrait>;
-export declare type ArmorCategory = keyof ConfigPF2e["PF2E"]["armorTypes"];
-export declare type ArmorGroup = keyof ConfigPF2e["PF2E"]["armorGroups"];
-export declare type BaseArmorType = keyof typeof LocalizePF2e.translations.PF2E.Item.Armor.Base;
-export declare type ResilientRuneType = "" | "resilient" | "greaterResilient" | "majorResilient";
-export interface ArmorSystemSource extends MagicItemSystemData {
+import { BasePhysicalItemData, BasePhysicalItemSource, Investable, PhysicalItemTraits, PhysicalSystemData, PhysicalSystemSource } from "@item/physical";
+import { OneToFour, ZeroToThree } from "@module/data";
+import { ArmorCategory, ArmorGroup, ArmorTrait, BaseArmorType, OtherArmorTag, ResilientRuneType, type ArmorPF2e } from ".";
+type ArmorSource = BasePhysicalItemSource<"armor", ArmorSystemSource>;
+type ArmorData = Omit<ArmorSource, "system" | "effects" | "flags"> & BasePhysicalItemData<ArmorPF2e, "armor", ArmorSystemData, ArmorSource>;
+interface ArmorSystemSource extends Investable<PhysicalSystemSource> {
     traits: ArmorTraits;
     armor: {
         value: number;
@@ -38,10 +24,10 @@ export interface ArmorSystemSource extends MagicItemSystemData {
         value: number;
     };
     potencyRune: {
-        value: ZeroToFour;
+        value: OneToFour | null;
     };
     resiliencyRune: {
-        value: ResilientRuneType | "";
+        value: ResilientRuneType | null;
     };
     propertyRune1: {
         value: string;
@@ -56,12 +42,15 @@ export interface ArmorSystemSource extends MagicItemSystemData {
         value: string;
     };
 }
-interface ArmorSystemData extends ArmorSystemSource {
+interface ArmorSystemData extends Omit<ArmorSystemSource, "identification" | "price" | "temporary" | "usage">, Omit<Investable<PhysicalSystemData>, "traits"> {
+    baseItem: BaseArmorType;
     runes: {
         potency: number;
         resilient: ZeroToThree;
         property: string[];
     };
 }
-export declare const ARMOR_CATEGORIES: readonly ["unarmored", "light", "medium", "heavy"];
-export {};
+interface ArmorTraits extends PhysicalItemTraits<ArmorTrait> {
+    otherTags: OtherArmorTag[];
+}
+export { ArmorData, ArmorSource, ArmorSystemData, ArmorSystemSource };

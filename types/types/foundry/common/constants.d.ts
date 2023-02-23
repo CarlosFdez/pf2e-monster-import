@@ -39,11 +39,40 @@ declare global {
             ROLL: 5;
         };
 
-        /**
-         * The allowed Entity types which may exist within a Compendium pack
-         * This is a subset of ENTITY_TYPES
-         */
-        COMPENDIUM_ENTITY_TYPES: ["Actor", "Item", "Scene", "JournalEntry", "Macro", "RollTable", "Playlist"];
+        DOCUMENT_TYPES: [
+            "Actor",
+            "Cards",
+            "ChatMessage",
+            "Combat",
+            "Item",
+            "Folder",
+            "JournalEntry",
+            "Macro",
+            "Playlist",
+            "RollTable",
+            "Scene",
+            "User"
+        ];
+
+        COMPATIBILITY_MODES: {
+            SILENT: 0;
+            WARNING: 1;
+            ERROR: 2;
+            FAILURE: 3;
+        };
+
+        /** The allowed Document types which may exist within a Compendium pack. */
+        COMPENDIUM_DOCUMENT_TYPES: [
+            "Actor",
+            "Cards",
+            "Item",
+            "JournalEntry",
+            "Macro",
+            "Playlist",
+            "RollTable",
+            "Scene",
+            "Adventure"
+        ];
 
         /** The default artwork used for Token images if none is provided */
         DEFAULT_TOKEN: ImagePath;
@@ -101,23 +130,6 @@ declare global {
         };
 
         /**
-         * Define the allowed Entity class types
-         */
-        ENTITY_TYPES: [
-            "Actor",
-            "ChatMessage",
-            "Combat",
-            "Item",
-            "Folder",
-            "JournalEntry",
-            "Macro",
-            "Playlist",
-            "RollTable",
-            "Scene",
-            "User"
-        ];
-
-        /**
          * EULA version number
          */
         EULA_VERSION: string;
@@ -141,10 +153,10 @@ declare global {
         /**
          * Define the allowed Entity types which Folders may contain
          */
-        FOLDER_ENTITY_TYPES: ["Actor", "Item", "Scene", "JournalEntry", "RollTable"];
+        FOLDER_DOCUMENT_TYPES: ["Actor", "Cards", "Item", "Scene", "JournalEntry", "RollTable"];
 
         /** Define the allowed Entity types which may be dynamically linked in chat */
-        ENTITY_LINK_TYPES: ["Actor", "Item", "Scene", "JournalEntry", "Macro", "RollTable"];
+        ENTITY_LINK_TYPES: ["Actor", "Cards", "Item", "Scene", "JournalEntry", "Macro", "RollTable"];
 
         /** The allowed Grid types which are supported by the software */
         GRID_TYPES: {
@@ -424,6 +436,9 @@ declare global {
             SECRET: 2;
         };
 
+        /** The wall properties which restrict the way interaction occurs with a specific wall */
+        WALL_RESTRICTION_TYPES: ["light", "sight", "sound", "move"];
+
         /**
          * The allowed door states which may describe a Wall that contains a door
          * CLOSED: The door is closed
@@ -454,8 +469,8 @@ declare global {
          */
         WALL_SENSE_TYPES: {
             NONE: 0;
-            NORMAL: 1;
-            LIMITED: 2;
+            LIMITED: 10;
+            NORMAL: 20;
         };
 
         /** The supported file extensions for image-type files */
@@ -468,17 +483,20 @@ declare global {
         AUDIO_FILE_EXTENSIONS: ["flac", "m4a", "mp3", "ogg", "opus", "wav", "webm"];
     };
 
-    type CanvasPerformanceMode = typeof CONST.CANVAS_PERFORMANCE_MODES[keyof typeof CONST.CANVAS_PERFORMANCE_MODES];
-    type ImageFileExtension = typeof CONST.IMAGE_FILE_EXTENSIONS[number];
-    type VideoFileExtension = typeof CONST.VIDEO_FILE_EXTENSIONS[number];
     type AudioFileExtension = typeof CONST.AUDIO_FILE_EXTENSIONS[number];
+    type CanvasPerformanceMode = typeof CONST.CANVAS_PERFORMANCE_MODES[keyof typeof CONST.CANVAS_PERFORMANCE_MODES];
+    type CompatibilityMode = typeof CONST.COMPATIBILITY_MODES[keyof typeof CONST.COMPATIBILITY_MODES];
     type DocumentPermission = keyof typeof CONST.DOCUMENT_PERMISSION_LEVELS;
     type DocumentPermissionNumber = typeof CONST.DOCUMENT_PERMISSION_LEVELS[DocumentPermission];
     type GridType = typeof CONST.GRID_TYPES[keyof typeof CONST.GRID_TYPES];
+    type ImageFileExtension = typeof CONST.IMAGE_FILE_EXTENSIONS[number];
     type PermissionLevel = typeof CONST.DOCUMENT_PERMISSION_LEVELS[DocumentPermission];
-    type UserPermission = keyof typeof CONST.USER_PERMISSIONS;
-    type UserAction = "create" | "update" | "delete";
     type TileOcclusionMode = typeof CONST.TILE_OCCLUSION_MODES[keyof typeof CONST.TILE_OCCLUSION_MODES];
-    type TokenDisposition = typeof CONST.TOKEN_DISPOSITIONS[keyof typeof CONST.TOKEN_DISPOSITIONS];
     type TokenDisplayMode = typeof CONST.TOKEN_DISPLAY_MODES[keyof typeof CONST.TOKEN_DISPLAY_MODES];
+    type TokenDisposition = typeof CONST.TOKEN_DISPOSITIONS[keyof typeof CONST.TOKEN_DISPOSITIONS];
+    type UserAction = "create" | "update" | "delete";
+    type UserPermission = keyof typeof CONST.USER_PERMISSIONS;
+    type VideoFileExtension = typeof CONST.VIDEO_FILE_EXTENSIONS[number];
+    type WallRestrictionType = typeof CONST.WALL_RESTRICTION_TYPES[number];
+    type WallSenseType = typeof CONST.WALL_SENSE_TYPES[keyof typeof CONST.WALL_SENSE_TYPES];
 }

@@ -1,34 +1,46 @@
-import { AbilityString } from "@actor/data/base";
+import { ActorPF2e } from "@actor";
+import { AbilityString } from "@actor/types";
 import { SpellPF2e } from "@item";
-import { ItemSystemData } from "@item/data/base";
-import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from "@item/data/non-physical";
-import { MAGIC_TRADITIONS } from "@item/spell/data";
-import { OneToFour, OneToTen, ZeroToEleven } from "@module/data";
+import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemSystemData } from "@item/data/base";
+import { MagicTradition } from "@item/spell/types";
+import { OneToTen, ZeroToEleven, ZeroToFour } from "@module/data";
 import { RollNotePF2e } from "@module/notes";
-import { Statistic, StatisticChatData } from "@system/statistic";
+import { Statistic } from "@system/statistic";
 import { SpellcastingEntryPF2e } from "..";
-export interface SpellcastingEntry {
+interface BaseSpellcastingEntry {
     id: string;
+    actor: ActorPF2e | null;
+    ability: AbilityString;
+    tradition: MagicTradition | null;
     statistic: Statistic;
-    cast(spell: SpellPF2e, options: {}): Promise<void>;
+    cast(spell: SpellPF2e, options: CastOptions): Promise<void>;
 }
-export declare type SlotKey = `slot${ZeroToEleven}`;
-export declare type SpellcastingEntrySource = BaseNonPhysicalItemSource<"spellcastingEntry", SpellcastingEntrySystemData>;
-export declare class SpellcastingEntryData extends BaseNonPhysicalItemData<SpellcastingEntryPF2e> {
-    static DEFAULT_ICON: ImagePath;
+interface SpellcastingEntry extends BaseSpellcastingEntry {
+    isPrepared: boolean;
+    isSpontaneous: boolean;
+    isInnate: boolean;
+    isFocusPool: boolean;
 }
-export interface SpellcastingEntryData extends Omit<SpellcastingEntrySource, "effects" | "flags"> {
-    type: SpellcastingEntrySource["type"];
-    data: SpellcastingEntrySource["data"];
-    readonly _source: SpellcastingEntrySource;
+interface CastOptions {
+    message?: boolean;
+    rollMode?: RollMode;
 }
-export interface SpellAttackRollModifier {
+interface SpellcastingEntryPF2eCastOptions extends CastOptions {
+    consume?: boolean;
+    /** The slot level to consume to cast the spell at */
+    level?: number;
+    slot?: number;
+}
+type SlotKey = `slot${ZeroToEleven}`;
+type SpellcastingEntrySource = BaseItemSourcePF2e<"spellcastingEntry", SpellcastingEntrySystemData>;
+type SpellcastingEntryData = Omit<SpellcastingEntrySource, "system" | "effects" | "flags"> & BaseItemDataPF2e<SpellcastingEntryPF2e, "spellcastingEntry", SpellcastingEntrySystemData, SpellcastingEntrySource>;
+interface SpellAttackRollModifier {
     breakdown: string;
     notes: RollNotePF2e[];
     roll: Function;
     value: number;
 }
-export interface SpellDifficultyClass {
+interface SpellDifficultyClass {
     breakdown: string;
     notes: RollNotePF2e[];
     value: number;
@@ -44,38 +56,33 @@ interface SpellSlotData {
     value: number;
     max: number;
 }
-export declare type MagicTradition = typeof MAGIC_TRADITIONS[number];
-export declare type PreparationType = keyof ConfigPF2e["PF2E"]["preparationType"];
-export interface SpellcastingEntrySystemData extends ItemSystemData {
+type PreparationType = keyof ConfigPF2e["PF2E"]["preparationType"];
+interface SpellcastingEntrySystemData extends ItemSystemData {
     ability: {
         value: AbilityString | "";
     };
     spelldc: {
         value: number;
         dc: number;
-        mod: number;
     };
-    statisticData?: StatisticChatData;
     tradition: {
         value: MagicTradition | "";
     };
     prepared: {
         value: PreparationType;
         flexible?: boolean;
-    };
-    showUnpreparedSpells: {
-        value: boolean;
+        validItems?: "scroll" | "";
     };
     showSlotlessLevels: {
         value: boolean;
     };
     proficiency: {
-        value: OneToFour;
+        slug: string;
+        value: ZeroToFour;
     };
-    displayLevels: Record<number, boolean>;
     slots: Record<SlotKey, SpellSlotData>;
     autoHeightenLevel: {
         value: OneToTen | null;
     };
 }
-export {};
+export { BaseSpellcastingEntry, CastOptions, PreparationType, SlotKey, SpellAttackRollModifier, SpellDifficultyClass, SpellcastingEntry, SpellcastingEntryData, SpellcastingEntryPF2eCastOptions, SpellcastingEntrySource, SpellcastingEntrySystemData, };

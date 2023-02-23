@@ -65,7 +65,7 @@ declare module foundry {
              * c.get("d"); // null
              * c.get("d", {strict: true}); // throws Error
              */
-            get<T extends V = V>(key: string, { strict }: { strict: true }): T;
+            get<T extends V = V>(key: string | null | undefined, { strict }: { strict: true }): T;
             get<T extends V = V>(key: string, { strict }?: { strict?: boolean }): T | undefined;
 
             /**
@@ -120,5 +120,3 @@ declare module foundry {
 
 declare type Collection<V> = foundry.utils.Collection<V>;
 declare const Collection: typeof foundry.utils.Collection;
-
-declare type CollectionValue<T> = T extends foundry.utils.Collection<infer U> ? U : never;

@@ -1,12 +1,11 @@
 /// <reference types="jquery" />
+/// <reference types="jquery" />
 /// <reference types="tooltipster" />
-interface FormInputData extends Omit<ClientSettingsData, "scope"> {
-    key: string;
+interface FormInputData extends Omit<SettingConfig, "config" | "namespace" | "scope"> {
     value: unknown;
     isSelect: boolean;
     isCheckbox: boolean;
     isDateTime: boolean;
-    scope?: "world" | "client";
 }
 interface TemplateData extends FormApplicationData {
     settings: FormInputData[];
@@ -22,7 +21,7 @@ interface UpdateData {
 }
 export declare class WorldClockSettings extends FormApplication {
     static get defaultOptions(): FormApplicationOptions;
-    getData(): TemplateData;
+    getData(): Promise<TemplateData>;
     /** Register World Clock settings */
     static registerSettings(): void;
     activateListeners($html: JQuery): void;

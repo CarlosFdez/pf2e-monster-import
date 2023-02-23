@@ -6,11 +6,11 @@ declare global {
      * Each primary Document type has an associated subclass of WorldCollection which contains them.
      * @param data An array of data objects from which to create Document instances
      */
-    abstract class WorldCollection<TDocument extends ClientDocument> extends DocumentCollection<TDocument> {
-        constructor(data?: TDocument["data"]["_source"][]);
+    abstract class WorldCollection<TDocument extends WorldDocument> extends DocumentCollection<TDocument> {
+        constructor(data?: TDocument["_source"][]);
 
         /** The source data is, itself, a mapping of IDs to data objects */
-        protected readonly _source: TDocument["data"]["_source"];
+        protected readonly _source: TDocument["_source"];
 
         /** An Array of application references which will be automatically updated when the collection content changes */
         apps: Application[];
@@ -19,7 +19,7 @@ declare global {
          * Initialize the WorldCollection object by constructing its contained Document instances
          * @param data
          */
-        protected _initialize(data: TDocument["data"]["_source"][]): void;
+        protected _initialize(data: TDocument["_source"][]): void;
 
         /* -------------------------------------------- */
         /*  Collection Properties                       */
@@ -37,7 +37,7 @@ declare global {
         get directory(): SidebarDirectory<TDocument> | null;
 
         /** Return a reference to the singleton instance of this WorldCollection, or null if it has not yet been created. */
-        static get instance(): WorldCollection<ClientDocument>;
+        static get instance(): WorldCollection<WorldDocument>;
 
         /* -------------------------------------------- */
         /*  Collection Methods                          */
@@ -55,8 +55,8 @@ declare global {
          * @param [options]    Optional arguments passed to the Document.create method
          * @return The imported Document instance
          */
-        importFromCompendium<T extends CompendiumDocument & TDocument>(
-            pack: CompendiumCollection<T>,
+        importFromCompendium(
+            pack: CompendiumCollection,
             id: string,
             updateData?: DocumentUpdateData<TDocument>,
             options?: DocumentModificationContext<TDocument>
@@ -73,9 +73,41 @@ declare global {
          * @return The processed data ready for world Document creation
          */
         fromCompendium(
-            document: TDocument | TDocument["data"]["_source"],
+            document: TDocument | TDocument["_source"],
             options?: FromCompendiumOptions
-        ): TDocument["data"]["_source"];
+        ): TDocument["_source"];
+
+        /* -------------------------------------------- */
+        /*  Sheet Registration Methods                  */
+        /* -------------------------------------------- */
+
+        /**
+         * Register a Document sheet class as a candidate which can be used to display Documents of a given type.
+         * See {@link DocumentSheetConfig.registerSheet} for details.
+         * @static
+         * @param args Arguments forwarded to the DocumentSheetConfig.registerSheet method
+         *
+         * @example Register a new ActorSheet subclass for use with certain Actor types.
+         * ```js
+         * Actors.registerSheet("dnd5e", ActorSheet5eCharacter, { types: ["character], makeDefault: true });
+         * ```
+         */
+        static registerSheet(...args: DropFirst<Parameters<(typeof DocumentSheetConfig)["registerSheet"]>>): void;
+
+        /**
+         * Unregister a Document sheet class, removing it from the list of available sheet Applications to use.
+         * See {@link DocumentSheetConfig.unregisterSheet} for detauls.
+         * @static
+         * @param args Arguments forwarded to the DocumentSheetConfig.unregisterSheet method
+         *
+         * @example Deregister the default ActorSheet subclass to replace it with others.
+         * ```js
+         * Actors.unregisterSheet("core", ActorSheet);
+         * ```
+         */
+        static unregisterSheet(...args: DropFirst<Parameters<(typeof DocumentSheetConfig)["unregisterSheet"]>>): void;
+
+        static get registeredSheets(): DocumentSheet[];
     }
 
     interface FromCompendiumOptions {

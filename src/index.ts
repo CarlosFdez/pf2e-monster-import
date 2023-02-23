@@ -1,5 +1,5 @@
-import { ActorPF2e } from "@pf2e/module/actor";
-import { ItemPF2e } from "@pf2e/module/item";
+import { ActorPF2e } from "@actor";
+import { ItemPF2e } from "@item";
 import { MonsterImportApplication } from "./import-application";
 
 // will be extracted by webpack

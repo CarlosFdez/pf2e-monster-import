@@ -1,17 +1,13 @@
-import { CreatureAttributes, BaseCreatureData, BaseCreatureSource, CreatureSystemData, SkillAbbreviation, CreatureSystemSource, CreatureTraitsData } from "@actor/creature/data";
-import { AbilityString, Rollable } from "@actor/data/base";
+import { BaseCreatureData, BaseCreatureSource, CreatureAttributes, CreatureSystemData, CreatureSystemSource, CreatureTraitsData, SkillAbbreviation } from "@actor/creature/data";
+import { CreatureSensePF2e } from "@actor/creature/sense";
+import { Rollable } from "@actor/data/base";
 import { StatisticModifier } from "@actor/modifiers";
+import { AbilityString } from "@actor/types";
 import type { FamiliarPF2e } from ".";
-export declare type FamiliarSource = BaseCreatureSource<"familiar", FamiliarSystemSource>;
-export declare class FamiliarData extends BaseCreatureData<FamiliarPF2e, FamiliarSystemData> {
-    static DEFAULT_ICON: ImagePath;
+type FamiliarSource = BaseCreatureSource<"familiar", FamiliarSystemSource>;
+interface FamiliarData extends Omit<FamiliarSource, "data" | "system" | "effects" | "flags" | "items" | "prototypeToken" | "type">, BaseCreatureData<FamiliarPF2e, "familiar", FamiliarSystemData, FamiliarSource> {
 }
-export interface FamiliarData extends Omit<FamiliarSource, "effects" | "flags" | "items" | "token"> {
-    readonly type: FamiliarSource["type"];
-    data: FamiliarSystemData;
-    readonly _source: FamiliarSource;
-}
-export interface FamiliarSystemSource extends Pick<CreatureSystemSource, "schema"> {
+interface FamiliarSystemSource extends Pick<CreatureSystemSource, "schema"> {
     details: {
         creature: {
             value: string;
@@ -21,20 +17,26 @@ export interface FamiliarSystemSource extends Pick<CreatureSystemSource, "schema
         hp: {
             value: number;
         };
+        immunities?: never;
+        weaknesses?: never;
+        resistances?: never;
     };
     master: {
         id: string | null;
         ability: AbilityString | null;
     };
+    customModifiers?: never;
+    resources?: never;
+    traits?: never;
 }
 /** The raw information contained within the actor data object for familiar actors. */
-export interface FamiliarSystemData extends Omit<FamiliarSystemSource, "toggles" | "traits">, CreatureSystemData {
+interface FamiliarSystemData extends Omit<FamiliarSystemSource, "attributes" | "customModifiers" | "toggles" | "traits">, CreatureSystemData {
     details: CreatureSystemData["details"] & {
         creature: {
             value: string;
         };
     };
-    actions?: undefined;
+    actions?: never;
     attack: StatisticModifier & Rollable;
     attributes: FamiliarAttributes;
     skills: FamiliarSkills;
@@ -42,7 +44,7 @@ export interface FamiliarSystemData extends Omit<FamiliarSystemSource, "toggles"
         id: string | null;
         ability: AbilityString | null;
     };
-    traits: CreatureTraitsData;
+    traits: FamiliarTraitsData;
 }
 interface FamiliarAttributes extends CreatureAttributes {
     ac: {
@@ -52,11 +54,16 @@ interface FamiliarAttributes extends CreatureAttributes {
     };
     perception: FamiliarPerception;
 }
-declare type FamiliarPerception = {
+type FamiliarPerception = {
     value: number;
 } & StatisticModifier & Rollable;
-declare type FamiliarSkill = StatisticModifier & Rollable & {
+type FamiliarSkill = StatisticModifier & Rollable & {
     value: number;
+    ability: AbilityString;
+    visible?: boolean;
 };
-declare type FamiliarSkills = Record<SkillAbbreviation, FamiliarSkill>;
-export {};
+type FamiliarSkills = Record<SkillAbbreviation, FamiliarSkill>;
+interface FamiliarTraitsData extends CreatureTraitsData {
+    senses: CreatureSensePF2e[];
+}
+export { FamiliarData, FamiliarSource, FamiliarSystemData, FamiliarSystemSource };

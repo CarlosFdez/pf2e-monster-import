@@ -1,27 +1,11 @@
-import { SaveType } from "@actor/data";
-import { AbilityString } from "@actor/data/base";
-import { ItemLevelData, ItemSystemData, ItemTraits } from "@item/data/base";
-import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from "@item/data/non-physical";
-import { MagicTradition } from "@item/spellcasting-entry/data";
-import { DamageType } from "@system/damage";
-import { ValuesList, OneToTen, ValueAndMax } from "@module/data";
+import { AbilityString, SaveType } from "@actor/types";
 import type { SpellPF2e } from "@item";
-import { MAGIC_SCHOOLS } from "./values";
-export declare type SpellSource = BaseNonPhysicalItemSource<"spell", SpellSystemSource>;
-export declare class SpellData extends BaseNonPhysicalItemData<SpellPF2e> {
-    /** Prepared data */
-    isCantrip: boolean;
-    isFocusSpell: boolean;
-    isRitual: boolean;
-    static DEFAULT_ICON: ImagePath;
-}
-export interface SpellData extends Omit<SpellSource, "effects" | "flags"> {
-    type: SpellSource["type"];
-    data: SpellSource["data"];
-    readonly _source: SpellSource;
-}
-export declare type MagicSchool = typeof MAGIC_SCHOOLS[number];
-export declare type SpellTrait = keyof ConfigPF2e["PF2E"]["spellTraits"] | MagicSchool | MagicTradition;
+import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemLevelData, ItemSystemData, ItemSystemSource, ItemTraits } from "@item/data/base";
+import { OneToTen, ValueAndMax, ValuesList } from "@module/data";
+import { DamageType } from "@system/damage";
+import { MagicSchool, MagicTradition, SpellComponent, SpellTrait } from "../types";
+declare type SpellSource = BaseItemSourcePF2e<"spell", SpellSystemSource>;
+declare type SpellData = Omit<SpellSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<SpellPF2e, "spell", SpellSystemData, SpellSource>;
 export declare type SpellTraits = ItemTraits<SpellTrait>;
 declare type SpellDamageCategory = keyof ConfigPF2e["PF2E"]["damageCategories"];
 export interface SpellDamageType {
@@ -34,7 +18,34 @@ export interface SpellDamage {
     applyMod?: boolean;
     type: SpellDamageType;
 }
-export interface SpellSystemSource extends ItemSystemData, ItemLevelData {
+export interface SpellHeighteningInterval {
+    type: "interval";
+    interval: number;
+    damage: Record<string, string>;
+}
+export interface SpellHeighteningFixed {
+    type: "fixed";
+    levels: Record<OneToTen, Partial<SpellSystemSource>>;
+}
+export interface SpellHeightenLayer {
+    level: number;
+    system: Partial<SpellSystemData>;
+}
+interface SpellOverlayOverride {
+    _id: string;
+    system: Partial<SpellSystemSource>;
+    name?: string;
+    overlayType: "override";
+    sort: number;
+}
+/** Not implemented */
+interface SpellOverlayDamage {
+    overlayType: "damage";
+    choices: DamageType[];
+}
+declare type SpellOverlay = SpellOverlayOverride | SpellOverlayDamage;
+declare type SpellOverlayType = SpellOverlay["overlayType"];
+interface SpellSystemSource extends ItemSystemSource, ItemLevelData {
     traits: SpellTraits;
     level: {
         value: OneToTen;
@@ -49,12 +60,7 @@ export interface SpellSystemSource extends ItemSystemData, ItemLevelData {
     school: {
         value: MagicSchool;
     };
-    components: {
-        focus: boolean;
-        material: boolean;
-        somatic: boolean;
-        verbal: boolean;
-    };
+    components: Record<SpellComponent, boolean>;
     materials: {
         value: string;
     };
@@ -77,10 +83,8 @@ export interface SpellSystemSource extends ItemSystemData, ItemLevelData {
     damage: {
         value: Record<string, SpellDamage>;
     };
-    scaling?: {
-        interval: number;
-        damage: Record<string, string>;
-    };
+    heightening?: SpellHeighteningFixed | SpellHeighteningInterval;
+    overlays?: Record<string, SpellOverlay>;
     save: {
         basic: string;
         value: SaveType | "";
@@ -109,5 +113,7 @@ export interface SpellSystemSource extends ItemSystemData, ItemLevelData {
         uses?: ValueAndMax;
     };
 }
-export declare type SpellSystemData = SpellSystemSource;
-export {};
+interface SpellSystemData extends SpellSystemSource, ItemSystemData {
+    traits: SpellTraits;
+}
+export { SpellData, SpellSource, SpellSystemData, SpellSystemSource, SpellOverlay, SpellOverlayOverride, SpellOverlayType, };

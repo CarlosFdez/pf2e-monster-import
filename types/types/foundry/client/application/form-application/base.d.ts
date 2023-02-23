@@ -41,6 +41,9 @@ declare global {
          */
         editors: Record<string, TinyMCEEditorData>;
 
+        // Undocumented
+        _submitting?: boolean;
+
         /** Assign the default options which are supported by the entity edit sheet */
         static override get defaultOptions(): FormApplicationOptions;
 
@@ -67,6 +70,7 @@ declare global {
 
         /**
          * If the form is not editable, disable its input fields
+         * @param form The form HTML
          */
         protected _disableFields(form: HTMLElement): void;
 
@@ -88,6 +92,13 @@ declare global {
          * @return The prepared update data
          */
         protected _getSubmitData(updateData?: Record<string, unknown>): Record<string, unknown>;
+
+        /**
+         * Handle changes to an input element, submitting the form if options.submitOnChange is true.
+         * Do not preventDefault in this handler as other interactions on the form may also be occurring.
+         * @param event The initial change event
+         */
+        protected _onChangeInput(event: Event): Promise<void>;
 
         /**
          * Handle unfocusing an input on form - maybe trigger an update if ``options.liveUpdate`` has been set to true
@@ -113,7 +124,11 @@ declare global {
          * @param options        TinyMCE initialization options passed to TextEditor.create
          * @param initialContent Initial text content for the editor area.
          */
-        activateEditor(name: string, options?: Partial<TinyMCE.EditorSettings>, initialContent?: string): void;
+        activateEditor(
+            name: string,
+            options?: Partial<TinyMCE.EditorOptions>,
+            initialContent?: string
+        ): Promise<TinyMCE.Editor>;
 
         /**
          * Handle saving the content of a specific editor by name
@@ -125,14 +140,7 @@ declare global {
         /** Activate a TinyMCE editor instance present within the form */
         protected _activateEditor(div: JQuery | HTMLElement): void;
 
-        /**
-         * By default, when the editor is saved treat it as a form submission event
-         */
-        protected _onEditorSave(target: any, element: JQuery | HTMLElement, content: string): void;
-
-        /**
-         * Activate a FilePicker instance present within the form
-         */
+        /** Activate a FilePicker instance present within the form */
         protected _activateFilePicker(button: JQuery | HTMLElement): void;
 
         /**
@@ -146,9 +154,16 @@ declare global {
     }
 
     class FormDataExtended extends FormData {
-        constructor(form: HTMLElement, options?: { editors?: any; dtypes?: any[] });
+        constructor(form: HTMLElement, options?: { editors?: Record<string, TinyMCEEditorData>; dtypes?: string[] });
 
-        toObject(): any;
+        /** The object representation of the form data, available once processed. */
+        readonly object: Record<string, unknown>;
+
+        /**
+         * Process the HTML form element to populate the FormData instance.
+         * @param form The HTML form
+         */
+        process(form: HTMLFormElement): void;
     }
 
     interface FormApplicationData<O extends {} = {}> {
@@ -197,7 +212,7 @@ declare global {
         hasButton: boolean;
         initial: string;
         mce: TinyMCE.Editor | null;
-        options: Partial<TinyMCE.EditorSettings>;
+        options: Partial<TinyMCE.EditorOptions>;
         target: string;
     }
 }

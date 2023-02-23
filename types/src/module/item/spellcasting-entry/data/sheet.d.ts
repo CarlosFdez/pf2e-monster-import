@@ -1,17 +1,14 @@
 import { SpellPF2e } from "@item";
+import { MagicTradition } from "@item/spell/types";
 import { ZeroToTen } from "@module/data";
 import { StatisticChatData } from "@system/statistic";
-import { MagicTradition, PreparationType } from ".";
-/** Final render data used for showing a spell list  */
-export interface SpellListData {
+import { PreparationType } from ".";
+/** Final render data used for showing a spellcasting ability  */
+export interface SpellcastingAbilityData {
     id: string;
     name: string;
-    levels: SpellcastingSlotLevel[];
-}
-/** Spell list render data for a SpellcastingEntryPF2e */
-export interface SpellcastingEntryListData extends SpellListData {
     statistic: StatisticChatData;
-    tradition: MagicTradition;
+    tradition: MagicTradition | null;
     castingType: PreparationType;
     isPrepared?: boolean;
     isSpontaneous?: boolean;
@@ -19,11 +16,16 @@ export interface SpellcastingEntryListData extends SpellListData {
     isInnate?: boolean;
     isFocusPool?: boolean;
     isRitual?: boolean;
+    hasCollection: boolean;
+}
+/** Spell list render data for a SpellcastingEntryPF2e */
+export interface SpellcastingEntryListData extends SpellcastingAbilityData {
     flexibleAvailable?: {
         value: number;
         max: number;
     };
-    spellPrepList: Record<number, SpellPrepEntry[]>;
+    levels: SpellcastingSlotLevel[];
+    spellPrepList: Record<number, SpellPrepEntry[]> | null;
 }
 export interface SpellcastingSlotLevel {
     label: string;
@@ -38,7 +40,6 @@ export interface SpellcastingSlotLevel {
         value?: number;
         max: number;
     };
-    displayPrepared?: boolean;
     active: (ActiveSpell | null)[];
 }
 export interface SpellPrepEntry {

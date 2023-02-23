@@ -2,8 +2,8 @@ import example from "../examples/monstrous-dandelion.json";
 import malfunctioningRepairDrone from "../examples/malfunctioning-repair-drone.json";
 import cillianCreed from "../examples/CillianCreed1646282563.json";
 import kateGlenn from "../examples/KateGlenn1645159516.json";
-import { ItemSourcePF2e } from "@pf2e/module/item/data";
-import { NPCPF2e } from "@pf2e/module/actor";
+import { NPCPF2e } from "@actor";
+import { ItemSourcePF2e } from "@item/data";
 
 export type MonsterDataExample = typeof malfunctioningRepairDrone & typeof example & typeof cillianCreed;
 

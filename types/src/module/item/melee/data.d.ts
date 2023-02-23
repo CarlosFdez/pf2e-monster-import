@@ -1,22 +1,20 @@
-import { ItemSystemData, ItemTraits } from "@item/data/base";
-import { BaseNonPhysicalItemData, BaseNonPhysicalItemSource } from "@item/data/non-physical";
+import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemFlagsPF2e, ItemSystemData, ItemSystemSource, ItemTraits } from "@item/data/base";
+import { PreciousMaterialGrade } from "@item/physical/types";
+import { WeaponMaterialType } from "@item/weapon/types";
+import { DamageType } from "@system/damage";
 import type { MeleePF2e } from ".";
-export declare type MeleeSource = BaseNonPhysicalItemSource<"melee", MeleeSystemData>;
-export declare class MeleeData extends BaseNonPhysicalItemData<MeleePF2e> {
-    static DEFAULT_ICON: ImagePath;
-}
-export interface MeleeData extends Omit<MeleeSource, "effects" | "flags"> {
-    type: MeleeSource["type"];
-    data: MeleeSource["data"];
-    readonly _source: MeleeSource;
-}
-export interface MeleeDamageRoll {
-    damage: string;
-    damageType: string;
-}
-export declare type NPCAttackTrait = keyof ConfigPF2e["PF2E"]["npcAttackTraits"];
-export declare type NPCAttackTraits = ItemTraits<NPCAttackTrait>;
-export interface MeleeSystemData extends ItemSystemData {
+type MeleeSource = BaseItemSourcePF2e<"melee", MeleeSystemSource> & {
+    flags: DeepPartial<MeleeFlags>;
+};
+type MeleeData = Omit<MeleeSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<MeleePF2e, "melee", MeleeSystemData, MeleeSource> & {
+    flags: MeleeFlags;
+};
+type MeleeFlags = ItemFlagsPF2e & {
+    pf2e: {
+        linkedWeapon?: string;
+    };
+};
+interface MeleeSystemSource extends ItemSystemSource {
     traits: NPCAttackTraits;
     attack: {
         value: string;
@@ -32,3 +30,18 @@ export interface MeleeSystemData extends ItemSystemData {
         value: "melee" | "ranged";
     };
 }
+interface MeleeSystemData extends MeleeSystemSource, Omit<ItemSystemData, "traits"> {
+    material: {
+        precious: {
+            type: WeaponMaterialType;
+            grade: PreciousMaterialGrade;
+        } | null;
+    };
+}
+interface MeleeDamageRoll {
+    damage: string;
+    damageType: DamageType;
+}
+export type NPCAttackTrait = keyof ConfigPF2e["PF2E"]["npcAttackTraits"];
+export type NPCAttackTraits = ItemTraits<NPCAttackTrait>;
+export { MeleeDamageRoll, MeleeData, MeleeSource, MeleeSystemData, MeleeSystemSource };

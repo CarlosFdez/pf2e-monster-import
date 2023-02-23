@@ -115,10 +115,11 @@ declare global {
          * Render the Application by evaluating it's HTML template against the object of data provided by the getData method
          * If the Application is rendered as a pop-out window, wrap the contained HTML in an outer frame with window controls
          *
-         * @param force     Add the rendered application to the DOM if it is not already present. If false, the
-         *                  Application will only be re-rendered if it is already present.
-         * @param options   Additional rendering options which are applied to customize the way that the Application
-         *                  is rendered in the DOM.
+         * @param force   Add the rendered application to the DOM if it is not already present. If false, the
+         *                Application will only be re-rendered if it is already present.
+         * @param options Additional rendering options which are applied to customize the way that the Application
+         *                is rendered in the DOM.
+         * @returns The rendered Application instance
          */
         render(force?: boolean, options?: RenderOptions): this | Promise<this>;
 
@@ -247,7 +248,7 @@ declare global {
          * This function returns a Promise which resolves once the window closing animation concludes
          * @return A Promise which resolves once the application is closed
          */
-        close(options?: { force?: boolean }): Promise<void>;
+        close(options?: { force?: boolean } & Record<string, unknown>): Promise<void>;
 
         /**
          * Minimize the pop-out window, collapsing it to a small tab
@@ -261,7 +262,7 @@ declare global {
          * Take no action for applications which are not of the pop-out variety or are already maximized
          * @return  A Promise which resolves to true once the maximization action has completed
          */
-        maximise(): Promise<boolean>;
+        maximize(): Promise<boolean>;
 
         /**
          * Set the application position and store it's new location
@@ -290,6 +291,8 @@ declare global {
         top: number | null;
         /** The default offset-left position for the rendered HTML */
         left: number | null;
+        /** A transformation scale for the rendered HTML */
+        scale?: number | null;
         /** Whether to display the application as a pop-out container */
         popOut: boolean;
         /** Whether the rendered application can be minimized (popOut only) */
@@ -320,6 +323,22 @@ declare global {
          * have their vertical scroll positions preserved during a re-render.
          */
         scrollY: string[];
+        /** filters An array of {@link SearchFilter} configuration objects. */
+        filters: SearchFilterConfiguration[];
+    }
+
+    /** Options which customize the behavior of the filter */
+    interface SearchFilterConfiguration {
+        /** The CSS selector used to target the text input element. */
+        inputSelector: string;
+        /** The CSS selector used to target the content container for these tabs. */
+        contentSelector: string;
+        /** A callback function which executes when the filter changes. */
+        callback?: Function;
+        /** The initial value of the search query. */
+        initial?: string;
+        /** The number of milliseconds to wait for text input before processing. */
+        delay?: number;
     }
 
     interface ApplicationHeaderButton {
@@ -329,7 +348,7 @@ declare global {
         onclick: ((event: Event) => void) | null;
     }
 
-    interface RenderOptions {
+    interface RenderOptions extends Partial<ApplicationOptions> {
         /** The left positioning attribute */
         left?: number;
         /** The top positioning attribute */
@@ -340,12 +359,16 @@ declare global {
         height?: number;
         /** The rendered transformation scale */
         scale?: number;
-        /** Whether to display a log message that the Application was rendered */
-        log?: boolean;
+        /** Apply focus to the application, maximizing it and bringing it to the top of the vertical stack. */
+        focus?: boolean;
         /** A context-providing string which suggests what event triggered the render */
         renderContext?: string;
         /** The data change which motivated the render request */
-        renderData?: any;
+        renderData?: Record<string, unknown>;
+        // Undocumented
+        action?: UserAction;
+        // Undocumented: applicable only to `FormApplication`s
+        editable?: boolean;
     }
 
     interface ApplicationPosition {
@@ -356,5 +379,5 @@ declare global {
         scale?: number;
     }
 
-    type ApplicationRenderState = typeof Application["RENDER_STATES"][keyof typeof Application["RENDER_STATES"]];
+    type ApplicationRenderState = (typeof Application)["RENDER_STATES"][keyof (typeof Application)["RENDER_STATES"]];
 }

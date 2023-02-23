@@ -1,44 +1,46 @@
-import { ActorSystemData, ActorSystemSource, BaseActorDataPF2e, BaseActorSourcePF2e, BaseTraitsData, BaseTraitsSource, GangUpCircumstance } from "@actor/data/base";
+import { ActorSystemData, ActorSystemSource, BaseActorDataPF2e, BaseActorSourcePF2e, ActorTraitsData, ActorTraitsSource, GangUpCircumstance, ActorAttributesSource, ActorAttributes } from "@actor/data/base";
 import { LootPF2e } from ".";
 /** The stored source data of a loot actor */
-export declare type LootSource = BaseActorSourcePF2e<"loot", LootSystemSource>;
-export declare class LootData extends BaseActorDataPF2e<LootPF2e> {
-    static DEFAULT_ICON: ImagePath;
-}
-/** Wrapper type for loot-specific data. */
-export interface LootData extends Omit<LootSource, "effects" | "flags" | "items" | "token"> {
-    type: LootSource["type"];
-    data: LootSystemData;
-    readonly _source: LootSource;
+type LootSource = BaseActorSourcePF2e<"loot", LootSystemSource>;
+interface LootData extends Omit<LootSource, "data" | "system" | "effects" | "flags" | "items" | "prototypeToken" | "type">, BaseActorDataPF2e<LootPF2e, "loot", LootSystemData, LootSource> {
 }
 /** The system-level data of loot actors. */
-export interface LootSystemSource extends ActorSystemSource {
-    attributes: {
-        ac?: never;
-        hp?: never;
-    };
-    details: {
-        description: {
-            value: string;
-        };
-        level: {
-            value: number;
-        };
-    };
+interface LootSystemSource extends ActorSystemSource {
+    attributes: LootAttributesSource;
+    details: LootDetailsSource;
     lootSheetType: "Merchant" | "Loot";
     hiddenWhenEmpty: boolean;
-    traits: BaseTraitsSource<string>;
+    traits: ActorTraitsSource<string>;
 }
-export declare type LootSystemData = Omit<ActorSystemData, "attributes"> &
-    LootSystemSource & {
-        attributes: {
-            flanking: {
-                canFlank: false;
-                canGangUp: GangUpCircumstance[];
-                flankable: false;
-                flatFootable: false;
-            };
-        };
-        traits: BaseTraitsData<string>;
-        [key: string]: any;
+interface LootSystemData extends Omit<LootSystemSource, "attributes">, Omit<ActorSystemData, "attributes"> {
+    attributes: LootAttributesData;
+    details: LootDetailsData;
+    traits: ActorTraitsData<string>;
+}
+interface LootAttributesSource extends ActorAttributesSource {
+    hp?: never;
+    ac?: never;
+    immunities?: never;
+    weaknesses?: never;
+    resistances?: never;
+}
+interface LootAttributesData extends ActorAttributes {
+    hp?: never;
+    ac?: never;
+    flanking: {
+        canFlank: false;
+        canGangUp: GangUpCircumstance[];
+        flankable: false;
+        flatFootable: false;
     };
+}
+interface LootDetailsSource {
+    description: string;
+    level: {
+        value: number;
+    };
+}
+interface LootDetailsData extends LootDetailsSource {
+    alliance: null;
+}
+export { LootData, LootSource, LootSystemData, LootSystemSource };

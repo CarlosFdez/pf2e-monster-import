@@ -1,7 +1,7 @@
 import { ActorType } from "@actor/data";
 import { ItemPF2e } from "@item";
 import { PredicatePF2e } from "@system/predication";
-import { AELikeRuleElement, AELikeData, AELikeSource } from "./ae-like";
+import { AELikeData, AELikeRuleElement, AELikeSource } from "./ae-like";
 import { RuleElementOptions } from "./base";
 declare class AdjustStrikeRuleElement extends AELikeRuleElement {
     protected static validActorTypes: ActorType[];

@@ -1,4 +1,5 @@
 /// <reference types="jquery" />
+/// <reference types="jquery" />
 /// <reference types="tooltipster" />
 /** A summary window that opens after a system migration completes */
 export declare class MigrationSummary extends Application<MigrationSummaryOptions> {
@@ -13,6 +14,7 @@ export declare class MigrationSummary extends Application<MigrationSummaryOption
         baseApplication: string | null;
         top: number | null;
         left: number | null;
+        scale?: number | null | undefined;
         popOut: boolean;
         minimizable: boolean;
         resizable: boolean | null;
@@ -30,8 +32,9 @@ export declare class MigrationSummary extends Application<MigrationSummaryOption
         title: string;
         template: string | null;
         scrollY: string[];
+        filters: SearchFilterConfiguration[];
     };
-    getData(): MigrationSummaryData;
+    getData(): Promise<MigrationSummaryData>;
     activateListeners($html: JQuery): void;
 }
 interface MigrationSummaryOptions extends ApplicationOptions {
@@ -51,5 +54,6 @@ interface MigrationSummaryData {
     };
     canRemigrate: boolean;
     helpResources: boolean;
+    helpResourcesText: string;
 }
 export {};

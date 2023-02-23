@@ -1,2 +1,1 @@
-import '@system/measure';
-import './styles/pf2e.scss';
+import "./styles/main.scss";
