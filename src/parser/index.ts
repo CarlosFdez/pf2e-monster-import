@@ -12,6 +12,7 @@ import { NPCSystemData } from "@actor/npc/data";
 import { CreatureTrait, CreatureTraitsSource, LabeledSpeed } from "@actor/creature/data";
 import { MeleeDamageRoll, MeleeSource } from "@item/melee/data";
 import { parseDescription } from "./text";
+import { ImmunityData, ResistanceData, WeaknessData } from "@actor/data/iwr";
 
 type Language = keyof typeof CONFIG.PF2E.languages;
 
@@ -129,12 +130,19 @@ export class MonsterParser {
             }
         }
 
+        const immunities = this.readImmunities(data);
+        const weaknesses = this.readWeaknesses(data);
+        const resistances = this.readResistances(data);
+
         return {
             ac: { value: Number(data.ac.value) },
             perception: { value: Number(data.perception.value) },
             hp: { value: Number(data.hp.value), max: Number(data.hp.value) },
             allSaves: { value: data.savenote },
             speed: formattedSpeeds,
+            immunities,
+            weaknesses,
+            resistances,
         };
     }
 
@@ -145,107 +153,102 @@ export class MonsterParser {
         const languages = (data.languages?.split(",") ?? []).filter((language): language is Language =>
             objectHasKey(CONFIG.PF2E.languages, language)
         );
-        // const weaknesses = this.readWeaknesses(data);
-        // const resistances = this.readResistances(data);
-        // const immunities = this.readImmunities(data);
 
         return {
             size: { value: SizesMap[data.size] ?? "med" },
             rarity: (rarity ?? "common") as Rarity,
             languages: { value: languages },
             value: traits.filter((trait): trait is CreatureTrait => objectHasKey(CONFIG.PF2E.creatureTraits, trait)),
-            // dv: weaknesses,
-            // dr: resistances,
-            // di: { value: immunities },
         };
     }
 
-    // private readWeaknesses(data: MonsterData): Partial<LabeledWeakness>[] {
-    //     const weaknesses = data.weakness.value.split(",");
+    private readImmunities(data: MonsterData): Partial<ImmunityData>[] {
+        const immunities = data.immunity.value.split(",");
 
-    //     const formattedWeaknesses: Partial<LabeledWeakness>[] = [];
-    //     for (const weakness of weaknesses) {
-    //         // extract number value from weakness
-    //         const value = Number(weakness.match(/[0-9]+/g)?.[0]);
+        const formattedImmunity: Partial<ImmunityData>[] = [];
+        for (const immunity of immunities) {
+            // extract string from weakness
+            const type = immunity
+                .match(/[A-Za-z]+/g)
+                ?.join("-")
+                .toLowerCase();
+            if (objectHasKey(CONFIG.PF2E.immunityTypes, type)) {
+                formattedImmunity.push({ type });
+            }
+        }
+        return formattedImmunity;
+    }
 
-    //         // extract string from weakness
-    //         const type = sluggify(weakness.match(/[A-Za-z]+/g)?.[0] ?? "");
-    //         if (objectHasKey(CONFIG.PF2E.weaknessTypes, type)) {
-    //             formattedWeaknesses.push({ type, value });
-    //         }
-    //     }
+    private readWeaknesses(data: MonsterData): Partial<WeaknessData>[] {
+        const weaknesses = data.weakness.value.split(",");
 
-    //     return formattedWeaknesses;
-    // }
+        const formattedWeaknesses: Partial<WeaknessData>[] = [];
+        for (const weakness of weaknesses) {
+            // extract number value from weakness
+            const value = Number(weakness.match(/[0-9]+/g)?.[0]);
 
-    // private readResistances(data: MonsterData): Partial<LabeledResistance>[] {
-    //     const resistances = data.resistance.value.split("");
+            // extract string from weakness
+            const type = sluggify(weakness.match(/[A-Za-z]+/g)?.[0] ?? "");
+            if (objectHasKey(CONFIG.PF2E.weaknessTypes, type)) {
+                formattedWeaknesses.push({ type, value });
+            }
+        }
 
-    //     const splitArray: string[] = [];
-    //     let element: string[] = [];
-    //     let openBracket = false;
+        return formattedWeaknesses;
+    }
 
-    //     for (let i = 0; i <= resistances.length; i++) {
-    //         const char = resistances[i];
+    private readResistances(data: MonsterData): Partial<ResistanceData>[] {
+        const resistances = data.resistance.value.split("");
 
-    //         if (openBracket == false) {
-    //             if (char == ",") {
-    //                 if (element.length) {
-    //                     splitArray.push(element.join(""));
-    //                     element = [];
-    //                 }
-    //             } else if (char == "(") {
-    //                 openBracket = true;
-    //                 element.push(char);
-    //             } else {
-    //                 element.push(char);
-    //             }
-    //         } else {
-    //             if (char == ")") {
-    //                 element.push(char);
-    //                 splitArray.push(element.join(""));
-    //                 openBracket = false;
-    //                 element = [];
-    //             } else {
-    //                 element.push(char);
-    //             }
-    //         }
-    //     }
+        const splitArray: string[] = [];
+        let element: string[] = [];
+        let openBracket = false;
 
-    //     const formattedResistances: Partial<LabeledResistance>[] = [];
-    //     for (let item of splitArray) {
-    //         item = item.replace("or", "").trim();
+        // todo: clean up
+        for (let i = 0; i <= resistances.length; i++) {
+            const char = resistances[i];
 
-    //         const typeSlug = sluggify(item.split("(")[0]?.match(/[A-Za-z]+/g)?.[0] ?? "");
-    //         const type = typeSlug === "all-damage" ? "all" : typeSlug;
-    //         if (objectHasKey(CONFIG.PF2E.resistanceTypes, type)) {
-    //             formattedResistances.push({
-    //                 type,
-    //                 value: Number(item.match(/[0-9]+/g)?.[0]),
-    //                 exceptions: item.match(/(?<=\().*(?=\))/g)?.[0],
-    //             });
-    //         }
-    //     }
+            if (openBracket === false) {
+                if (char === ",") {
+                    if (element.length) {
+                        splitArray.push(element.join(""));
+                        element = [];
+                    }
+                } else if (char === "(") {
+                    openBracket = true;
+                    element.push(char);
+                } else {
+                    element.push(char);
+                }
+            } else {
+                if (char === ")") {
+                    element.push(char);
+                    splitArray.push(element.join(""));
+                    openBracket = false;
+                    element = [];
+                } else {
+                    element.push(char);
+                }
+            }
+        }
 
-    //     return formattedResistances;
-    // }
+        const formattedResistances: Partial<ResistanceData>[] = [];
+        for (let item of splitArray) {
+            item = item.replace("or", "").trim();
 
-    // private readImmunities(data: MonsterData): ImmunityType[] {
-    //     const immunities = data.immunity.value.split(",");
+            const typeSlug = sluggify(item.split("(")[0]?.match(/[A-Za-z]+/g)?.[0] ?? "");
+            const type = typeSlug === "all-damage" ? "all" : typeSlug;
+            if (objectHasKey(CONFIG.PF2E.resistanceTypes, type)) {
+                formattedResistances.push({
+                    type,
+                    value: Number(item.match(/[0-9]+/g)?.[0]),
+                    // exceptions: item.match(/(?<=\().*(?=\))/g)?.[0],
+                });
+            }
+        }
 
-    //     const formattedImmunity: ImmunityType[] = [];
-    //     for (const immunity of immunities) {
-    //         // extract string from weakness
-    //         const type = immunity
-    //             .match(/[A-Za-z]+/g)
-    //             ?.join("-")
-    //             .toLowerCase();
-    //         if (objectHasKey(CONFIG.PF2E.immunityTypes, type)) {
-    //             formattedImmunity.push(type);
-    //         }
-    //     }
-    //     return formattedImmunity;
-    // }
+        return formattedResistances;
+    }
 
     private readAction(data: MonsterData["specials"][number]): DeepPartial<ActionItemSource> {
         const actionCostMap: Record<string, 1 | 2 | 3 | undefined> = {
@@ -335,6 +338,12 @@ export class MonsterParser {
             }
         }
 
+        type Trait = keyof ConfigPF2e["PF2E"]["npcAttackTraits"];
+        const traits = (data.traits ?? "")
+            .split(",")
+            .map((s) => sluggify(s.trim()))
+            .filter((t): t is Trait => t in CONFIG.PF2E.npcAttackTraits);
+
         return {
             name: data.name,
             type: "melee",
@@ -343,6 +352,9 @@ export class MonsterParser {
                 weaponType: { value: type === "melee" ? "melee" : "ranged" },
                 damageRolls,
                 attackEffects: { value: attackEffects },
+                traits: {
+                    value: traits,
+                },
             },
         };
     }
