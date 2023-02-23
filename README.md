@@ -4,7 +4,9 @@ A perpetually unreleased module to import monsters from https://monster.pf2.tool
 
 ## Why are you not releasing this?
 
-This module cannot ever become complete, and minor input errors may cause failures. There are also some aspects that are hard to automated. Therefore using this module comes with the caveat that you will have to make some adjustments. Due to system dev work on the PF2e system, I cannot handle the incredible amount of support such a module requires. A certain base level of troubleshooting willingness is required, and thus the installation of the module is a bit harder to weed out people who are not willing to put in that time.
+A module of this nature cannot ever be 100%, and due to my system dev work on the PF2e system, I cannot be expected to update every single issue in a timely manor. Imported NPCs may sometimes need to be adjusted, and a bit of willingness to get down and dirty and is expected of you, and thus the installation of the module is a bit harder to weed out people who are not willing to put in that time.
+
+If you can figure out how to grab the module.json from the releases page, you can use this module, basically.
 
 ## How to build
 
