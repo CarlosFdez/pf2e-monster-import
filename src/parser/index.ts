@@ -76,6 +76,9 @@ export class MonsterParser {
                     will: { value: Number(data.will.value) },
                 },
             },
+            prototypeToken: {
+                name: data.name,
+            },
         });
 
         const items: DeepPartial<ItemSourcePF2e>[] = [];
