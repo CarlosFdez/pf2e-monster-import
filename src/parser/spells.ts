@@ -119,8 +119,8 @@ export class SpellParser {
     private async parseSpells(
         spellLevels: string[],
         preparedType: string,
-        traditionId: string,
-    ): Promise<Array<Array<SpellMetadata>>> {
+        traditionId: string
+    ): Promise<SpellMetadata[][]> {
         const compendium = await this.getCompendium();
         if (!compendium) {
             ui.notifications.error("Failed to load spell compendium to import spells");

@@ -79,7 +79,9 @@ export class MonsterParser {
 
         const items: DeepPartial<ItemSourcePF2e>[] = [];
         items.push(...(data.strikes ?? []).map(this.readStrike.bind(this)));
-        items.push(...(data.specials ?? []).map(this.readAction.bind(this)));
+        for (const actionData of data.specials ?? []) {
+            items.push(this.readAction(actionData));
+        }
         items.push(...this.readSkill(data));
 
         const spellParser = new SpellParser();
@@ -141,11 +143,11 @@ export class MonsterParser {
 
         const rarity = traits.find((trait) => objectHasKey(CONFIG.PF2E.rarityTraits, trait));
         const languages = (data.languages?.split(",") ?? []).filter((language): language is Language =>
-            objectHasKey(CONFIG.PF2E.languages, language),
+            objectHasKey(CONFIG.PF2E.languages, language)
         );
-        //const weaknesses = this.readWeaknesses(data);
-        //const resistances = this.readResistances(data);
-        //const immunities = this.readImmunities(data);
+        // const weaknesses = this.readWeaknesses(data);
+        // const resistances = this.readResistances(data);
+        // const immunities = this.readImmunities(data);
 
         return {
             size: { value: SizesMap[data.size] ?? "med" },
@@ -258,6 +260,22 @@ export class MonsterParser {
             reaction: "reaction",
         } as const;
 
+        // Check if a glossary entry exists. Failed lookups match the key, so we need to test for that case
+        const glossaryLookupKey = `PF2E.NPC.Abilities.Glossary.${sluggify(data.name, { camel: "bactrian" })}`;
+        const glossaryLookup = game.i18n.localize(glossaryLookupKey);
+        const glossaryInfo = glossaryLookup === glossaryLookupKey ? null : glossaryLookup;
+
+        // Parse the description, keeping in mind alterations due to special actions
+        const baseDescription = (() => {
+            if (["Constrict", "Greater Constrict"].includes(data.name)) {
+                return parseDescription(data.description.replace("DC", "damage, DC") + " fortitude");
+            }
+
+            return parseDescription(data.description);
+        })();
+
+        const description = glossaryInfo ? `${baseDescription}<hr />${glossaryInfo}` : baseDescription;
+
         const actionCost = ((): Partial<ActionItemSource["system"]> => {
             if (data.actions in actionCostMap) {
                 return {
@@ -279,7 +297,7 @@ export class MonsterParser {
             system: {
                 ...actionCost,
                 actionCategory: { value: ActionCategoryMap[data.type] },
-                description: { value: parseDescription(data.description) },
+                description: { value: description },
             },
         };
     }
