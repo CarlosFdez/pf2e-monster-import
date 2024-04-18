@@ -58,7 +58,7 @@ export function sluggify(text: string, { camel = null }: { camel?: "dromedary" |
                 .replace(nonWordCharacterHyphenOrSpaceRE, "")
                 .replace(/[-_]+/g, " ")
                 .replace(upperOrWordBoundariedLowerRE, (part, index) =>
-                    index === 0 ? part.toLowerCase() : part.toUpperCase()
+                    index === 0 ? part.toLowerCase() : part.toUpperCase(),
                 )
                 .replace(/\s+/g, "");
         default:

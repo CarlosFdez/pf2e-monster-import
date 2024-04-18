@@ -1,16 +1,15 @@
-import type { CharacterData, CharacterSource } from "@actor/character/data";
-import { CreatureType } from "@actor/creature/data";
-import type { FamiliarData, FamiliarSource } from "@actor/familiar/data";
-import type { HazardData, HazardSource } from "@actor/hazard/data";
-import type { LootData, LootSource } from "@actor/loot/data";
-import type { NPCData, NPCSource } from "@actor/npc/data";
-import type { VehicleData, VehicleSource } from "@actor/vehicle/data";
-type CreatureData = CharacterData | NPCData | FamiliarData;
-type ActorType = CreatureType | "hazard" | "loot" | "vehicle";
-type ActorDataPF2e = CreatureData | HazardData | LootData | VehicleData;
-type ActorSourcePF2e = ActorDataPF2e["_source"];
-interface RollInitiativeOptionsPF2e extends RollInitiativeOptions {
+import { ArmySource } from "@actor/army/data.ts";
+import { CharacterSource } from "@actor/character/data.ts";
+import { FamiliarSource } from "@actor/familiar/data.ts";
+import { HazardSource } from "@actor/hazard/data.ts";
+import { LootSource } from "@actor/loot/data.ts";
+import { NPCSource } from "@actor/npc/data.ts";
+import { PartySource } from "@actor/party/data.ts";
+import { VehicleSource } from "@actor/vehicle/data.ts";
+import { StatisticRollParameters } from "@system/statistic/index.ts";
+type CreatureSource = CharacterSource | NPCSource | FamiliarSource;
+type ActorSourcePF2e = ArmySource | CreatureSource | HazardSource | LootSource | PartySource | VehicleSource;
+interface RollInitiativeOptionsPF2e extends RollInitiativeOptions, StatisticRollParameters {
     secret?: boolean;
-    skipDialog?: boolean;
 }
-export { ActorDataPF2e, ActorSourcePF2e, ActorType, CharacterData, CharacterSource, CreatureData, FamiliarData, FamiliarSource, HazardData, HazardSource, LootData, LootSource, NPCData, NPCSource, RollInitiativeOptionsPF2e, VehicleData, VehicleSource, };
+export type { ActorSourcePF2e, ArmySource, CharacterSource, CreatureSource, FamiliarSource, HazardSource, LootSource, NPCSource, PartySource, RollInitiativeOptionsPF2e, VehicleSource, };

@@ -1,24 +1,37 @@
-import { DexterityModifierCapData } from "@actor/character/types";
-import { MovementType, LabeledSpeed } from "@actor/creature/data";
-import { CreatureSensePF2e } from "@actor/creature/sense";
-import { DamageDicePF2e, DeferredValue, ModifierAdjustment, ModifierPF2e } from "@actor/modifiers";
-import { MeleePF2e, WeaponPF2e } from "@item";
-import { ActionTrait } from "@item/action/data";
-import { WeaponPropertyRuneType } from "@item/weapon/types";
-import { RollNotePF2e } from "@module/notes";
-import { MaterialDamageEffect } from "@system/damage";
-import { DegreeOfSuccessAdjustment } from "@system/degree-of-success";
-import { PredicatePF2e } from "@system/predication";
+import type { ActorPF2e } from "@actor";
+import type { DexterityModifierCapData } from "@actor/character/types.ts";
+import type { LabeledSpeed, SenseData } from "@actor/creature/data.ts";
+import type { DamageDicePF2e, DeferredDamageDiceOptions, DeferredPromise, DeferredValue, ModifierAdjustment, ModifierPF2e } from "@actor/modifiers.ts";
+import type { TokenEffect } from "@actor/token-effect.ts";
+import type { MovementType } from "@actor/types.ts";
+import type { MeleePF2e, WeaponPF2e } from "@item";
+import type { ActionTrait } from "@item/ability/index.ts";
+import type { ConditionSource, EffectSource } from "@item/base/data/index.ts";
+import type { WeaponRuneSource } from "@item/weapon/data.ts";
+import type { WeaponPropertyRuneType } from "@item/weapon/types.ts";
+import type { RollNotePF2e } from "@module/notes.ts";
+import type { MaterialDamageEffect } from "@system/damage/types.ts";
+import type { DegreeOfSuccessAdjustment } from "@system/degree-of-success.ts";
+import type { PredicatePF2e } from "@system/predication.ts";
+import type { Statistic } from "@system/statistic/index.ts";
+import type { DamageAlteration } from "./rule-element/damage-alteration/alteration.ts";
+import type { Suboption } from "./rule-element/roll-option/data.ts";
 /** Defines a list of data provided by rule elements that an actor can pull from during its data preparation lifecycle */
 interface RuleElementSynthetics {
-    criticalSpecalizations: {
+    criticalSpecializations: {
         standard: CritSpecSynthetic[];
         alternate: CritSpecSynthetic[];
     };
+    damageAlterations: Record<string, DamageAlteration[]>;
     damageDice: DamageDiceSynthetics;
     degreeOfSuccessAdjustments: Record<string, DegreeOfSuccessAdjustment[]>;
     dexterityModifierCaps: DexterityModifierCapData[];
+    ephemeralEffects: Record<string, {
+        target: DeferredEphemeralEffect[];
+        origin: DeferredEphemeralEffect[];
+    } | undefined>;
     modifierAdjustments: ModifierAdjustmentSynthetics;
+    modifiers: ModifierSynthetics;
     movementTypes: {
         [K in MovementType]?: DeferredMovementType[];
     };
@@ -27,47 +40,42 @@ interface RuleElementSynthetics {
     rollSubstitutions: Record<string, RollSubstitution[]>;
     rollTwice: Record<string, RollTwiceSynthetic[]>;
     senses: SenseSynthetic[];
-    statisticsModifiers: ModifierSynthetics;
+    statistics: Map<string, Statistic>;
     strikeAdjustments: StrikeAdjustment[];
-    strikes: Map<string, Embedded<WeaponPF2e>>;
+    strikes: DeferredStrike[];
     striking: Record<string, StrikingSynthetic[]>;
-    targetMarks: Map<TokenDocumentUUID, string>;
-    tokenOverrides: DeepPartial<Pick<foundry.data.TokenSource, "light" | "name">> & {
+    toggles: Record<string, Record<string, RollOptionToggle>>;
+    tokenEffectIcons: TokenEffect[];
+    tokenMarks: Map<TokenDocumentUUID, string>;
+    tokenOverrides: DeepPartial<Pick<foundry.documents.TokenSource, "light" | "name" | "alpha">> & {
         texture?: {
             src: VideoFilePath;
+            tint?: HexColorString;
         } | {
             src: VideoFilePath;
+            tint?: HexColorString;
             scaleX: number;
             scaleY: number;
         };
     };
     weaponPotency: Record<string, PotencySynthetic[]>;
-    preparationWarnings: {
-        /** Adds a new preparation warning to be printed when flushed. These warnings are de-duped. */
-        add: (warning: string) => void;
-        /** Prints all preparation warnings, but this printout is debounced to handle prep and off-prep cycles */
-        flush: () => void;
-    };
 }
-type CritSpecSynthetic = (weapon: Embedded<WeaponPF2e>, options: Set<string>) => RollNotePF2e | null;
+type CritSpecEffect = (DamageDicePF2e | ModifierPF2e | RollNotePF2e)[];
+type CritSpecSynthetic = (weapon: WeaponPF2e | MeleePF2e, options: Set<string>) => CritSpecEffect | null;
 type DamageDiceSynthetics = {
     damage: DeferredDamageDice[];
-} & {
-    [K in string]?: DeferredDamageDice[];
-};
-type ModifierSynthetics = Record<"all" | "damage", DeferredModifier[]> & {
-    [K in string]?: DeferredModifier[];
-};
+} & Record<string, DeferredDamageDice[] | undefined>;
+type ModifierSynthetics = Record<"all" | "damage", DeferredModifier[]> & Record<string, DeferredModifier[] | undefined>;
 type ModifierAdjustmentSynthetics = {
     all: ModifierAdjustment[];
     damage: ModifierAdjustment[];
-} & {
-    [K in string]?: ModifierAdjustment[];
-};
+} & Record<string, ModifierAdjustment[] | undefined>;
 type DeferredModifier = DeferredValue<ModifierPF2e>;
-type DeferredDamageDice = DeferredValue<DamageDicePF2e>;
+type DeferredDamageDice = (args: DeferredDamageDiceOptions) => DamageDicePF2e | null;
 type DeferredMovementType = DeferredValue<BaseSpeedSynthetic | null>;
-interface BaseSpeedSynthetic extends Omit<LabeledSpeed, "label"> {
+type DeferredEphemeralEffect = DeferredPromise<EffectSource | ConditionSource | null>;
+type DeferredStrike = (runes?: WeaponRuneSource) => WeaponPF2e<ActorPF2e> | null;
+interface BaseSpeedSynthetic extends Omit<LabeledSpeed, "label" | "type"> {
     type: MovementType;
     /**
      * Whether this speed is derived from a creature's land speed:
@@ -78,22 +86,35 @@ interface BaseSpeedSynthetic extends Omit<LabeledSpeed, "label"> {
 interface MAPSynthetic {
     label: string;
     penalty: number;
-    predicate?: PredicatePF2e;
+    predicate: PredicatePF2e;
 }
 interface RollSubstitution {
     slug: string;
     label: string;
-    predicate: PredicatePF2e | null;
+    predicate: PredicatePF2e;
     value: number;
-    ignored: boolean;
+    required: boolean;
+    selected: boolean;
     effectType: "fortune" | "misfortune";
+}
+interface RollOptionToggle {
+    /** The ID of the item with a rule element for this toggle */
+    itemId: string;
+    label: string;
+    placement: string;
+    domain: string;
+    option: string;
+    suboptions: Suboption[];
+    alwaysActive: boolean;
+    checked: boolean;
+    enabled: boolean;
 }
 interface RollTwiceSynthetic {
     keep: "higher" | "lower";
     predicate?: PredicatePF2e;
 }
 interface SenseSynthetic {
-    sense: CreatureSensePF2e;
+    sense: Required<SenseData>;
     predicate: PredicatePF2e;
     force: boolean;
 }
@@ -101,7 +122,7 @@ interface StrikeAdjustment {
     adjustDamageRoll?: (weapon: WeaponPF2e | MeleePF2e, { materials }: {
         materials?: Set<MaterialDamageEffect>;
     }) => void;
-    adjustWeapon?: (weapon: Embedded<WeaponPF2e>) => void;
+    adjustWeapon?: (weapon: WeaponPF2e | MeleePF2e) => void;
     adjustTraits?: (weapon: WeaponPF2e | MeleePF2e, traits: ActionTrait[]) => void;
 }
 interface StrikingSynthetic {
@@ -116,4 +137,4 @@ interface PotencySynthetic {
     predicate: PredicatePF2e;
     property?: WeaponPropertyRuneType[];
 }
-export { BaseSpeedSynthetic, DamageDiceSynthetics, DeferredDamageDice, DeferredModifier, DeferredMovementType, MAPSynthetic, ModifierAdjustmentSynthetics, ModifierSynthetics, PotencySynthetic, RollSubstitution, RollTwiceSynthetic, RuleElementSynthetics, SenseSynthetic, StrikeAdjustment, StrikingSynthetic, };
+export type { BaseSpeedSynthetic, CritSpecEffect, DamageDiceSynthetics, DeferredDamageDice, DeferredEphemeralEffect, DeferredModifier, DeferredMovementType, MAPSynthetic, ModifierAdjustmentSynthetics, ModifierSynthetics, PotencySynthetic, RollOptionToggle, RollSubstitution, RollTwiceSynthetic, RuleElementSynthetics, SenseSynthetic, StrikeAdjustment, StrikingSynthetic, };

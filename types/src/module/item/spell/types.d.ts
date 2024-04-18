@@ -1,8 +1,5 @@
-import { MAGIC_SCHOOLS, MAGIC_TRADITIONS, SPELL_COMPONENTS } from "./values";
-type MagicSchool = SetElement<typeof MAGIC_SCHOOLS>;
+import type { EFFECT_AREA_SHAPES, MAGIC_TRADITIONS } from "./values.ts";
 type MagicTradition = SetElement<typeof MAGIC_TRADITIONS>;
-type SpellComponent = typeof SPELL_COMPONENTS[number];
-type SpellTrait = keyof ConfigPF2e["PF2E"]["spellTraits"] | MagicSchool | MagicTradition;
-type EffectAreaSize = keyof ConfigPF2e["PF2E"]["areaSizes"];
-type EffectAreaType = keyof ConfigPF2e["PF2E"]["areaTypes"];
-export { EffectAreaSize, EffectAreaType, MagicSchool, MagicTradition, SpellComponent, SpellTrait };
+type SpellTrait = keyof typeof CONFIG.PF2E.spellTraits;
+type EffectAreaShape = (typeof EFFECT_AREA_SHAPES)[number];
+export type { EffectAreaShape, MagicTradition, SpellTrait };

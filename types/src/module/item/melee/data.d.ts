@@ -1,13 +1,10 @@
-import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemFlagsPF2e, ItemSystemData, ItemSystemSource, ItemTraits } from "@item/data/base";
-import { PreciousMaterialGrade } from "@item/physical/types";
-import { WeaponMaterialType } from "@item/weapon/types";
-import { DamageType } from "@system/damage";
-import type { MeleePF2e } from ".";
+import type { BaseItemSourcePF2e, ItemFlagsPF2e, ItemSystemData, ItemSystemSource, ItemTraitsNoRarity } from "@item/base/data/system.ts";
+import type { WeaponMaterialData } from "@item/weapon/data.ts";
+import type { WeaponPropertyRuneType } from "@item/weapon/types.ts";
+import type { DamageType } from "@system/damage/types.ts";
+import type { NPCAttackTrait } from "./types.ts";
 type MeleeSource = BaseItemSourcePF2e<"melee", MeleeSystemSource> & {
     flags: DeepPartial<MeleeFlags>;
-};
-type MeleeData = Omit<MeleeSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<MeleePF2e, "melee", MeleeSystemData, MeleeSource> & {
-    flags: MeleeFlags;
 };
 type MeleeFlags = ItemFlagsPF2e & {
     pf2e: {
@@ -15,11 +12,12 @@ type MeleeFlags = ItemFlagsPF2e & {
     };
 };
 interface MeleeSystemSource extends ItemSystemSource {
+    level?: never;
     traits: NPCAttackTraits;
     attack: {
         value: string;
     };
-    damageRolls: Record<string, MeleeDamageRoll>;
+    damageRolls: Record<string, NPCAttackDamage>;
     bonus: {
         value: number;
     };
@@ -30,18 +28,17 @@ interface MeleeSystemSource extends ItemSystemSource {
         value: "melee" | "ranged";
     };
 }
-interface MeleeSystemData extends MeleeSystemSource, Omit<ItemSystemData, "traits"> {
-    material: {
-        precious: {
-            type: WeaponMaterialType;
-            grade: PreciousMaterialGrade;
-        } | null;
+interface MeleeSystemData extends Omit<MeleeSystemSource, "description">, Omit<ItemSystemData, "level" | "traits"> {
+    material: WeaponMaterialData;
+    runes: {
+        property: WeaponPropertyRuneType[];
     };
 }
-interface MeleeDamageRoll {
+interface NPCAttackDamageSource {
     damage: string;
     damageType: DamageType;
+    category?: "persistent" | "precision" | "splash" | null;
 }
-export type NPCAttackTrait = keyof ConfigPF2e["PF2E"]["npcAttackTraits"];
-export type NPCAttackTraits = ItemTraits<NPCAttackTrait>;
-export { MeleeDamageRoll, MeleeData, MeleeSource, MeleeSystemData, MeleeSystemSource };
+type NPCAttackDamage = Required<NPCAttackDamageSource>;
+export type NPCAttackTraits = ItemTraitsNoRarity<NPCAttackTrait>;
+export type { MeleeFlags, MeleeSource, MeleeSystemData, MeleeSystemSource, NPCAttackDamage, NPCAttackDamageSource };

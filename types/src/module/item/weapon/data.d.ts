@@ -1,67 +1,37 @@
-import { ItemFlagsPF2e } from "@item/data/base";
-import { BasePhysicalItemData, BasePhysicalItemSource, Investable, PhysicalItemTraits, PhysicalSystemData, PhysicalSystemSource, PreciousMaterialGrade, UsageDetails } from "@item/physical";
-import { OneToFour, ZeroToThree } from "@module/data";
-import { DamageDieSize, DamageType } from "@system/damage";
-import { type WeaponPF2e } from "./document";
-import { BaseWeaponType, MeleeWeaponGroup, OtherWeaponTag, StrikingRuneType, WeaponCategory, WeaponGroup, WeaponMaterialType, WeaponPropertyRuneType, WeaponRangeIncrement, WeaponReloadTime, WeaponTrait } from "./types";
+import { AttributeString } from "@actor/types.ts";
+import type { PhysicalItemSource } from "@item/base/data/index.ts";
+import { ItemFlagsPF2e } from "@item/base/data/system.ts";
+import type { BasePhysicalItemSource, Investable, ItemMaterialData, ItemMaterialSource, PhysicalItemTraits, PhysicalSystemData, PhysicalSystemSource, UsageDetails } from "@item/physical/index.ts";
+import { ZeroToFour, ZeroToThree } from "@module/data.ts";
+import { DamageDieSize, DamageType } from "@system/damage/index.ts";
+import type { WeaponTraitToggles } from "./trait-toggles.ts";
+import type { BaseWeaponType, MeleeWeaponGroup, OtherWeaponTag, WeaponCategory, WeaponGroup, WeaponMaterialType, WeaponPropertyRuneType, WeaponRangeIncrement, WeaponReloadTime, WeaponTrait } from "./types.ts";
 type WeaponSource = BasePhysicalItemSource<"weapon", WeaponSystemSource> & {
     flags: DeepPartial<WeaponFlags>;
 };
-type WeaponData = Omit<WeaponSource, "system" | "effects" | "flags"> & BasePhysicalItemData<WeaponPF2e, "weapon", WeaponSystemData, WeaponSource> & {
-    flags: WeaponFlags;
-};
 type WeaponFlags = ItemFlagsPF2e & {
     pf2e: {
-        /** Whether this attack is from a battle form */
+        /** Whether this attack is compatible with a battle form */
         battleForm?: boolean;
+        /** Whether the weapon is a combination weapon in its melee form */
         comboMeleeUsage: boolean;
+        /**
+         * Used for NPC attacks generated from strike rule elements: if numeric, it will be used as the NPC attack's
+         * modifier, and damage will also not be recalculated.
+         */
+        fixedAttack?: number | null;
+        /** A logging of this weapon's attack item bonus, whatever the source (rune, bomb innate item bonus, etc.) */
+        attackItemBonus: number;
+        /** A tracking property of whether the damage die size has been upgraded */
+        damageFacesUpgraded: boolean;
     };
 };
-interface WeaponTraits extends PhysicalItemTraits<WeaponTrait> {
-    otherTags: OtherWeaponTag[];
-}
-interface WeaponDamage {
-    dice: number;
-    die: DamageDieSize | null;
-    damageType: DamageType;
-    modifier: number;
-    /** Optional persistent damage */
-    persistent: WeaponPersistentDamage | null;
-}
-interface WeaponPersistentDamage {
-    /** A number of dice if `faces` is numeric, otherwise a constant */
-    number: number;
-    /** A number of die faces */
-    faces: 4 | 6 | 8 | 10 | 12 | null;
-    /** Usually the same as the weapon's own base damage type, but open for the user to change */
-    type: DamageType;
-}
-interface WeaponRuneData {
-    potency: OneToFour | null;
-    striking: StrikingRuneType | null;
-    property: Record<OneToFour, WeaponPropertyRuneType | null>;
-}
-/** A weapon can either be unspecific or specific along with baseline material and runes */
-type SpecificWeaponData = {
-    value: false;
-} | {
-    value: true;
-    price: string;
-    material: {
-        precious?: {
-            type: WeaponMaterialType;
-            grade: PreciousMaterialGrade;
-        };
-    };
-    runes: Omit<WeaponRuneData, "property">;
-};
-interface WeaponPropertyRuneSlot {
-    value: WeaponPropertyRuneType | null;
-}
 interface WeaponSystemSource extends Investable<PhysicalSystemSource> {
-    traits: WeaponTraits;
+    traits: WeaponTraitsSource;
+    material: WeaponMaterialSource;
     category: WeaponCategory;
     group: WeaponGroup | null;
+    /** A base shield type can be used for attacks generated from shields */
     baseItem: BaseWeaponType | null;
     bonus: {
         value: number;
@@ -79,28 +49,20 @@ interface WeaponSystemSource extends Investable<PhysicalSystemSource> {
         value: WeaponReloadTime | null;
     };
     usage: {
+        canBeAmmo?: boolean;
         value: "worngloves" | "held-in-one-hand" | "held-in-one-plus-hands" | "held-in-two-hands";
     };
-    MAP: {
-        value: string;
-    };
+    runes: WeaponRuneSource;
+    /** An optional override of the default ability modifier used in attack rolls with this weapon  */
+    attribute?: AttributeString | null;
     /** A combination weapon's melee usage */
     meleeUsage?: ComboWeaponMeleeUsage;
     /** Whether the weapon is a "specific magic weapon" */
-    specific?: SpecificWeaponData;
-    potencyRune: {
-        value: OneToFour | null;
-    };
-    strikingRune: {
-        value: StrikingRuneType | null;
-    };
-    propertyRune1: WeaponPropertyRuneSlot;
-    propertyRune2: WeaponPropertyRuneSlot;
-    propertyRune3: WeaponPropertyRuneSlot;
-    propertyRune4: WeaponPropertyRuneSlot;
-    preciousMaterial: {
-        value: WeaponMaterialType | null;
-    };
+    specific: SpecificWeaponData | null;
+    /** Whether this is an unarmed attack that is a grasping appendage, requiring a free hand for use */
+    graspingAppendage?: boolean;
+    /** Doubly-embedded adjustments, attachments, talismans etc. */
+    subitems: PhysicalItemSource[];
     property1: {
         value: string;
         dice: number;
@@ -113,29 +75,78 @@ interface WeaponSystemSource extends Investable<PhysicalSystemSource> {
     };
     selectedAmmoId: string | null;
 }
-interface WeaponSystemData extends Omit<WeaponSystemSource, "identification" | "price" | "temporary">, Omit<Investable<PhysicalSystemData>, "traits"> {
+interface WeaponTraitsSource extends PhysicalItemTraits<WeaponTrait> {
+    otherTags: OtherWeaponTag[];
+    toggles?: {
+        doubleBarrel?: {
+            selected: boolean;
+        };
+        modular?: {
+            selected: DamageType | null;
+        };
+        versatile?: {
+            selected: DamageType | null;
+        };
+    };
+}
+interface WeaponDamage {
+    dice: number;
+    die: DamageDieSize | null;
+    damageType: DamageType;
+    modifier: number;
+    /** Optional persistent damage */
+    persistent: WeaponPersistentDamage | null;
+}
+interface WeaponPersistentDamage {
+    /** A number of dice if `faces` is numeric, otherwise a constant */
+    number: number;
+    /** A number of die faces */
+    faces: 4 | 6 | 8 | 10 | 12 | null;
+    /** Usually the same as the weapon's own base damage type, but open for the user to change */
+    type: DamageType;
+}
+/** A weapon can either be unspecific or specific along with baseline material and runes */
+type SpecificWeaponData = {
+    material: WeaponMaterialSource;
+    runes: WeaponRuneSource;
+};
+interface WeaponMaterialSource extends ItemMaterialSource {
+    type: WeaponMaterialType | null;
+}
+type WeaponRuneSource = {
+    potency: ZeroToFour;
+    striking: ZeroToThree;
+    property: WeaponPropertyRuneType[];
+};
+interface WeaponSystemData extends Omit<WeaponSystemSource, SourceOmission>, Omit<Investable<PhysicalSystemData>, "material" | "subitems"> {
+    traits: WeaponTraits;
     baseItem: BaseWeaponType | null;
+    material: WeaponMaterialData;
     maxRange: number | null;
     reload: {
         value: WeaponReloadTime | null;
         /** Whether the ammunition (or the weapon itself, if thrown) should be consumed upon firing */
         consume: boolean | null;
+        /** A display label for use in any view */
+        label: string | null;
     };
-    runes: {
-        potency: number;
-        striking: ZeroToThree;
-        property: WeaponPropertyRuneType[];
-        effects: [];
-    };
-    material: WeaponMaterialData;
-    usage: UsageDetails & WeaponSystemSource["usage"];
+    runes: WeaponRuneData;
+    usage: WeaponUsageDetails;
+    graspingAppendage: boolean;
+    meleeUsage?: Required<ComboWeaponMeleeUsage>;
+    stackGroup: null;
 }
-interface WeaponMaterialData {
-    /** The precious material of which this weapon is composed */
-    precious: {
-        type: WeaponMaterialType;
-        grade: PreciousMaterialGrade;
-    } | null;
+type SourceOmission = "apex" | "bulk" | "description" | "hp" | "identification" | "price" | "temporary";
+type WeaponUsageDetails = UsageDetails & Required<WeaponSystemSource["usage"]>;
+interface WeaponTraits extends WeaponTraitsSource {
+    otherTags: OtherWeaponTag[];
+    toggles: WeaponTraitToggles;
+}
+interface WeaponMaterialData extends ItemMaterialData {
+    type: WeaponMaterialType | null;
+}
+interface WeaponRuneData extends WeaponRuneSource {
+    effects: WeaponPropertyRuneType[];
 }
 interface ComboWeaponMeleeUsage {
     damage: {
@@ -143,6 +154,10 @@ interface ComboWeaponMeleeUsage {
         die: DamageDieSize;
     };
     group: MeleeWeaponGroup;
-    traits: WeaponTrait[];
+    traits?: WeaponTrait[];
+    traitToggles?: {
+        modular: DamageType | null;
+        versatile: DamageType | null;
+    };
 }
-export { ComboWeaponMeleeUsage, WeaponDamage, WeaponData, WeaponMaterialData, WeaponPersistentDamage, WeaponPropertyRuneSlot, WeaponRuneData, WeaponSource, WeaponSystemData, WeaponSystemSource, };
+export type { ComboWeaponMeleeUsage, SpecificWeaponData, WeaponDamage, WeaponFlags, WeaponMaterialData, WeaponMaterialSource, WeaponPersistentDamage, WeaponRuneData, WeaponRuneSource, WeaponSource, WeaponSystemData, WeaponSystemSource, WeaponTraitsSource, };

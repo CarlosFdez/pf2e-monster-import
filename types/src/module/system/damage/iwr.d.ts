@@ -1,16 +1,13 @@
-import { ActorPF2e } from "@actor";
-import { ConditionSource } from "@item";
-import { DamageInstance, DamageRoll } from "./roll";
+import type { ActorPF2e } from "@actor";
+import { DamageInstance, DamageRoll } from "./roll.ts";
 /** Apply an actor's IWR applications to an evaluated damage roll's instances */
 declare function applyIWR(actor: ActorPF2e, roll: Rolled<DamageRoll>, rollOptions: Set<string>): IWRApplicationData;
-/** Get the theoretic maximum damage for an instance of persistent damage after applying IWR */
-declare function maxPersistentAfterIWR(actor: ActorPF2e, data: ConditionSource, rollOptions: Set<string>): Promise<number>;
 interface IWRApplicationData {
     finalDamage: number;
     applications: IWRApplication[];
-    persistent: DamageInstance[];
+    persistent: Rolled<DamageInstance>[];
 }
-interface UnafectedApplication {
+interface UnaffectedApplication {
     category: "unaffected";
     type: string;
     adjustment: number;
@@ -31,5 +28,12 @@ interface ResistanceApplication {
     adjustment: number;
     ignored: boolean;
 }
-type IWRApplication = UnafectedApplication | ImmunityApplication | WeaknessApplication | ResistanceApplication;
-export { IWRApplication, IWRApplicationData, applyIWR, maxPersistentAfterIWR };
+/** Post-IWR reductions from various sources (e.g., hardness) */
+interface DamageReductionApplication {
+    category: "reduction";
+    type: string;
+    adjustment: number;
+}
+type IWRApplication = UnaffectedApplication | ImmunityApplication | WeaknessApplication | ResistanceApplication | DamageReductionApplication;
+export { applyIWR };
+export type { IWRApplication, IWRApplicationData };

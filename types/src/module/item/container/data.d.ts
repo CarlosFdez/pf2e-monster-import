@@ -1,17 +1,28 @@
-import { EquipmentTrait } from "@item/equipment/data";
-import { BasePhysicalItemData, BasePhysicalItemSource, Investable, PhysicalItemTraits, PhysicalSystemData, PhysicalSystemSource } from "@item/physical/data";
-import { ContainerPF2e } from ".";
+import { EquipmentTrait } from "@item/equipment/data.ts";
+import { BasePhysicalItemSource, BulkData, Investable, PhysicalItemTraits, PhysicalSystemData, PhysicalSystemSource } from "@item/physical/data.ts";
 type ContainerSource = BasePhysicalItemSource<"backpack", ContainerSystemSource>;
-type ContainerData = Omit<ContainerSource, "system" | "effects" | "flags"> & BasePhysicalItemData<ContainerPF2e, "backpack", ContainerSystemData, ContainerSource>;
 type ContainerTraits = PhysicalItemTraits<EquipmentTrait>;
 interface ContainerSystemSource extends Investable<PhysicalSystemSource> {
     traits: ContainerTraits;
     stowing: boolean;
-    bulkCapacity: {
-        value: string | null;
-    };
+    bulk: ContainerBulkSource;
     collapsed: boolean;
+    usage: {
+        value: string;
+    };
+    subitems?: never;
 }
-interface ContainerSystemData extends Omit<ContainerSystemSource, "identification" | "price" | "temporary" | "usage">, Omit<Investable<PhysicalSystemData>, "traits"> {
+interface ContainerBulkSource {
+    value: number;
+    heldOrStowed: number;
+    capacity: number;
+    ignored: number;
 }
-export { ContainerData, ContainerSource };
+interface ContainerSystemData extends Omit<ContainerSystemSource, SourceOmission>, Omit<Investable<PhysicalSystemData>, "subitems" | "traits"> {
+    bulk: ContainerBulkData;
+    stackGroup: null;
+}
+type SourceOmission = "apex" | "bulk" | "description" | "hp" | "identification" | "material" | "price" | "temporary" | "usage";
+interface ContainerBulkData extends ContainerBulkSource, BulkData {
+}
+export type { ContainerBulkData, ContainerSource, ContainerSystemData };

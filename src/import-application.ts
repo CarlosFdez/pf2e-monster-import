@@ -6,8 +6,8 @@ interface MonsterImportOptions extends ApplicationOptions {
 }
 
 export class MonsterImportApplication extends Application<MonsterImportOptions> {
-    static override get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+    static override get defaultOptions(): ApplicationOptions {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             template: "./modules/pf2e-monster-import/templates/import-form.html",
             class: "pf2e-monster-import-form",
             resizable: true,
@@ -18,7 +18,7 @@ export class MonsterImportApplication extends Application<MonsterImportOptions> 
         });
     }
 
-    override activateListeners($html: JQuery) {
+    override activateListeners($html: JQuery): void {
         $html.find("[data-action=import]").on("click", async () => {
             const actor = this.options.actor;
             const input = $html.find("textarea").val()?.toString() ?? "";

@@ -1,9 +1,10 @@
-import { AmbientLightDocumentPF2e } from "@module/scene";
-import { LightingLayerPF2e } from ".";
-export declare class AmbientLightPF2e extends AmbientLight<AmbientLightDocumentPF2e> {
+import { AmbientLightDocumentPF2e } from "@scene/index.ts";
+import { LightingLayerPF2e } from "./index.ts";
+declare class AmbientLightPF2e<TDocument extends AmbientLightDocumentPF2e = AmbientLightDocumentPF2e> extends AmbientLight<TDocument> {
     /** Is this light actually a source of darkness? */
     get isDarkness(): boolean;
 }
-export interface AmbientLightPF2e {
+interface AmbientLightPF2e<TDocument extends AmbientLightDocumentPF2e = AmbientLightDocumentPF2e> extends AmbientLight<TDocument> {
     get layer(): LightingLayerPF2e<this>;
 }
+export { AmbientLightPF2e };

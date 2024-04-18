@@ -1,108 +1,146 @@
-/// <reference types="jquery" />
-import { DamageDicePF2e, ModifierPF2e } from "@actor/modifiers";
-import { AbilityString } from "@actor/types";
-import { ItemConstructionContextPF2e, ItemPF2e, SpellcastingEntryPF2e } from "@item";
-import { ActionTrait } from "@item/action/data";
-import { ItemSourcePF2e, ItemSummaryData } from "@item/data";
-import { TrickMagicItemEntry } from "@item/spellcasting-entry/trick";
-import { GhostTemplate } from "@module/canvas/ghost-measured-template";
-import { ChatMessagePF2e } from "@module/chat-message";
-import { OneToTen } from "@module/data";
-import { UserPF2e } from "@module/user";
-import { CheckRoll } from "@system/check";
-import { StatisticRollParameters } from "@system/statistic";
-import { EnrichHTMLOptionsPF2e } from "@system/text-editor";
-import { SpellData, SpellHeightenLayer, SpellOverlayType, SpellSource } from "./data";
-import { SpellOverlayCollection } from "./overlay";
-import { MagicSchool, MagicTradition, SpellComponent, SpellTrait } from "./types";
-import { DamageRoll } from "@system/damage/roll";
-interface SpellConstructionContext extends ItemConstructionContextPF2e {
-    fromConsumable?: boolean;
-}
-interface SpellDamage {
-    roll: DamageRoll;
-    domains: string[];
-    options: Set<string>;
-    modifiers: (ModifierPF2e | DamageDicePF2e)[];
-    breakdownTags: string[];
-}
-declare class SpellPF2e extends ItemPF2e {
-    readonly isFromConsumable: boolean;
+/// <reference types="jquery" resolution-mode="require"/>
+import type { ActorPF2e } from "@actor";
+import { AttributeString } from "@actor/types.ts";
+import type { ConsumablePF2e } from "@item";
+import { ItemPF2e } from "@item";
+import { ItemSourcePF2e, RawItemChatData } from "@item/base/data/index.ts";
+import { SpellSlotGroupId } from "@item/spellcasting-entry/collection.ts";
+import { BaseSpellcastingEntry } from "@item/spellcasting-entry/types.ts";
+import { RangeData } from "@item/types.ts";
+import { MeasuredTemplatePF2e } from "@module/canvas/index.ts";
+import { ChatMessagePF2e, ItemOriginFlag } from "@module/chat-message/index.ts";
+import { OneToTen, Rarity, ZeroToTwo } from "@module/data.ts";
+import type { UserPF2e } from "@module/user/index.ts";
+import type { TokenDocumentPF2e } from "@scene";
+import { CheckRoll } from "@system/check/index.ts";
+import { DamageRoll } from "@system/damage/roll.ts";
+import { DamageDamageContext, DamageKind, SpellDamageTemplate } from "@system/damage/types.ts";
+import { StatisticRollParameters } from "@system/statistic/index.ts";
+import { EnrichmentOptionsPF2e } from "@system/text-editor.ts";
+import { SpellArea, SpellHeightenLayer, SpellOverlayType, SpellSource, SpellSystemData } from "./data.ts";
+import { SpellOverlayCollection } from "./overlay.ts";
+import { MagicTradition, SpellTrait } from "./types.ts";
+declare class SpellPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends ItemPF2e<TParent> {
+    readonly parentItem: ConsumablePF2e<TParent> | null;
     /** The original spell. Only exists if this is a variant */
-    original?: SpellPF2e;
+    original?: SpellPF2e<TParent>;
     /** The overlays that were applied to create this variant */
     appliedOverlays?: Map<SpellOverlayType, string>;
-    /** Set if casted with trick magic item. Will be replaced via overriding spellcasting on cast later. */
-    trickMagicEntry: TrickMagicItemEntry | null;
+    overlays: SpellOverlayCollection;
+    constructor(data: PreCreate<ItemSourcePF2e>, context?: SpellConstructionContext<TParent>);
+    static get validTraits(): Record<SpellTrait, string>;
+    /** The id of the override overlay that constitutes this variant */
+    get variantId(): string | null;
+    /** The spell's "base" rank; that is, before heightening */
+    get baseRank(): OneToTen;
+    /** Legacy getter, though not yet deprecated */
     get baseLevel(): OneToTen;
     /**
-     * Heightened level of the spell if heightened, otherwise base.
+     * Heightened rank of the spell if heightened, otherwise base.
      * This applies for spontaneous or innate spells usually, but not prepared ones.
+     */
+    get rank(): OneToTen;
+    /**
+     * Legacy getter: only deprecated internally
+     * @deprecated
      */
     get level(): number;
     get traits(): Set<SpellTrait>;
-    /** Action traits added when Casting this Spell */
-    get castingTraits(): ActionTrait[];
-    get school(): MagicSchool;
+    get rarity(): Rarity;
     get traditions(): Set<MagicTradition>;
-    get spellcasting(): SpellcastingEntryPF2e | undefined;
+    get actionGlyph(): string | null;
+    get defense(): {
+        slug: string;
+        label: string;
+    } | null;
+    get spellcasting(): BaseSpellcastingEntry<NonNullable<TParent>> | null;
     get isAttack(): boolean;
     get isCantrip(): boolean;
     get isFocusSpell(): boolean;
     get isRitual(): boolean;
-    get ability(): AbilityString;
-    get components(): Record<SpellComponent, boolean> & {
-        value: string;
-    };
+    get attribute(): AttributeString;
+    /** @deprecated */
+    get ability(): AttributeString;
     /** Whether this spell has unlimited uses */
-    get unlimited(): boolean;
+    get atWill(): boolean;
     get isVariant(): boolean;
     get hasVariants(): boolean;
+    /**
+     * Attempt to parse out range data.
+     * @todo Migrate me.
+     */
+    get range(): RangeData | null;
+    get isMelee(): boolean;
+    get isRanged(): boolean;
+    get area(): (SpellArea & {
+        label: string;
+    }) | null;
+    /** Whether the "damage" roll of this spell deals damage or heals (or both, depending on the target) */
+    get damageKinds(): Set<DamageKind>;
     get uuid(): ItemUUID;
-    constructor(data: PreCreate<ItemSourcePF2e>, context?: SpellConstructionContext);
     /** Given a slot level, compute the actual level the spell will be cast at */
-    computeCastLevel(slotLevel?: number): number;
+    computeCastRank(slotNumber?: number): OneToTen;
     getRollData(rollOptions?: {
-        castLevel?: number | string;
-    }): NonNullable<EnrichHTMLOptions["rollData"]>;
-    get damage(): SpellDamage | null;
+        castRank?: number | string;
+    }): NonNullable<EnrichmentOptions["rollData"]>;
+    getDamage(params?: SpellDamageOptions): Promise<SpellDamage | null>;
     /**
      * Loads an alternative version of this spell, called a variant.
      * The variant is created via the application of one or more overlays based on parameters.
      * This handles heightening as well as alternative cast modes of spells.
      * If there's nothing to apply, returns null.
      */
-    loadVariant(options?: {
-        castLevel?: number;
-        overlayIds?: string[];
-    }): Embedded<SpellPF2e> | null;
-    getHeightenLayers(level?: number): SpellHeightenLayer[];
-    createTemplate(): GhostTemplate;
-    placeTemplate(): void;
+    loadVariant(options?: SpellVariantOptions): this | null;
+    getHeightenLayers(rank?: number): SpellHeightenLayer[];
+    placeTemplate(message?: ChatMessagePF2e): Promise<MeasuredTemplatePF2e>;
     prepareBaseData(): void;
-    prepareSiblingData(this: Embedded<SpellPF2e>): void;
-    getRollOptions(prefix?: string): string[];
-    toMessage(event?: JQuery.TriggeredEvent, { create, data, rollMode }?: SpellToMessageOptions): Promise<ChatMessagePF2e | undefined>;
-    getChatData(htmlOptions?: EnrichHTMLOptionsPF2e, rollOptions?: {
-        castLevel?: number | string;
-        slotLevel?: number | string;
-    }): Promise<Omit<ItemSummaryData, "traits">>;
-    rollAttack(this: Embedded<SpellPF2e>, event: JQuery.ClickEvent, attackNumber?: number, context?: StatisticRollParameters): Promise<void>;
-    rollDamage(this: Embedded<SpellPF2e>, event: JQuery.ClickEvent<unknown, unknown, HTMLElement>): Promise<Rolled<DamageRoll> | null>;
+    prepareSiblingData(this: SpellPF2e<ActorPF2e>): void;
+    prepareActorData(): void;
+    onPrepareSynthetics(this: SpellPF2e<ActorPF2e>): void;
+    getRollOptions(prefix?: string, options?: {
+        includeGranter?: boolean;
+        includeVariants?: boolean;
+    }): string[];
+    toMessage(event?: Maybe<MouseEvent | JQuery.TriggeredEvent>, { create, data, rollMode }?: SpellToMessageOptions): Promise<ChatMessagePF2e | undefined>;
+    getChatData(this: SpellPF2e<ActorPF2e>, htmlOptions?: EnrichmentOptionsPF2e, rollOptions?: {
+        castRank?: number | string;
+        groupId?: SpellSlotGroupId;
+    }): Promise<RawItemChatData>;
+    rollAttack(this: SpellPF2e<ActorPF2e>, event: MouseEvent | JQuery.ClickEvent, attackNumber?: number, context?: StatisticRollParameters): Promise<Rolled<CheckRoll> | null>;
+    rollDamage(this: SpellPF2e<ActorPF2e>, event: MouseEvent | JQuery.ClickEvent, mapIncreases?: ZeroToTwo): Promise<Rolled<DamageRoll> | null>;
     /** Roll counteract check */
-    rollCounteract(event: JQuery.ClickEvent): Promise<Rolled<CheckRoll> | null>;
-    update(data: DocumentUpdateData<this>, options?: DocumentModificationContext<this>): Promise<this>;
-    protected _preUpdate(changed: DeepPartial<SpellSource>, options: DocumentModificationContext<this>, user: UserPF2e): Promise<void>;
+    rollCounteract(event?: MouseEvent | JQuery.ClickEvent): Promise<Rolled<CheckRoll> | null>;
+    getOriginData(): ItemOriginFlag;
+    update(data: Record<string, unknown>, options?: DocumentUpdateContext<TParent>): Promise<this | undefined>;
+    protected _preCreate(data: this["_source"], options: DocumentModificationContext<TParent>, user: UserPF2e): Promise<boolean | void>;
+    protected _preUpdate(changed: DeepPartial<SpellSource>, options: DocumentUpdateContext<TParent>, user: UserPF2e): Promise<boolean | void>;
 }
-interface SpellPF2e {
-    readonly data: SpellData;
-    overlays: SpellOverlayCollection;
+interface SpellPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends ItemPF2e<TParent> {
+    readonly _source: SpellSource;
+    system: SpellSystemData;
+}
+interface SpellConstructionContext<TParent extends ActorPF2e | null> extends DocumentConstructionContext<TParent> {
+    parentItem?: Maybe<ConsumablePF2e<TParent>>;
+}
+interface SpellDamage {
+    template: SpellDamageTemplate;
+    context: DamageDamageContext;
 }
 interface SpellToMessageOptions {
     create?: boolean;
     rollMode?: RollMode;
     data?: {
-        castLevel?: number;
+        castRank?: number;
     };
 }
-export { SpellPF2e, SpellToMessageOptions };
+interface SpellDamageOptions {
+    rollMode?: RollMode | "roll";
+    skipDialog?: boolean;
+    target?: Maybe<TokenDocumentPF2e>;
+}
+interface SpellVariantOptions {
+    castRank?: number;
+    overlayIds?: string[];
+    entryId?: string | null;
+}
+export { SpellPF2e, type SpellToMessageOptions };

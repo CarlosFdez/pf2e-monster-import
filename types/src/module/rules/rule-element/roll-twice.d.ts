@@ -1,20 +1,18 @@
-import { ItemPF2e } from "@item";
-import { RuleElementSource } from ".";
-import { RuleElementOptions, RuleElementPF2e } from "./base";
+import type { BooleanField, StringField } from "types/foundry/common/data/fields.d.ts";
+import { RuleElementPF2e } from "./base.ts";
+import { ModelPropsFromRESchema, RuleElementSchema } from "./data.ts";
 /** Roll Twice and keep either the higher or lower result */
-export declare class RollTwiceRuleElement extends RuleElementPF2e {
-    #private;
-    selector: string;
-    keep: "higher" | "lower";
-    /** If the hosting item is an effect, remove or expire it after a matching roll is made */
-    removeAfterRoll: boolean;
-    constructor(data: RollTwiceSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
+declare class RollTwiceRuleElement extends RuleElementPF2e<RollTwiceRuleSchema> {
+    static defineSchema(): RollTwiceRuleSchema;
     beforePrepareData(): void;
-    afterRoll({ selectors, roll, rollOptions }: RuleElementPF2e.AfterRollParams): Promise<void>;
+    afterRoll({ domains, roll, rollOptions }: RuleElementPF2e.AfterRollParams): Promise<void>;
 }
-interface RollTwiceSource extends RuleElementSource {
-    selector?: unknown;
-    keep?: unknown;
-    removeAfterRoll?: unknown;
+interface RollTwiceRuleElement extends RuleElementPF2e<RollTwiceRuleSchema>, ModelPropsFromRESchema<RollTwiceRuleSchema> {
 }
-export {};
+type RollTwiceRuleSchema = RuleElementSchema & {
+    selector: StringField<string, string, true, false, false>;
+    keep: StringField<"higher" | "lower", "higher" | "lower", true, false, false>;
+    /** If the hosting item is an effect, remove or expire it after a matching roll is made */
+    removeAfterRoll: BooleanField<boolean, boolean, false, false, false>;
+};
+export { RollTwiceRuleElement };

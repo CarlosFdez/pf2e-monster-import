@@ -1,44 +1,30 @@
-import { RuleElementPF2e, RuleElementData, RuleElementSource, RuleElementOptions } from ".";
-import { CharacterPF2e } from "@actor";
-import { MartialProficiency } from "@actor/character/data";
-import { ActorType } from "@actor/data";
-import { ItemPF2e } from "@item";
-import { ProficiencyRank } from "@item/data";
-import { WeaponCategory } from "@item/weapon/types";
-import { PredicatePF2e, RawPredicate } from "@system/predication";
-declare class MartialProficiencyRuleElement extends RuleElementPF2e {
+import type { ActorType, CharacterPF2e } from "@actor";
+import { ArmorCategory } from "@item/armor/types.ts";
+import { ProficiencyRank } from "@item/base/data/index.ts";
+import { WeaponCategory } from "@item/weapon/types.ts";
+import { PredicateField, StrictStringField } from "@system/schema-data-fields.ts";
+import { RuleElementOptions, RuleElementPF2e } from "./base.ts";
+import { ModelPropsFromRESchema, ResolvableValueField, RuleElementSchema, RuleElementSource } from "./data.ts";
+declare class MartialProficiencyRuleElement extends RuleElementPF2e<MartialProficiencySchema> {
     protected static validActorTypes: ActorType[];
-    /** Predication test for whether a weapon matches this proficiency */
-    definition: PredicatePF2e;
-    constructor(data: MartialProficiencySource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
-    private validateData;
+    slug: string;
+    constructor(data: RuleElementSource, options: RuleElementOptions);
+    static defineSchema(): MartialProficiencySchema;
     onApplyActiveEffects(): void;
-    /** Set this martial proficiency as an AELike value  */
-    private createValue;
 }
-interface MartialProficiencyRuleElement extends RuleElementPF2e {
-    data: MartialProficiencyData;
+interface MartialProficiencyRuleElement extends RuleElementPF2e<MartialProficiencySchema>, ModelPropsFromRESchema<MartialProficiencySchema> {
     get actor(): CharacterPF2e;
 }
-interface MartialProficiencyData extends RuleElementData {
-    key: "MartialProficiency";
-    /** The key to be used for this proficiency in `CharacterPF2e#data#data#martial` */
-    slug: string;
+type MartialProficiencySchema = RuleElementSchema & {
+    /** Whether the proficiency is an attack or defense */
+    kind: StrictStringField<"attack" | "defense", "attack" | "defense", true, false, true>;
     /** The criteria for matching qualifying weapons and other attacks */
-    definition: RawPredicate;
-    /** Whether this proficiency's rank can be manually changed */
-    immutable: boolean;
+    definition: PredicateField<true, false, false>;
     /** The attack category to which this proficiency's rank is linked */
-    sameAs: WeaponCategory;
+    sameAs: StrictStringField<WeaponCategory | ArmorCategory, WeaponCategory | ArmorCategory, false, false, false>;
     /** The maximum rank this proficiency can reach, if any */
-    maxRank?: Exclude<ProficiencyRank, "untrained">;
+    maxRank: StrictStringField<Exclude<ProficiencyRank, "untrained">, Exclude<ProficiencyRank, "untrained">, false, false, false>;
     /** Initially a number indicating rank, changed into a `MartialProficiency` object for overriding as an AE-like */
-    value: number | MartialProficiency;
-}
-export interface MartialProficiencySource extends RuleElementSource {
-    definition?: unknown;
-    sameAs?: unknown;
-    immutable?: unknown;
-    maxRank?: unknown;
-}
+    value: ResolvableValueField<false, false, false>;
+};
 export { MartialProficiencyRuleElement };

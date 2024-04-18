@@ -5,6 +5,7 @@
  * @category PF2
  */
 declare class PredicatePF2e extends Array<PredicateStatement> {
+    #private;
     /** Is the predicate data structurally valid? */
     readonly isValid: boolean;
     constructor(...statements: PredicateStatement[] | [PredicateStatement[]]);
@@ -14,24 +15,17 @@ declare class PredicatePF2e extends Array<PredicateStatement> {
     static isArray(statements: unknown): statements is PredicateStatement[];
     /** Test if the given predicate passes for the given list of options. */
     static test(predicate: PredicateStatement[] | undefined, options: Set<string> | string[]): boolean;
-    /** Create a predicate from unknown data, with deprecation support for legacy objects */
-    static create(data: unknown, warn?: boolean): PredicatePF2e;
     /** Test this predicate against a domain of discourse */
     test(options: Set<string> | string[]): boolean;
     toObject(): RawPredicate;
     clone(): PredicatePF2e;
-    /** Is the provided statement true? */
-    private isTrue;
-    private testBinaryOp;
-    /** Is the provided compound statement true? */
-    private testCompound;
 }
-declare function convertLegacyData(predicate: OldRawPredicate): RawPredicate;
-interface OldRawPredicate {
-    label?: unknown;
-    all?: PredicateStatement[];
-    any?: PredicateStatement[];
-    not?: PredicateStatement[];
+declare class StatementValidator {
+    #private;
+    static isStatement(statement: unknown): statement is PredicateStatement;
+    static isAtomic(statement: unknown): statement is Atom;
+    static isBinaryOp(statement: unknown): statement is BinaryOperation;
+    static isCompound(statement: unknown): statement is CompoundStatement;
 }
 type EqualTo = {
     eq: [string, string | number];
@@ -56,6 +50,9 @@ type Conjunction = {
 type Disjunction = {
     or: PredicateStatement[];
 };
+type ExclusiveDisjunction = {
+    xor: PredicateStatement[];
+};
 type Negation = {
     not: PredicateStatement;
 };
@@ -69,7 +66,11 @@ type Conditional = {
     if: PredicateStatement;
     then: PredicateStatement;
 };
-type CompoundStatement = Conjunction | Disjunction | AlternativeDenial | JointDenial | Negation | Conditional;
+type Biconditional = {
+    iff: PredicateStatement[];
+};
+type CompoundStatement = Conjunction | Disjunction | ExclusiveDisjunction | AlternativeDenial | JointDenial | Negation | Conditional | Biconditional;
 type PredicateStatement = Atom | CompoundStatement;
 type RawPredicate = PredicateStatement[];
-export { PredicatePF2e, PredicateStatement, RawPredicate, convertLegacyData };
+export { PredicatePF2e, StatementValidator };
+export type { PredicateStatement, RawPredicate };

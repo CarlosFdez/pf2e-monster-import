@@ -1,21 +1,22 @@
-import { SkillAbbreviation } from "@actor/creature/data";
-import { AbilityString } from "@actor/types";
-import { ABCSystemData, ABCSystemSource } from "@item/abc/data";
-import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemTraits } from "@item/data/base";
-import { BackgroundPF2e } from ".";
+import { SkillAbbreviation } from "@actor/creature/data.ts";
+import { AttributeString } from "@actor/types.ts";
+import { ABCSystemData, ABCSystemSource } from "@item/abc/data.ts";
+import { BaseItemSourcePF2e, ItemTraits } from "@item/base/data/system.ts";
+import { BackgroundTrait } from "./types.ts";
 type BackgroundSource = BaseItemSourcePF2e<"background", BackgroundSystemSource>;
-type BackgroundData = Omit<BackgroundSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<BackgroundPF2e, "background", BackgroundSystemData, BackgroundSource>;
 interface BackgroundSystemSource extends ABCSystemSource {
-    traits: ItemTraits;
+    traits: BackgroundTraits;
     boosts: Record<number, {
-        value: AbilityString[];
-        selected: AbilityString | null;
+        value: AttributeString[];
+        selected: AttributeString | null;
     }>;
     trainedLore: string;
     trainedSkills: {
         value: SkillAbbreviation[];
     };
+    level?: never;
 }
-interface BackgroundSystemData extends Omit<BackgroundSystemSource, "items">, Omit<ABCSystemData, "traits"> {
+type BackgroundTraits = ItemTraits<BackgroundTrait>;
+interface BackgroundSystemData extends Omit<BackgroundSystemSource, "description" | "items">, Omit<ABCSystemData, "level" | "traits"> {
 }
-export { BackgroundData, BackgroundSource };
+export type { BackgroundSource, BackgroundSystemData };

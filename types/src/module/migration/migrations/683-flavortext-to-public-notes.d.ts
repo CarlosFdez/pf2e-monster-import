@@ -1,6 +1,6 @@
-import { ActorSourcePF2e } from "@actor/data";
-import { NPCSystemSource } from "@actor/npc/data";
-import { MigrationBase } from "../base";
+import { ActorSourcePF2e } from "@actor/data/index.ts";
+import { NPCSystemSource } from "@actor/npc/data.ts";
+import { MigrationBase } from "../base.ts";
 interface NPCSystemDataOld extends NPCSystemSource {
     details: NPCSystemSource["details"] & {
         flavorText?: string;
@@ -12,6 +12,6 @@ export declare class Migration683FlavorTextToPublicNotes extends MigrationBase {
     static version: number;
     /** Migrate flavorText to public Notes and remove flavorText */
     replaceFlavorTextData(old: NPCSystemDataOld): void;
-    updateActor(actorSource: ActorSourcePF2e): Promise<void>;
+    updateActor(source: ActorSourcePF2e): Promise<void>;
 }
 export {};

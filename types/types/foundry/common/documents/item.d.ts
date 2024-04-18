@@ -1,71 +1,102 @@
-declare module foundry {
-    module documents {
-        /** The Item document model. */
-        class BaseItem extends abstract.Document {
-            sort: number;
+import type * as abstract from "../abstract/module.d.ts";
+import type * as fields from "../data/fields.d.ts";
+import type * as documents from "./module.d.ts";
 
-            /** The default icon used for newly created Item documents */
-            static DEFAULT_ICON: ImageFilePath;
+/**
+ * The Document definition for an Item.
+ * Defines the DataSchema and common behaviors for an Item which are shared between both client and server.
+ * @memberof documents
+ *
+ * @param data    Initial data from which to construct the Item
+ * @param context Construction context options
+ */
+export default class BaseItem<TParent extends documents.BaseActor | null> extends abstract.Document<
+    TParent,
+    ItemSchema
+> {
+    /* -------------------------------------------- */
+    /*  Model Configuration                         */
+    /* -------------------------------------------- */
 
-            static override get schema(): ConstructorOf<data.ItemData<BaseItem, BaseActiveEffect>>;
+    static override get metadata(): ItemMetadata;
 
-            static override get metadata(): ItemMetadata;
+    static override defineSchema(): ItemSchema;
 
-            /** A reference to the Collection of ActiveEffect instances in the Item document, indexed by _id. */
-            get effects(): this["data"]["effects"];
+    /** The default icon used for newly created Item documents */
+    static DEFAULT_ICON: ImageFilePath;
 
-            override canUserModify(user: BaseUser, action: UserAction, data?: DocumentUpdateData<this>): boolean;
+    /**
+     * Determine default artwork based on the provided item data.
+     * @param The source item data.
+     * @returns Candidate item image.
+     */
+    static getDefaultArtwork(itemData: ItemSource): { img: ImageFilePath };
 
-            override testUserPermission(
-                user: BaseUser,
-                permission: DocumentOwnershipString | DocumentOwnershipLevel,
-                { exact }?: { exact?: boolean }
-            ): boolean;
+    /** The allowed set of Item types which may exist. */
+    static get TYPES(): string[];
 
-            /**
-             * Migrate the system data object to conform to data model defined by the current system version.
-             * @see mergeObject
-             * @param options Options which customize how the system data is migrated.
-             * @param options.insertKeys   Retain keys which exist in the current data, but not the model
-             * @param options.insertValues Retain inner-object values which exist in the current data, but not the model
-             * @param options.enforceTypes Require that data types match the model exactly to be retained
-             * @return The migrated system data object, not yet saved to the database
-             */
-            migrateSystemData({
-                insertKeys,
-                insertValues,
-                enforceTypes,
-            }?: {
-                insertKeys?: boolean;
-                insertValues?: boolean;
-                enforceTypes?: boolean;
-            }): this["data"]["system"];
-        }
+    override canUserModify(user: documents.BaseUser, action: UserAction, data?: Record<string, unknown>): boolean;
 
-        interface BaseItem {
-            readonly data: data.ItemData<BaseItem, BaseActiveEffect>;
+    override testUserPermission(
+        user: documents.BaseUser,
+        permission: DocumentOwnershipString | DocumentOwnershipLevel,
+        { exact }?: { exact?: boolean },
+    ): boolean;
+}
 
-            /** Shim for V10 preparation */
-            readonly system: this["data"]["system"];
+export default interface BaseItem<TParent extends documents.BaseActor | null>
+    extends abstract.Document<TParent, ItemSchema>,
+        ModelPropsFromSchema<ItemSchema> {
+    get documentName(): ItemMetadata["name"];
 
-            readonly parent: BaseActor | null;
+    readonly effects: abstract.EmbeddedCollection<documents.BaseActiveEffect<this>>;
+}
 
-            get documentName(): (typeof BaseItem)["metadata"]["name"];
-        }
+interface ItemMetadata extends abstract.DocumentMetadata {
+    name: "Item";
+    collection: "items";
+    indexed: true;
+    compendiumIndexFields: ["_id", "name", "img", "type", "sort", "folder"];
+    embedded: { ActiveEffect: "effects" };
+    label: "DOCUMENT.Item";
+    labelPlural: "DOCUMENT.Items";
+    permissions: Omit<abstract.DocumentMetadata["permissions"], "create"> & {
+        create: "ITEM_CREATE";
+    };
+}
 
-        interface ItemMetadata extends abstract.DocumentMetadata {
-            name: "Item";
-            collection: "items";
-            label: "DOCUMENT.Item";
-            embedded: {
-                ActiveEffect: typeof BaseActiveEffect;
-            };
-            isPrimary: true;
-            hasSystemData: true;
-            types: string[];
-            permissions: Omit<abstract.DocumentMetadata["permissions"], "create"> & {
-                create: "ITEM_CREATE";
-            };
-        }
-    }
+export type ItemSchema<TType extends string = string, TSystemSource extends object = object> = {
+    /** The _id which uniquely identifies this Item document */
+    _id: fields.DocumentIdField;
+    /** The name of this Item */
+    name: fields.StringField<string, string, true, false, false>;
+    /** An Item subtype which configures the system data model applied */
+    type: fields.StringField<TType, TType, true, false, false>;
+    /** An image file path which provides the artwork for this Item */
+    img: fields.FilePathField<ImageFilePath, ImageFilePath, false, false, true>;
+    /** The system data object which is defined by the system template.json model */
+    system: fields.TypeDataField<TSystemSource>;
+    /** A collection of ActiveEffect embedded Documents */
+    effects: fields.EmbeddedCollectionField<documents.BaseActiveEffect<BaseItem<documents.BaseActor | null>>>;
+    /** The _id of a Folder which contains this Item */
+    folder: fields.ForeignDocumentField<documents.BaseFolder>;
+    /** The numeric sort value which orders this Item relative to its siblings */
+    sort: fields.IntegerSortField;
+    /** An object which configures ownership of this Item */
+    ownership: fields.DocumentOwnershipField;
+    /** An object of optional key/value flags */
+    flags: fields.ObjectField<ItemFlags>;
+    /** An object of creation and access information */
+    _stats: fields.DocumentStatsField;
+};
+
+export type ItemSource<TType extends string = string, TSystemSource extends object = object> = SourceFromSchema<
+    ItemSchema<TType, TSystemSource>
+>;
+
+interface ItemFlags extends DocumentFlags {
+    core?: {
+        sourceId?: ItemUUID;
+    };
+    [key: string]: Record<string, unknown> | undefined;
 }

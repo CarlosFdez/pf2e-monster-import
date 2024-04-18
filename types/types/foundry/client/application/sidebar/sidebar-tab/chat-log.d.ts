@@ -51,9 +51,10 @@ declare class ChatLog<TChatMessage extends ChatMessage = ChatMessage> extends Si
 
     /**
      * Render a batch of additional messages, prepending them to the top of the log
-     * @param size     The batch size to include
+     * @param html The rendered jQuery HTML object
+     * @param size The batch size to include
      */
-    protected _renderBatch(size: number): Promise<void>;
+    protected _renderBatch(html: JQuery, size: number): Promise<void>;
 
     override renderPopout(original: TChatMessage): void;
 
@@ -122,7 +123,7 @@ declare class ChatLog<TChatMessage extends ChatMessage = ChatMessage> extends Si
      * @param message The original string of the message content
      * @return A Promise resolving to the prepared chat data object
      */
-    protected processMessage(message: string): Promise<foundry.data.ChatMessageData>;
+    protected processMessage(message: string): Promise<foundry.documents.ChatMessageSource>;
 
     /**
      * Process messages which are posted using a dice-roll command
@@ -134,15 +135,35 @@ declare class ChatLog<TChatMessage extends ChatMessage = ChatMessage> extends Si
     protected _processDiceCommand(
         command: string,
         matches: RegExpMatchArray[],
-        chatData: DeepPartial<foundry.data.ChatMessageSource>,
-        createOptions: ChatMessageModificationContext
+        chatData: DeepPartial<foundry.documents.ChatMessageSource>,
+        createOptions: ChatMessageModificationContext,
     ): Promise<void>;
+
+    protected _contextMenu(html: JQuery): void;
 
     /**
      * Get the ChatLog entry context options
      * @return The sidebar entry context options
      */
     protected override _getEntryContextOptions(): EntryContextOption[];
+
+    /** Handle keydown events in the chat entry textarea */
+    protected _onChatKeyDown(event: KeyboardEvent): void;
+
+    /** Handle clicking of dice tooltip buttons */
+    protected _onDiceRollClick(event: JQuery.ClickEvent): void;
+
+    /**
+     * Handle scroll events within the chat log container
+     * @param event The initial scroll event
+     */
+    protected _onScrollLog(event: JQuery.TriggeredEvent): void;
+
+    /**
+     * Update roll mode select dropdowns when the setting is changed
+     * @param {string} mode     The new roll mode setting
+     */
+    static _setRollMode(mode: RollMode): void;
 }
 
 declare interface ChatLogOptions extends ApplicationOptions {

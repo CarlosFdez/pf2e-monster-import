@@ -1,6 +1,6 @@
-import { ActorSourcePF2e } from "@actor/data";
-import { ItemSourcePF2e } from "@item/data";
-import { MigrationBase } from "../base";
+import { ActorSourcePF2e } from "@actor/data/index.ts";
+import { ItemSourcePF2e } from "@item/base/data/index.ts";
+import { MigrationBase } from "../base.ts";
 /** Update feats, items, and rule elements to accurately process cumulative item bonuses */
 export declare class Migration723CumulativeItemBonuses extends MigrationBase {
     static version: number;
@@ -13,5 +13,5 @@ export declare class Migration723CumulativeItemBonuses extends MigrationBase {
     /** Update feat, effect, and equipment items */
     updateItem(source: ItemSourcePF2e): Promise<void>;
     /** Replace the retired toggle macro with a simple hotbar-drop effect macro */
-    updateMacro(source: foundry.data.MacroSource): Promise<void>;
+    updateMacro(source: foundry.documents.MacroSource): Promise<void>;
 }

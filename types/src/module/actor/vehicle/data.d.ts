@@ -1,69 +1,77 @@
-import { ActorSystemData, ActorAttributes, BaseActorDataPF2e, BaseActorSourcePF2e, BaseHitPointsData, ActorTraitsData } from "@actor/data/base";
-import { ActorSheetDataPF2e } from "@actor/sheet/data-types";
-import { ActorSizePF2e } from "@actor/data/size";
-import { StatisticTraceData } from "@system/statistic";
-import { VehiclePF2e } from ".";
-import { VehicleTrait } from "./types";
+import { ActorAttributes, ActorAttributesSource, ActorDetailsSource, ActorHitPoints, ActorSystemData, ActorSystemSource, ActorTraitsSource, BaseActorSourcePF2e } from "@actor/data/base.ts";
+import { ImmunitySource } from "@actor/data/iwr.ts";
+import type { ActorSizePF2e } from "@actor/data/size.ts";
+import { PublicationData, Rarity, Size } from "@module/data.ts";
+import type { ArmorClassTraceData, StatisticTraceData } from "@system/statistic/index.ts";
+import { VehicleTrait } from "./types.ts";
 /** The stored source data of a vehicle actor */
-type VehicleSource = BaseActorSourcePF2e<"vehicle", VehicleSystemData>;
-type VehicleData = Omit<VehicleSource, "effects" | "flags" | "items" | "prototypeToken"> & BaseActorDataPF2e<VehiclePF2e, "vehicle", VehicleSystemData, VehicleSource>;
-interface VehicleHitPointsData extends Required<BaseHitPointsData> {
-    brokenThreshold: number;
-    negativeHealing: false;
-}
-interface VehicleAttributes extends ActorAttributes {
-    ac: {
-        value: number;
-        check: number;
-        details: string;
-    };
-    hardness: number;
-    hp: VehicleHitPointsData;
-}
-/** The system-level data of vehicle actors. */
-interface VehicleSystemData extends ActorSystemData {
-    attributes: VehicleAttributes;
-    details: {
-        description: string;
-        level: {
-            value: number;
-        };
-        alliance: null;
-        price: number;
-        space: {
-            long: number;
-            wide: number;
-            high: number;
-        };
-        crew: string;
-        passengers: string;
-        pilotingCheck: string;
-        AC: number;
-        speed: number;
-    };
+type VehicleSource = BaseActorSourcePF2e<"vehicle", VehicleSystemSource>;
+interface VehicleSystemSource extends ActorSystemSource {
+    attributes: VehicleAttributesSource;
+    details: VehicleDetailsSource;
     saves: {
         fortitude: VehicleFortitudeSaveData;
     };
-    traits: VehicleTraitsData;
+    traits: VehicleTraitsSource;
+}
+interface VehicleAttributesSource extends ActorAttributesSource {
+    ac: {
+        value: number;
+    };
+    hardness: number;
+    immunities: ImmunitySource[];
+}
+interface VehicleDetailsSource extends ActorDetailsSource {
+    description: string;
+    level: {
+        value: number;
+    };
+    alliance: null;
+    price: number;
+    space: {
+        long: number;
+        wide: number;
+        high: number;
+    };
+    crew: string;
+    passengers: string;
+    pilotingCheck: string;
+    AC: number;
+    speed: number;
+    /** Information concerning the publication from which this actor originates */
+    publication: PublicationData;
+}
+interface VehicleTraitsSource extends ActorTraitsSource<VehicleTrait> {
+    rarity: Rarity;
+    size: {
+        value: Size;
+    };
+    languages?: never;
+}
+/** The system-level data of vehicle actors. */
+interface VehicleSystemData extends VehicleSystemSource, Omit<ActorSystemData, "details"> {
+    attributes: VehicleAttributes;
+    traits: VehicleTraits;
+}
+interface VehicleAttributes extends Omit<VehicleAttributesSource, AttributesSourceOmission>, ActorAttributes {
+    ac: ArmorClassTraceData;
+    hp: VehicleHitPoints;
+    initiative?: never;
+    shield?: never;
+    emitsSound: boolean | "encounter";
+}
+type AttributesSourceOmission = "immunities" | "weaknesses" | "resistances";
+interface VehicleHitPoints extends ActorHitPoints {
+    brokenThreshold: number;
 }
 interface VehicleFortitudeSaveData extends StatisticTraceData {
     saveDetail: string;
 }
-interface VehicleTraitsData extends ActorTraitsData<VehicleTrait> {
-    rarity: keyof ConfigPF2e["PF2E"]["rarityTraits"];
+interface VehicleTraits extends VehicleTraitsSource {
     size: ActorSizePF2e;
 }
 interface TokenDimensions {
     width: number;
     height: number;
 }
-interface VehicleSheetData extends ActorSheetDataPF2e<VehiclePF2e> {
-    actorRarities: typeof CONFIG.PF2E.rarityTraits;
-    actorRarity: string;
-    actorSizes: typeof CONFIG.PF2E.actorSizes;
-    actorSize: string;
-    data: {
-        traits: VehicleTraitsData;
-    };
-}
-export { VehicleData, VehicleSheetData, VehicleSource, VehicleTrait, TokenDimensions };
+export type { TokenDimensions, VehicleSource, VehicleSystemData, VehicleTrait };

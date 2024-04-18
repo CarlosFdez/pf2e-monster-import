@@ -30,7 +30,7 @@ declare global {
          * Draw the grid
          * @param preview Override settings used in place of those saved to the Scene data
          */
-        draw({ type, dimensions, gridColor, gridAlpha }?: GridDrawOptions): Promise<this>;
+        protected _draw({ type, dimensions, gridColor, gridAlpha }?: GridDrawOptions): Promise<void>;
 
         /**
          * Given a pair of coordinates (x1,y1), return the grid coordinates (x2,y2) which represent the snapped position
@@ -56,22 +56,24 @@ declare global {
          * Measure the grid-wise distance between two point coordinates.
          * @param origin The origin point
          * @param target The target point
+         * @param [options] Additional options which modify the measurement
          * @return The measured distance between these points
          *
          * @example
          * let distance = canvas.grid.measureDistance({x: 1000, y: 1000}, {x: 2000, y: 2000});
          */
-        measureDistance(origin: Point, target: Point): number;
+        measureDistance(origin: Point, target: Point, options?: MeasureDistancesOptions): number;
 
         /**
          * Measure the distance traveled over an array of distance segments.
-         * @param segments An array of measured segments
-         * @param options  Additional options which modify the measurement
+         * @param segments  An array of measured segments
+         * @param [options] Additional options which modify the measurement
          */
-        measureDistances(segments: Segment[], options?: Record<string, unknown>): number[];
+        measureDistances(segments: Segment[], options?: MeasureDistancesOptions): number[];
 
         /* -------------------------------------------- */
         /*  Grid Highlighting Methods                   */
+
         /* -------------------------------------------- */
 
         /**
@@ -117,9 +119,14 @@ declare global {
 
     interface GridDrawOptions {
         type?: GridType | null;
-        dimensions?: CanvasDimensions | null;
+        dimensions?: SceneDimensions | null;
         gridColor?: string | null;
         gridAlpha?: number | null;
+    }
+
+    interface MeasureDistancesOptions {
+        /** Return the distance in grid increments rather than the co-ordinate distance. */
+        gridSpaces?: boolean;
     }
 }
 

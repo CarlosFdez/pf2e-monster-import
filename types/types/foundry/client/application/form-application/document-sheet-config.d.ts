@@ -1,7 +1,8 @@
 export {};
 
 declare global {
-    interface DocumentSheetConfigData<TDocument extends ClientDocument> extends FormApplicationData<TDocument> {
+    interface DocumentSheetConfigData<TDocument extends foundry.abstract.Document>
+        extends FormApplicationData<TDocument> {
         isGM: boolean;
         object: TDocument;
         options: FormApplicationOptions;
@@ -15,10 +16,11 @@ declare global {
         label?: string | (() => string);
         types?: string[];
         makeDefault?: boolean;
+        canBeDefault?: boolean;
     }
 
     /** Document Sheet Configuration Application */
-    class DocumentSheetConfig<TDocument extends ClientDocument = ClientDocument> extends FormApplication<TDocument> {
+    class DocumentSheetConfig<TDocument extends foundry.abstract.Document> extends FormApplication<TDocument> {
         static override get defaultOptions(): FormApplicationOptions;
 
         /** An array of pending sheet assignments which are submitted before other elements of the framework are ready. */
@@ -27,7 +29,7 @@ declare global {
         override get title(): string;
 
         override getData(
-            options?: Partial<FormApplicationOptions>
+            options?: Partial<FormApplicationOptions>,
         ): DocumentSheetConfigData<TDocument> | Promise<DocumentSheetConfigData<TDocument>>;
 
         protected override _updateObject(event: Event, formData: FormApplicationData): Promise<void>;
@@ -44,7 +46,7 @@ declare global {
          */
         static initializeSheets(): void;
 
-        protected static _getDocumentTypes(cls: ClientDocument, types?: string[]): string[];
+        protected static _getDocumentTypes(cls: foundry.abstract.Document, types?: string[]): string[];
 
         /**
          * Register a sheet class as a candidate which can be used to display documents of a given type
@@ -56,11 +58,11 @@ declare global {
          * @param [options.types]       An array of document types for which this sheet should be used
          * @param [options.makeDefault] Whether to make this sheet the default for provided types
          */
-        static registerSheet<T extends ClientDocument>(
+        static registerSheet<T extends foundry.abstract.Document & { get sheet(): FormApplication<T> }>(
             documentClass: ConstructorOf<T>,
             scope: string,
             sheetClass: ConstructorOf<T["sheet"]>,
-            options?: RegisterSheetOptions
+            options?: RegisterSheetOptions,
         ): void;
 
         /** Perform the sheet registration */
@@ -73,11 +75,11 @@ declare global {
          * @param sheetClass  A defined Application class used to render the sheet
          * @param types             An Array of types for which this sheet should be removed
          */
-        static unregisterSheet<T extends ClientDocument>(
+        static unregisterSheet<T extends foundry.abstract.Document & { get sheet(): FormApplication<T> }>(
             documentClass: ConstructorOf<T>,
             scope: string,
             sheetClass: ConstructorOf<T["sheet"]>,
-            options?: { types: string[] }
+            options?: { types: string[] },
         ): void;
 
         /** Perform the sheet de-registration */
@@ -88,6 +90,6 @@ declare global {
         }): void;
 
         /** Update the currently default Sheets using a new core world setting */
-        static updateDefaultSheets(setting: {}): void;
+        static updateDefaultSheets(setting: object): void;
     }
 }

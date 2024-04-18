@@ -1,14 +1,15 @@
-import { CreatureTraits } from "@item/ancestry/data";
-import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemSystemData } from "@item/data/base";
-import type { HeritagePF2e } from "./document";
+import { AncestryTraits } from "@item/ancestry/data.ts";
+import { BaseItemSourcePF2e, ItemSystemData, ItemSystemSource } from "@item/base/data/system.ts";
 type HeritageSource = BaseItemSourcePF2e<"heritage", HeritageSystemSource>;
-type HeritageData = Omit<HeritageSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<HeritagePF2e, "heritage", HeritageSystemData, HeritageSource>;
-interface HeritageSystemSource extends ItemSystemData {
+interface HeritageSystemSource extends ItemSystemSource {
     ancestry: {
         name: string;
+        slug: string;
         uuid: ItemUUID;
     } | null;
-    traits: CreatureTraits;
+    traits: AncestryTraits;
+    level?: never;
 }
-export type HeritageSystemData = HeritageSystemSource;
-export { HeritageData, HeritageSource, HeritageSystemSource };
+interface HeritageSystemData extends Omit<HeritageSystemSource, "description">, Omit<ItemSystemData, "level" | "traits"> {
+}
+export type { HeritageSource, HeritageSystemData, HeritageSystemSource };

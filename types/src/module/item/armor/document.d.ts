@@ -1,35 +1,38 @@
-import { ItemSummaryData } from "@item/data";
-import { PhysicalItemHitPoints, PhysicalItemPF2e } from "@item/physical";
-import { ArmorCategory, ArmorData, ArmorGroup, BaseArmorType } from ".";
-declare class ArmorPF2e extends PhysicalItemPF2e {
-    isStackableWith(item: PhysicalItemPF2e): boolean;
-    get isShield(): boolean;
-    get isArmor(): boolean;
+import type { ActorPF2e } from "@actor";
+import { RawItemChatData } from "@item/base/data/index.ts";
+import { PhysicalItemPF2e } from "@item/physical/index.ts";
+import { UserPF2e } from "@module/user/index.ts";
+import { ArmorSource, ArmorSystemData } from "./data.ts";
+import { ArmorCategory, ArmorGroup, ArmorTrait, BaseArmorType } from "./types.ts";
+declare class ArmorPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends PhysicalItemPF2e<TParent> {
+    static get validTraits(): Record<ArmorTrait, string>;
+    get isBarding(): boolean;
     get baseType(): BaseArmorType | null;
     get group(): ArmorGroup | null;
     get category(): ArmorCategory;
-    get dexCap(): number | null;
+    get dexCap(): number;
     get strength(): number | null;
-    get checkPenalty(): number | null;
+    get checkPenalty(): number;
     get speedPenalty(): number;
     get acBonus(): number;
-    get hitPoints(): PhysicalItemHitPoints;
-    get hardness(): number;
-    get isBroken(): boolean;
-    get isDestroyed(): boolean;
-    /** Given this is a shield, is it raised? */
-    get isRaised(): boolean;
+    get isSpecific(): boolean;
     /** Generate a list of strings for use in predication */
-    getRollOptions(prefix?: string): string[];
+    getRollOptions(prefix?: string, options?: {
+        includeGranter?: boolean;
+    }): string[];
+    isStackableWith(item: PhysicalItemPF2e<TParent>): boolean;
     prepareBaseData(): void;
     prepareDerivedData(): void;
-    prepareActorData(): void;
-    getChatData(this: Embedded<ArmorPF2e>, htmlOptions?: EnrichHTMLOptions): Promise<ItemSummaryData>;
+    prepareActorData(this: ArmorPF2e<ActorPF2e>): void;
+    getChatData(this: ArmorPF2e<ActorPF2e>, htmlOptions?: EnrichmentOptions): Promise<RawItemChatData>;
     generateUnidentifiedName({ typeOnly }?: {
         typeOnly?: boolean;
     }): string;
+    /** Ensure correct shield/actual-armor usage */
+    protected _preUpdate(changed: DeepPartial<this["_source"]>, options: DocumentUpdateContext<TParent>, user: UserPF2e): Promise<boolean | void>;
 }
-interface ArmorPF2e {
-    readonly data: ArmorData;
+interface ArmorPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends PhysicalItemPF2e<TParent> {
+    readonly _source: ArmorSource;
+    system: ArmorSystemData;
 }
 export { ArmorPF2e };

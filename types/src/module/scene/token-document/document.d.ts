@@ -1,22 +1,28 @@
 import { ActorPF2e } from "@actor";
-import { TokenPF2e } from "@module/canvas";
-import { ScenePF2e, TokenConfigPF2e } from "@module/scene";
-import { TokenDataPF2e } from "./data";
-import { CombatantPF2e, EncounterPF2e } from "@module/encounter";
-import { PrototypeTokenPF2e } from "@actor/data/base";
-import { TokenAura } from "./aura";
-declare class TokenDocumentPF2e<TActor extends ActorPF2e = ActorPF2e> extends TokenDocument<TActor> {
-    #private;
-    /** Has this token gone through at least one cycle of data preparation? */
-    private initialized?;
+import type { PrototypeTokenPF2e } from "@actor/data/base.ts";
+import type { TokenPF2e } from "@module/canvas/index.ts";
+import type { CombatantPF2e, EncounterPF2e } from "@module/encounter/index.ts";
+import type { ScenePF2e } from "../document.ts";
+import { TokenAura } from "./aura/index.ts";
+import { TokenFlagsPF2e } from "./data.ts";
+import type { TokenConfigPF2e } from "./sheet.ts";
+declare class TokenDocumentPF2e<TParent extends ScenePF2e | null = ScenePF2e | null> extends TokenDocument<TParent> {
+    /** Has this document completed `DataModel` initialization? */
+    initialized: boolean;
     auras: Map<string, TokenAura>;
+    /** Returns if the token is in combat, though some actors have different conditions */
+    get inCombat(): boolean;
     /** Check actor for effects found in `CONFIG.specialStatusEffects` */
     hasStatusEffect(statusId: string): boolean;
     /** Filter trackable attributes for relevance and avoidance of circular references */
-    static getTrackedAttributes(data?: Record<string, unknown>, _path?: string[]): TokenAttributes;
+    static getTrackedAttributes(data?: Record<string, unknown>, _path?: string[]): TrackedAttributesDescription;
+    static getTrackedAttributeChoices(attributes?: TrackedAttributesDescription): TrackedAttributesDescription;
+    /** Make stamina and resolve editable despite not being present in template.json */
+    getBarAttribute(barName: string, options?: {
+        alternative?: string;
+    }): TokenResourceData | null;
     /** This should be in Foundry core, but ... */
     get scene(): this["parent"];
-    protected _initialize(): void;
     /** Is this token emitting light with a negative value */
     get emitsDarkness(): boolean;
     get rulesBasedVision(): boolean;
@@ -31,37 +37,42 @@ declare class TokenDocumentPF2e<TActor extends ActorPF2e = ActorPF2e> extends To
     get playersCanSeeName(): boolean;
     /** The pixel-coordinate definition of this token's space */
     get bounds(): PIXI.Rectangle;
+    /** Bounds used for mechanics, such as flanking and drawing auras */
+    get mechanicalBounds(): PIXI.Rectangle;
     /** The pixel-coordinate pair constituting this token's center */
     get center(): Point;
+    protected _initialize(options?: Record<string, unknown>): void;
+    /** If embedded, don't prepare data if the parent's data model hasn't initialized all its properties */
+    prepareData(): void;
     /** If rules-based vision is enabled, disable manually configured vision radii */
     prepareBaseData(): void;
-    /** Reset sight defaults if using rules-based vision */
+    /** Set vision and detection modes based on actor data */
     protected _prepareDetectionModes(): void;
-    prepareDerivedData(): void;
+    /** Synchronize the token image with the actor image if the token does not currently have an image */
+    static assignDefaultImage(token: TokenDocumentPF2e | PrototypeTokenPF2e<ActorPF2e>): void;
     /** Set a TokenData instance's dimensions from actor data. Static so actors can use for their prototypes */
-    static prepareSize(token: TokenDocumentPF2e | PrototypeTokenPF2e, actor: ActorPF2e | null): void;
+    static prepareSize(token: TokenDocumentPF2e | PrototypeTokenPF2e<ActorPF2e>): void;
     /** Set a token's initiative on the current encounter, creating a combatant if necessary */
     setInitiative({ initiative, sendMessage, }: {
         initiative: number;
         sendMessage?: boolean;
     }): Promise<void>;
+    /**
+     * Use actor updates (real or otherwise) that propagate down to ephemeral token changes  to provoke canvas object
+     * re-rendering.
+     */
+    simulateUpdate(actorUpdates?: Record<string, unknown>): void;
     /** Toggle token hiding if this token's actor is a loot actor */
-    protected _onCreate(data: this["_source"], options: DocumentModificationContext<this>, userId: string): void;
-    protected _onUpdate(changed: DeepPartial<this["_source"]>, options: DocumentModificationContext, userId: string): void;
-    /** Reinitialize vision if the actor's senses were updated directly */
-    _onUpdateBaseActor(update?: Record<string, unknown>, options?: DocumentModificationContext<Actor>): void;
-    protected _onDelete(options: DocumentModificationContext<this>, userId: string): void;
-    /** Re-render token placeable if REs have ephemerally changed any visuals of this token */
-    onActorEmbeddedItemChange(): void;
+    protected _onCreate(data: this["_source"], options: DocumentModificationContext<TParent>, userId: string): void;
+    protected _onUpdate(changed: DeepPartial<this["_source"]>, options: DocumentUpdateContext<TParent>, userId: string): void;
+    protected _onRelatedUpdate(update?: Record<string, unknown>, options?: DocumentModificationContext<null>): void;
+    protected _onDelete(options: DocumentModificationContext<TParent>, userId: string): void;
 }
-interface TokenDocumentPF2e<TActor extends ActorPF2e = ActorPF2e> extends TokenDocument<TActor> {
-    readonly data: TokenDataPF2e<this>;
-    readonly _object: TokenPF2e | null;
-    get object(): TokenPF2e;
-    readonly parent: ScenePF2e | null;
-    get combatant(): CombatantPF2e<EncounterPF2e> | null;
-    _sheet: TokenConfigPF2e<this> | null;
+interface TokenDocumentPF2e<TParent extends ScenePF2e | null = ScenePF2e | null> extends TokenDocument<TParent> {
+    flags: TokenFlagsPF2e;
+    get actor(): ActorPF2e<this | null> | null;
+    get combatant(): CombatantPF2e<EncounterPF2e, this> | null;
+    get object(): TokenPF2e<this> | null;
     get sheet(): TokenConfigPF2e<this>;
-    overlayEffect: ImageFilePath;
 }
 export { TokenDocumentPF2e };

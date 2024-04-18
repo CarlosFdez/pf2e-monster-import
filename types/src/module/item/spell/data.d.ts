@@ -1,114 +1,40 @@
-import { AbilityString, SaveType } from "@actor/types";
-import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemLevelData, ItemSystemData, ItemSystemSource, ItemTraits } from "@item/data/base";
-import { OneToTen, ValueAndMax, ValuesList } from "@module/data";
-import { MaterialDamageEffect, DamageCategoryUnique, DamageType } from "@system/damage";
-import type { SpellPF2e } from "./document";
-import { EffectAreaSize, EffectAreaType, MagicSchool, MagicTradition, SpellComponent, SpellTrait } from "./types";
+import type { SaveType } from "@actor/types.ts";
+import type { BaseItemSourcePF2e, ItemSystemData, ItemSystemSource, ItemTraits } from "@item/base/data/system.ts";
+import type { OneToTen, ValueAndMax, ZeroToThree } from "@module/data.ts";
+import type { DamageCategoryUnique, DamageKind, DamageType, MaterialDamageEffect } from "@system/damage/index.ts";
+import type { EffectAreaShape, MagicTradition, SpellTrait } from "./types.ts";
 type SpellSource = BaseItemSourcePF2e<"spell", SpellSystemSource>;
-type SpellData = Omit<SpellSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<SpellPF2e, "spell", SpellSystemData, SpellSource>;
-export type SpellTraits = ItemTraits<SpellTrait>;
-export interface SpellDamageType {
-    value: DamageType;
-    subtype?: DamageCategoryUnique;
-    categories: MaterialDamageEffect[];
-}
-export interface SpellDamage {
-    value: string;
-    applyMod?: boolean;
-    type: SpellDamageType;
-}
-export interface SpellHeighteningInterval {
-    type: "interval";
-    interval: number;
-    damage: Record<string, string>;
-}
-export interface SpellHeighteningFixed {
-    type: "fixed";
-    levels: Record<OneToTen, Partial<SpellSystemSource>>;
-}
-export interface SpellHeightenLayer {
-    level: number;
-    system: Partial<SpellSystemData>;
-}
-interface SpellOverlayOverride {
-    _id: string;
-    system: Partial<SpellSystemSource>;
-    name?: string;
-    overlayType: "override";
-    sort: number;
-}
-/** Not implemented */
-interface SpellOverlayDamage {
-    overlayType: "damage";
-    choices: DamageType[];
-}
-type SpellOverlay = SpellOverlayOverride | SpellOverlayDamage;
-type SpellOverlayType = SpellOverlay["overlayType"];
-interface SpellSystemSource extends ItemSystemSource, ItemLevelData {
+interface SpellSystemSource extends ItemSystemSource {
     traits: SpellTraits;
     level: {
         value: OneToTen;
     };
-    spellType: {
-        value: keyof ConfigPF2e["PF2E"]["spellTypes"];
-    };
-    category: {
-        value: keyof ConfigPF2e["PF2E"]["spellCategories"];
-    };
-    traditions: ValuesList<MagicTradition>;
-    school: {
-        value: MagicSchool;
-    };
-    components: Record<SpellComponent, boolean>;
-    materials: {
-        value: string;
-    };
+    requirements: string;
     target: {
         value: string;
     };
     range: {
         value: string;
     };
-    area: {
-        value: EffectAreaSize;
-        type: EffectAreaType;
-        /**
-         * Legacy text information about spell effect areas:
-         * if present, includes information not representable in a structured way
-         */
-        details?: string;
-    } | null;
+    area: SpellArea | null;
     time: {
         value: string;
     };
     duration: {
         value: string;
+        sustained: boolean;
     };
-    damage: {
-        value: Record<string, SpellDamage>;
-    };
+    damage: Record<string, SpellDamageSource>;
     heightening?: SpellHeighteningFixed | SpellHeighteningInterval;
     overlays?: Record<string, SpellOverlay>;
-    save: {
-        basic: string;
-        value: SaveType | "";
-        dc?: number;
-        str?: string;
-    };
-    sustained: {
-        value: false;
-    };
+    defense: SpellDefenseSource | null;
     cost: {
         value: string;
     };
-    ability: {
-        value: AbilityString;
-    };
-    hasCounteractCheck: {
-        value: boolean;
-    };
+    counteraction: boolean;
+    ritual: RitualData | null;
     location: {
-        value: string;
+        value: string | null;
         signature?: boolean;
         heightenedLevel?: number;
         /** The level to heighten this spell to if it's a cantrip or focus spell */
@@ -117,7 +43,85 @@ interface SpellSystemSource extends ItemSystemSource, ItemLevelData {
         uses?: ValueAndMax;
     };
 }
-interface SpellSystemData extends SpellSystemSource, ItemSystemData {
-    traits: SpellTraits;
+interface SpellTraits extends ItemTraits<SpellTrait> {
+    traditions: MagicTradition[];
 }
-export { SpellData, SpellSource, SpellSystemData, SpellSystemSource, SpellOverlay, SpellOverlayOverride, SpellOverlayType, };
+interface SpellArea {
+    type: EffectAreaShape;
+    value: number;
+    /**
+     * Legacy text information about spell effect areas:
+     * if present, includes information not representable in a structured way
+     */
+    details?: string;
+}
+interface SpellDamageSource {
+    formula: string;
+    kinds?: DamageKind[];
+    applyMod?: boolean;
+    type: DamageType;
+    category: DamageCategoryUnique | null;
+    materials: MaterialDamageEffect[];
+}
+interface SpellDefenseSource {
+    passive: {
+        statistic: SpellPassiveDefense;
+    } | null;
+    save: {
+        statistic: SaveType;
+        basic: boolean;
+    } | null;
+}
+type SpellPassiveDefense = "ac" | `${SaveType}-dc`;
+interface SpellHeighteningInterval {
+    type: "interval";
+    interval: number;
+    damage: Record<string, string>;
+}
+interface SpellHeighteningFixed {
+    type: "fixed";
+    levels: {
+        [K in OneToTen]?: Partial<SpellSystemSource>;
+    };
+}
+interface SpellHeightenLayer {
+    level: number;
+    system: Partial<SpellSystemSource>;
+}
+interface SpellOverlayOverride {
+    system?: DeepPartial<SpellSystemSource>;
+    name?: string;
+    overlayType: "override";
+    sort: number;
+}
+interface SpellSystemData extends Omit<SpellSystemSource, "damage" | "description">, Omit<ItemSystemData, "level" | "traits"> {
+    /** Time and resources consumed in the casting of this spell */
+    cast: SpellCastData;
+    damage: Record<string, SpellDamage>;
+    defense: SpellDefenseData | null;
+}
+interface SpellCastData {
+    focusPoints: ZeroToThree;
+}
+interface SpellDamage extends Omit<SpellDamageSource, "kinds"> {
+    kinds: Set<DamageKind>;
+}
+interface SpellDefenseData extends SpellDefenseSource {
+    passive: {
+        statistic: SpellPassiveDefense;
+    } | null;
+}
+type SpellOverlay = SpellOverlayOverride;
+type SpellOverlayType = SpellOverlay["overlayType"];
+interface RitualData {
+    /** Details of the primary check for the ritual */
+    primary: {
+        check: string;
+    };
+    /** Details of the secondary check(s) for the ritual and maximum number of casters */
+    secondary: {
+        checks: string;
+        casters: number;
+    };
+}
+export type { SpellArea, SpellDamage, SpellDamageSource, SpellHeightenLayer, SpellHeighteningInterval, SpellOverlay, SpellOverlayOverride, SpellOverlayType, SpellPassiveDefense, SpellSource, SpellSystemData, SpellSystemSource, };

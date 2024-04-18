@@ -1,29 +1,30 @@
-import { ActorType } from "@actor/data";
-import { ItemPF2e } from "@item";
-import { RuleElementPF2e, RuleElementData, RuleElementSource, RuleElementOptions } from ".";
+import type { ActorType } from "@actor/types.ts";
+import type { ArrayField, StringField } from "types/foundry/common/data/fields.d.ts";
+import { RuleElementPF2e } from "./base.ts";
+import { ModelPropsFromRESchema, ResolvableValueField, RuleElementSchema } from "./data.ts";
 /**
  * Rule element to implement fast healing and regeneration.
  * Creates a chat card every round of combat.
  * @category RuleElement
  */
-declare class FastHealingRuleElement extends RuleElementPF2e {
+declare class FastHealingRuleElement extends RuleElementPF2e<FastHealingRuleSchema> {
     static validActorTypes: ActorType[];
-    constructor(data: FastHealingSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
-    get details(): string | null;
+    static defineSchema(): FastHealingRuleSchema;
+    static validateJoint(data: SourceFromSchema<FastHealingRuleSchema>): void;
     /** Send a message with a "healing" (damage) roll at the start of its turn */
-    onTurnStart(): Promise<void>;
+    onUpdateEncounter({ event }: {
+        event: "initiative-roll" | "turn-start";
+    }): Promise<void>;
 }
-interface FastHealingRuleElement extends RuleElementPF2e {
-    data: FastHealingData;
+type FastHealingRuleSchema = RuleElementSchema & {
+    value: ResolvableValueField<true, false, false>;
+    type: StringField<FastHealingType, FastHealingType, false, false, true>;
+    details: StringField<string, string, false, true, true>;
+    deactivatedBy: ArrayField<StringField<string, string, true, false, false>, string[], string[], false, false, false>;
+};
+interface FastHealingRuleElement extends RuleElementPF2e<FastHealingRuleSchema>, ModelPropsFromRESchema<FastHealingRuleSchema> {
 }
-interface FastHealingData extends RuleElementData {
-    type: "fast-healing" | "regeneration";
-    details?: string;
-    deactivatedBy: string[];
-}
-interface FastHealingSource extends RuleElementSource {
-    type?: "fast-healing" | "regeneration";
-    details?: string;
-    deactivatedBy?: string[];
-}
-export { FastHealingRuleElement, FastHealingData, FastHealingSource };
+type FastHealingType = "fast-healing" | "regeneration";
+type FastHealingSource = SourceFromSchema<FastHealingRuleSchema>;
+export { FastHealingRuleElement };
+export type { FastHealingSource, FastHealingType };

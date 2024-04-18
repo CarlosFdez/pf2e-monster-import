@@ -1,33 +1,23 @@
-import { RuleElementPF2e, RuleElementData, RuleElementSource } from "./";
-import { CharacterPF2e, FamiliarPF2e } from "@actor";
-import { ActorType } from "@actor/data";
-import { ItemPF2e } from "@item";
-import { SenseAcuity } from "@actor/creature/sense";
-import { RuleElementOptions } from "./base";
+import type { ActorType, CharacterPF2e, FamiliarPF2e } from "@actor";
+import type { SenseAcuity, SenseType } from "@actor/creature/types.ts";
+import type { BooleanField, StringField } from "types/foundry/common/data/fields.d.ts";
+import { RuleElementPF2e } from "./base.ts";
+import { ModelPropsFromRESchema, ResolvableValueField, RuleElementSchema } from "./data.ts";
 /**
  * @category RuleElement
  */
-export declare class SenseRuleElement extends RuleElementPF2e {
+declare class SenseRuleElement extends RuleElementPF2e<SenseRuleSchema> {
     protected static validActorTypes: ActorType[];
-    private selector;
-    private acuity;
-    constructor(data: SenseRuleElementSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
+    static defineSchema(): SenseRuleSchema;
     beforePrepareData(): void;
 }
-export interface SenseRuleElement {
+interface SenseRuleElement extends RuleElementPF2e<SenseRuleSchema>, ModelPropsFromRESchema<SenseRuleSchema> {
     get actor(): CharacterPF2e | FamiliarPF2e;
-    data: SenseRuleElementData;
 }
-interface SenseRuleElementData extends RuleElementData {
-    label: string;
-    force: boolean;
-    acuity: SenseAcuity;
-    range: string | number;
-}
-interface SenseRuleElementSource extends RuleElementSource {
-    selector?: unknown;
-    acuity?: string;
-    range?: string | number | null;
-    force?: boolean;
-}
-export {};
+type SenseRuleSchema = RuleElementSchema & {
+    selector: StringField<SenseType, SenseType, true, false, false>;
+    force: BooleanField<boolean, boolean, false, false, true>;
+    acuity: StringField<SenseAcuity, SenseAcuity, false, false, true>;
+    range: ResolvableValueField<false, false, false>;
+};
+export { SenseRuleElement };

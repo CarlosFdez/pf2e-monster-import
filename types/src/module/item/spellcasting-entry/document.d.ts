@@ -1,18 +1,24 @@
-import { AbilityString } from "@actor/types";
-import { ItemPF2e, PhysicalItemPF2e, SpellPF2e } from "@item";
-import { MagicTradition } from "@item/spell/types";
-import { ZeroToFour } from "@module/data";
-import { UserPF2e } from "@module/user";
-import { Statistic } from "@system/statistic";
-import { SpellCollection } from "./collection";
-import { SpellcastingAbilityData, SpellcastingEntry, SpellcastingEntryData, SpellcastingEntryListData, SpellcastingEntryPF2eCastOptions } from "./data";
-declare class SpellcastingEntryPF2e extends ItemPF2e implements SpellcastingEntry {
-    spells: SpellCollection | null;
+import type { ActorPF2e } from "@actor";
+import { AttributeString } from "@actor/types.ts";
+import { ItemPF2e, PhysicalItemPF2e, type SpellPF2e } from "@item";
+import { MagicTradition } from "@item/spell/types.ts";
+import { ZeroToFour, ZeroToTen } from "@module/data.ts";
+import type { UserPF2e } from "@module/user/index.ts";
+import { Statistic } from "@system/statistic/index.ts";
+import { SpellCollection, type SpellSlotGroupId } from "./collection.ts";
+import { SpellcastingEntrySource, SpellcastingEntrySystemData } from "./data.ts";
+import { CastOptions, SpellcastingCategory, SpellcastingEntry, SpellcastingSheetData } from "./types.ts";
+declare class SpellcastingEntryPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends ItemPF2e<TParent> implements SpellcastingEntry<TParent> {
+    spells: SpellCollection<NonNullable<TParent>> | null;
     /** Spellcasting attack and dc data created during actor preparation */
     statistic: Statistic;
-    get ability(): AbilityString;
+    get attribute(): AttributeString;
+    get counteraction(): Statistic;
+    /** @deprecated */
+    get ability(): AttributeString;
     /** This entry's magic tradition, null if the spell's tradition should be used instead */
     get tradition(): MagicTradition | null;
+    get category(): SpellcastingCategory;
     /**
      * Returns the proficiency used for calculations.
      * For innate spells, this is the highest spell proficiency (min trained)
@@ -23,39 +29,52 @@ declare class SpellcastingEntryPF2e extends ItemPF2e implements SpellcastingEntr
     get isSpontaneous(): boolean;
     get isInnate(): boolean;
     get isFocusPool(): boolean;
-    get isRitual(): boolean;
-    get highestLevel(): number;
+    /** Ritual spellcasting is handled separately */
+    get isRitual(): false;
+    get isEphemeral(): false;
+    get highestRank(): ZeroToTen;
+    get showSlotlessRanks(): boolean;
     prepareBaseData(): void;
-    prepareSiblingData(): void;
-    prepareActorData(this: Embedded<SpellcastingEntryPF2e>): void;
+    prepareSiblingData(this: SpellcastingEntryPF2e<NonNullable<TParent>>): void;
+    prepareActorData(this: SpellcastingEntryPF2e<NonNullable<TParent>>): void;
+    /** Prepares the statistic for this spellcasting entry */
+    prepareStatistic(): void;
     /** All spells associated with this spellcasting entry on the actor that should also be deleted */
-    getLinkedItems(): Embedded<SpellPF2e>[];
-    /** Returns if the spell is valid to cast by this spellcasting entry */
-    canCastSpell(spell: SpellPF2e, options?: {
+    getLinkedItems(): SpellPF2e<ActorPF2e>[];
+    /** Whether the spell is valid to cast by this spellcasting entry */
+    canCast(spell: SpellPF2e, { origin }?: {
         origin?: PhysicalItemPF2e;
     }): boolean;
-    /** Casts the given spell as if it was part of this spellcasting entry */
-    cast(spell: Embedded<SpellPF2e>, options?: SpellcastingEntryPF2eCastOptions): Promise<void>;
-    consume(spell: SpellPF2e, level: number, slot?: number): Promise<boolean>;
+    /** Cast the given spell as if it was part of this spellcasting entry. */
+    cast(spell: SpellPF2e<ActorPF2e>, options?: CastOptions): Promise<void>;
+    consume(spell: SpellPF2e<ActorPF2e>, rank: number, slotIndex?: number): Promise<boolean>;
     /**
      * Adds a spell to this spellcasting entry, either moving it from another one if its the same actor,
      * or creating a new spell if its not.
      */
-    addSpell(spell: SpellPF2e, options?: {
-        slotLevel?: number;
-    }): Promise<SpellPF2e | null>;
+    addSpell(spell: SpellPF2e<NonNullable<TParent>>, { groupId }: {
+        groupId: Maybe<SpellSlotGroupId>;
+    }): Promise<SpellPF2e<NonNullable<TParent>> | null>;
     /** Saves the prepared spell slot data to the spellcasting entry  */
-    prepareSpell(spell: SpellPF2e, slotLevel: number, spellSlot: number): Promise<SpellcastingEntryPF2e | null>;
+    prepareSpell(spell: SpellPF2e, groupId: SpellSlotGroupId, spellSlot: number): Promise<Maybe<this>>;
     /** Removes the spell slot and updates the spellcasting entry */
-    unprepareSpell(spellLevel: number, slotLevel: number): Promise<SpellcastingEntryPF2e | null>;
+    unprepareSpell(groupId: SpellSlotGroupId, slotId: number): Promise<Maybe<this>>;
     /** Sets the expended state of a spell slot and updates the spellcasting entry */
-    setSlotExpendedState(slotLevel: number, spellSlot: number, isExpended: boolean): Promise<SpellcastingEntryPF2e | null>;
+    setSlotExpendedState(groupId: SpellSlotGroupId, slotId: number, value: boolean): Promise<Maybe<this>>;
     /** Returns rendering data to display the spellcasting entry in the sheet */
-    getSpellData(): Promise<SpellcastingAbilityData | SpellcastingEntryListData>;
+    getSheetData({ prepList }?: {
+        prepList?: boolean | undefined;
+    }): Promise<SpellcastingSheetData>;
     getRollOptions(prefix?: string): string[];
-    protected _preUpdate(changed: DeepPartial<this["_source"]>, options: DocumentModificationContext<this>, user: UserPF2e): Promise<void>;
+    protected _preUpdate(changed: DeepPartial<this["_source"]>, options: DocumentModificationContext<TParent>, user: UserPF2e): Promise<boolean | void>;
+    /**
+     * To prevent (or delay) console spam, will send out a deprecation notice in a later release
+     * @deprecated
+     */
+    getSpellData(): Promise<SpellcastingSheetData>;
 }
-interface SpellcastingEntryPF2e {
-    readonly data: SpellcastingEntryData;
+interface SpellcastingEntryPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends ItemPF2e<TParent> {
+    readonly _source: SpellcastingEntrySource;
+    system: SpellcastingEntrySystemData;
 }
 export { SpellcastingEntryPF2e };

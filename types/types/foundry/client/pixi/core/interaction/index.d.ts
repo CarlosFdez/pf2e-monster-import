@@ -1,1 +1,3 @@
-import "./canvas-animation";
+import "./canvas-animation.d.ts";
+import "./mouse-handler.d.ts";
+import "./render-flags.d.ts";

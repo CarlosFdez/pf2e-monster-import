@@ -1,7 +1,17 @@
-import type { EffectContextData, ItemPF2e } from "@item";
-export type DropCanvasItemDataPF2e = DropCanvasData<"Item", ItemPF2e> & {
+import { ItemPF2e } from "@item";
+import { EffectContextData } from "@item/abstract-effect/index.ts";
+type DropCanvasItemDataPF2e = DropCanvasData<"Item", ItemPF2e> & {
     value?: number;
     level?: number;
+    spellFrom?: {
+        collectionId: string;
+        groupId: string;
+        slotIndex: number;
+    };
     context?: EffectContextData;
 };
-export type DropCanvasDataPF2e<T extends string = string, D extends object = object> = T extends "Item" ? DropCanvasItemDataPF2e : DropCanvasData<T, D>;
+type DropCanvasPersistentDamage = DropCanvasData<"PersistentDamage"> & {
+    formula: string;
+};
+type DropCanvasDataPF2e = DropCanvasItemDataPF2e | DropCanvasPersistentDamage;
+export type { DropCanvasDataPF2e, DropCanvasItemDataPF2e };

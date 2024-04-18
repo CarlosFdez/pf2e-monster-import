@@ -1,46 +1,64 @@
-import { ConsumablePF2e, MeleePF2e, PhysicalItemPF2e } from "@item";
-import { ItemSummaryData } from "@item/data";
-import { CoinsPF2e, IdentificationStatus, MaterialGradeData, MystifiedData, RuneValuationData } from "@item/physical";
-import { WeaponDamage, WeaponData, WeaponMaterialData } from "./data";
-import { BaseWeaponType, OtherWeaponTag, WeaponCategory, WeaponGroup, WeaponRangeIncrement, WeaponReloadTime, WeaponTrait } from "./types";
-declare class WeaponPF2e extends PhysicalItemPF2e {
+import type { ActorPF2e } from "@actor";
+import type { AttributeString } from "@actor/types.ts";
+import type { ConsumablePF2e, MeleePF2e, ShieldPF2e } from "@item";
+import { PhysicalItemPF2e } from "@item";
+import type { ItemSourcePF2e, RawItemChatData } from "@item/base/data/index.ts";
+import type { NPCAttackTrait } from "@item/melee/types.ts";
+import type { PhysicalItemConstructionContext } from "@item/physical/document.ts";
+import { IdentificationStatus, MystifiedData } from "@item/physical/index.ts";
+import type { RangeData } from "@item/types.ts";
+import type { UserPF2e } from "@module/user/document.ts";
+import type { WeaponDamage, WeaponFlags, WeaponSource, WeaponSystemData } from "./data.ts";
+import type { BaseWeaponType, OtherWeaponTag, WeaponCategory, WeaponGroup, WeaponReloadTime, WeaponTrait } from "./types.ts";
+declare class WeaponPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends PhysicalItemPF2e<TParent> {
+    shield?: ShieldPF2e<TParent>;
+    static get validTraits(): Record<NPCAttackTrait, string>;
+    constructor(data: PreCreate<ItemSourcePF2e>, context?: WeaponConstructionContext<TParent>);
     /** Given this weapon is an alternative usage, whether it is melee or thrown */
     altUsageType: "melee" | "thrown" | null;
     get isEquipped(): boolean;
-    isStackableWith(item: PhysicalItemPF2e): boolean;
+    /** Weapons may have "attached" traits instead of "attached" usages. */
+    get isAttachable(): boolean;
     get baseType(): BaseWeaponType | null;
     get group(): WeaponGroup | null;
     get category(): WeaponCategory;
+    /** The default attribute used in attack rolls */
+    get defaultAttribute(): AttributeString;
     get hands(): "0" | "1" | "1+" | "2";
-    /** The range increment of this weapon, or null if a melee weapon */
-    get rangeIncrement(): WeaponRangeIncrement | null;
     /** The maximum range of this weapon: `null` if melee, and usually 6 * range increment if ranged */
     get maxRange(): number | null;
+    /** A single object containing range increment and maximum */
+    get range(): RangeData | null;
     get reload(): WeaponReloadTime | null;
     get isSpecific(): boolean;
     get isMelee(): boolean;
     get isRanged(): boolean;
+    /** Whether the weapon in its current usage is thrown: a thrown-only weapon or a thrown usage of a melee weapon */
     get isThrown(): boolean;
+    /** Whether the weapon is _can be_ thrown: a thrown-only weapon or one that has a throwable usage */
+    get isThrowable(): boolean;
+    get isOversized(): boolean;
     /** This weapon's damage before modification by creature abilities, effects, etc. */
     get baseDamage(): WeaponDamage;
     /** Does this weapon deal damage? */
     get dealsDamage(): boolean;
-    get material(): WeaponMaterialData;
-    /** Does this weapon require ammunition in order to make a strike? */
-    get requiresAmmo(): boolean;
-    get ammo(): Embedded<ConsumablePF2e> | null;
+    /** The number of units of ammunition required to attack with this weapon */
+    get ammoRequired(): number;
+    get ammo(): ConsumablePF2e<ActorPF2e> | WeaponPF2e<ActorPF2e> | null;
     get otherTags(): Set<OtherWeaponTag>;
+    acceptsSubitem(candidate: PhysicalItemPF2e): boolean;
+    isStackableWith(item: PhysicalItemPF2e<TParent>): boolean;
+    /** Whether this weapon can serve as ammunition for another weapon */
+    isAmmoFor(weapon: WeaponPF2e): boolean;
     /** Generate a list of strings for use in predication */
-    getRollOptions(prefix?: string): string[];
+    getRollOptions(prefix?: string, options?: {
+        includeGranter?: boolean;
+    }): string[];
     prepareBaseData(): void;
-    prepareDerivedData(): void;
-    processMaterialAndRunes(): void;
-    computeAdjustedPrice(): CoinsPF2e | null;
-    getRunesData(): RuneValuationData[];
-    getMaterialData(): MaterialGradeData | null;
-    getChatData(this: Embedded<WeaponPF2e>, htmlOptions?: EnrichHTMLOptions): Promise<ItemSummaryData>;
-    /** Generate a weapon name base on precious-material composition and runes */
-    generateMagicName(): string;
+    /** Add the rule elements of this weapon's linked ammunition to its own list */
+    prepareSiblingData(): void;
+    onPrepareSynthetics(): void;
+    getChatData(this: WeaponPF2e<ActorPF2e>, htmlOptions?: EnrichmentOptions): Promise<RawItemChatData>;
     getMystifiedData(status: IdentificationStatus, { source }?: {
         source?: boolean | undefined;
     }): MystifiedData;
@@ -55,27 +73,37 @@ declare class WeaponPF2e extends PhysicalItemPF2e {
     getAltUsages(options?: {
         recurse?: boolean;
     }): this[];
-    clone<T extends this>(data: DocumentUpdateData<this> | undefined, options: Omit<WeaponCloneOptions, "save"> & {
+    clone(data: Record<string, unknown> | undefined, context: Omit<WeaponCloneContext, "save"> & {
         save: true;
-    }): Promise<T>;
-    clone<T extends this>(data?: DocumentUpdateData<this>, options?: Omit<WeaponCloneOptions, "save"> & {
+    }): Promise<this>;
+    clone(data?: Record<string, unknown>, context?: Omit<WeaponCloneContext, "save"> & {
         save?: false;
-    }): T;
-    clone<T extends this>(data?: DocumentUpdateData<this>, options?: WeaponCloneOptions): T | Promise<T>;
+    }): this;
+    clone(data?: Record<string, unknown>, context?: WeaponCloneContext): this | Promise<this>;
     /** Generate a clone of this thrown melee weapon with its thrown usage overlain, or `null` if not applicable */
     private toThrownUsage;
     /** Generate a clone of this combination weapon with its melee usage overlain, or `null` if not applicable */
     private toMeleeUsage;
     /** Generate a melee item from this weapon for use by NPCs */
-    toNPCAttacks(this: Embedded<WeaponPF2e>): Embedded<MeleePF2e>[];
+    toNPCAttacks(this: WeaponPF2e<NonNullable<TParent>>, { keepId }?: {
+        keepId?: boolean | undefined;
+    }): MeleePF2e<NonNullable<TParent>>[];
+    /** Consume a unit of ammunition used by this weapon */
+    consumeAmmo(): Promise<void>;
+    protected _preUpdate(changed: DeepPartial<this["_source"]>, options: DocumentUpdateContext<TParent>, user: UserPF2e): Promise<boolean | void>;
+    /** Remove links to this weapon from NPC attacks */
+    protected _onDelete(options: DocumentModificationContext<TParent>, userId: string): void;
 }
-interface WeaponPF2e {
-    readonly data: WeaponData;
+interface WeaponPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends PhysicalItemPF2e<TParent> {
+    flags: WeaponFlags;
+    readonly _source: WeaponSource;
+    system: WeaponSystemData;
     get traits(): Set<WeaponTrait>;
 }
-interface WeaponCloneOptions {
-    save?: boolean;
-    keepId?: boolean;
+interface WeaponConstructionContext<TParent extends ActorPF2e | null> extends PhysicalItemConstructionContext<TParent> {
+    shield?: ShieldPF2e<TParent>;
+}
+interface WeaponCloneContext extends DocumentCloneContext {
     /** If this clone is an alternative usage, the type */
     altUsage?: "melee" | "thrown";
 }

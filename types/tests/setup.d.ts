@@ -1,1 +1,1 @@
-export declare const fetchSpell: (name: string) => any;
+import "../build/lib/foundry-utils.ts";

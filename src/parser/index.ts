@@ -5,14 +5,14 @@ import { sluggify } from "../util";
 import { MonsterData, MonsterParseResults, SpecialType } from "./types";
 import { ALIGNMENTS, SKILLS } from "./values";
 import { Rarity, Size } from "@module/data";
-import { NPCData } from "@actor/data";
 import { NPCPF2e } from "@actor";
-import { ActionItemSource, ItemSourcePF2e, LoreSource } from "@item/data";
-import { NPCSystemData } from "@actor/npc/data";
-import { CreatureTrait, CreatureTraitsSource, LabeledSpeed } from "@actor/creature/data";
-import { MeleeDamageRoll, MeleeSource } from "@item/melee/data";
+import { AbilitySource, ItemSourcePF2e, LoreSource } from "@item/base/data";
+import { NPCSource, NPCSystemData } from "@actor/npc/data";
+import { CreatureTraitsSource, LabeledSpeed } from "@actor/creature/data";
+import { MeleeSource, NPCAttackDamage } from "@item/melee/data";
 import { parseDescription } from "./text";
-import { ImmunityData, ResistanceData, WeaknessData } from "@actor/data/iwr";
+import { ImmunitySource, ResistanceSource, WeaknessSource } from "@actor/data/iwr";
+import { CreatureTrait } from "@actor/creature";
 
 type Language = keyof typeof CONFIG.PF2E.languages;
 
@@ -29,7 +29,7 @@ const ActionCategoryMap: Record<SpecialType, keyof ConfigPF2e["PF2E"]["actionCat
     general: "interaction",
 };
 
-function createEmptyData(): DeepPartial<NPCData> {
+function createEmptyData(): DeepPartial<NPCSource> {
     return {
         system: {
             attributes: {},
@@ -57,16 +57,22 @@ export class MonsterParser {
         const updates = createEmptyData();
         const alignment = data.alignment.toUpperCase();
 
-        mergeObject(updates, {
+        const languages = (data.languages?.split(",") ?? []).filter((language): language is Language =>
+            objectHasKey(CONFIG.PF2E.languages, language),
+        );
+
+        foundry.utils.mergeObject(updates, {
             name: data.name,
             system: {
                 abilities: this.readAbilities(data),
                 attributes: this.readAttributes(data),
+                perception: { mod: Number(data.perception.value) },
                 details: {
                     level: { value: data.level },
                     alignment: {
                         value: tupleHasValue(ALIGNMENTS, alignment) ? alignment : "N",
                     },
+                    languages: { value: languages },
                     publicNotes: data.description,
                 },
                 traits: this.readTraits(data),
@@ -125,7 +131,7 @@ export class MonsterParser {
 
             // If there's no type, then it's walking speed.
             const type = splitSpeed[0].match(/[A-Za-z]+/g)?.[0];
-            if (type && objectHasKey(CONFIG.PF2E.speedTypes, type)) {
+            if (type && objectHasKey(CONFIG.PF2E.speedTypes, type) && type !== "land") {
                 otherSpeeds.push({ type, value });
             } else {
                 formattedSpeeds.value = value;
@@ -139,7 +145,6 @@ export class MonsterParser {
 
         return {
             ac: { value: Number(data.ac.value) },
-            perception: { value: Number(data.perception.value) },
             hp: { value: Number(data.hp.value), max: Number(data.hp.value) },
             allSaves: { value: data.savenote },
             speed: formattedSpeeds,
@@ -151,24 +156,19 @@ export class MonsterParser {
 
     private readTraits(data: MonsterData): DeepPartial<CreatureTraitsSource> {
         const traits = [data.type, ...data.traits.split(",")].map((trait) => trait.toLowerCase().trim());
-
         const rarity = traits.find((trait) => objectHasKey(CONFIG.PF2E.rarityTraits, trait));
-        const languages = (data.languages?.split(",") ?? []).filter((language): language is Language =>
-            objectHasKey(CONFIG.PF2E.languages, language)
-        );
 
         return {
             size: { value: SizesMap[data.size] ?? "med" },
             rarity: (rarity ?? "common") as Rarity,
-            languages: { value: languages },
             value: traits.filter((trait): trait is CreatureTrait => objectHasKey(CONFIG.PF2E.creatureTraits, trait)),
         };
     }
 
-    private readImmunities(data: MonsterData): Partial<ImmunityData>[] {
+    private readImmunities(data: MonsterData): Partial<ImmunitySource>[] {
         const immunities = data.immunity.value.split(",");
 
-        const formattedImmunity: Partial<ImmunityData>[] = [];
+        const formattedImmunity: Partial<ImmunitySource>[] = [];
         for (const immunity of immunities) {
             // extract string from weakness
             const type = immunity
@@ -182,10 +182,10 @@ export class MonsterParser {
         return formattedImmunity;
     }
 
-    private readWeaknesses(data: MonsterData): Partial<WeaknessData>[] {
+    private readWeaknesses(data: MonsterData): Partial<WeaknessSource>[] {
         const weaknesses = data.weakness.value.split(",");
 
-        const formattedWeaknesses: Partial<WeaknessData>[] = [];
+        const formattedWeaknesses: Partial<WeaknessSource>[] = [];
         for (const weakness of weaknesses) {
             // extract number value from weakness
             const value = Number(weakness.match(/[0-9]+/g)?.[0]);
@@ -200,7 +200,7 @@ export class MonsterParser {
         return formattedWeaknesses;
     }
 
-    private readResistances(data: MonsterData): Partial<ResistanceData>[] {
+    private readResistances(data: MonsterData): Partial<ResistanceSource>[] {
         const resistances = data.resistance.value.split("");
 
         const splitArray: string[] = [];
@@ -235,7 +235,7 @@ export class MonsterParser {
             }
         }
 
-        const formattedResistances: Partial<ResistanceData>[] = [];
+        const formattedResistances: Partial<ResistanceSource>[] = [];
         for (let item of splitArray) {
             item = item.replace("or", "").trim();
 
@@ -253,7 +253,7 @@ export class MonsterParser {
         return formattedResistances;
     }
 
-    private readAction(data: MonsterData["specials"][number]): DeepPartial<ActionItemSource> {
+    private readAction(data: MonsterData["specials"][number]): DeepPartial<AbilitySource> {
         const actionCostMap: Record<string, 1 | 2 | 3 | undefined> = {
             one: 1,
             two: 2,
@@ -282,7 +282,7 @@ export class MonsterParser {
 
         const description = glossaryInfo ? `${baseDescription}<hr />${glossaryInfo}` : baseDescription;
 
-        const actionCost = ((): Partial<ActionItemSource["system"]> => {
+        const actionCost = ((): Partial<AbilitySource["system"]> => {
             if (data.actions in actionCostMap) {
                 return {
                     actionType: { value: "action" },
@@ -302,7 +302,7 @@ export class MonsterParser {
             type: "action",
             system: {
                 ...actionCost,
-                actionCategory: { value: ActionCategoryMap[data.type] },
+                category: ActionCategoryMap[data.type] || null,
                 description: { value: description },
             },
         };
@@ -310,7 +310,7 @@ export class MonsterParser {
 
     private readStrike(data: MonsterData["strikes"][number]): DeepPartial<MeleeSource> {
         const type = data.type?.toLowerCase() ?? "melee";
-        const damageRolls: Record<string, MeleeDamageRoll> = {};
+        const damageRolls: Record<string, NPCAttackDamage> = {};
         const attackEffects: string[] = [];
         const rollStrings = data.damage.split(" plus ");
         for (const rollString of rollStrings) {
@@ -331,7 +331,7 @@ export class MonsterParser {
                     return "untyped";
                 })();
 
-                damageRolls[randomID()] = { damage, damageType };
+                damageRolls[foundry.utils.randomID()] = { category: null, damage, damageType };
             } else {
                 // It might be something like knockdown
                 const slug = sluggify(rollString.toLowerCase());
@@ -370,7 +370,7 @@ export class MonsterParser {
             if (tupleHasValue(SKILLS, capitalizedSkill)) {
                 if (value.value) {
                     skillsList.push({
-                        _id: randomID(),
+                        _id: foundry.utils.randomID(),
                         type: "lore",
                         name: capitalizedSkill,
                         system: {

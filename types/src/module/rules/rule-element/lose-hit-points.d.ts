@@ -1,26 +1,27 @@
-import { CreaturePF2e } from "@actor";
-import { ActorType } from "@actor/data";
-import { ItemPF2e } from "@item";
-import { ItemSourcePF2e } from "@item/data";
-import { RuleElementPF2e, RuleElementSource } from "./";
-import { RuleElementOptions } from "./base";
+import type { ActorType, CreaturePF2e } from "@actor";
+import { ItemSourcePF2e } from "@item/base/data/index.ts";
+import type { BooleanField } from "types/foundry/common/data/fields.d.ts";
+import { RuleElementPF2e } from "./base.ts";
+import { ModelPropsFromRESchema, ResolvableValueField, RuleElementSchema } from "./data.ts";
 /** Reduce current hit points without applying damage */
-export declare class LoseHitPointsRuleElement extends RuleElementPF2e {
+declare class LoseHitPointsRuleElement extends RuleElementPF2e<LoseHitPointsRuleSchema> {
     static validActorTypes: ActorType[];
+    static defineSchema(): LoseHitPointsRuleSchema;
+    onCreate(actorUpdates: Record<string, unknown>): void;
+    beforePrepareData(): void;
+    preUpdate(changes: DeepPartial<ItemSourcePF2e>): Promise<void>;
+}
+interface LoseHitPointsRuleElement extends RuleElementPF2e<LoseHitPointsRuleSchema>, ModelPropsFromRESchema<LoseHitPointsRuleSchema> {
+    get actor(): CreaturePF2e;
+}
+type LoseHitPointsRuleSchema = RuleElementSchema & {
+    value: ResolvableValueField<true, false, false>;
+    /** Whether the lost hit points are recoverable while the parent item is present on the actor */
+    recoverable: BooleanField<boolean, boolean, false>;
     /**
      * Lost hitpoints should reevaluate on item update, with the parent actor losing the difference in HP between the
      * new and old values.
      */
-    private reevaluateOnUpdate;
-    constructor(data: LoseHitPointsSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
-    onCreate(actorUpdates: Record<string, unknown>): void;
-    preUpdate(changes: DeepPartial<ItemSourcePF2e>): Promise<void>;
-}
-interface LoseHitPointsSource extends RuleElementSource {
-    value?: unknown;
-    reevaluateOnUpdate?: unknown;
-}
-export interface LoseHitPointsRuleElement extends RuleElementPF2e {
-    get actor(): CreaturePF2e;
-}
-export {};
+    reevaluateOnUpdate: BooleanField<boolean, boolean, false>;
+};
+export { LoseHitPointsRuleElement };

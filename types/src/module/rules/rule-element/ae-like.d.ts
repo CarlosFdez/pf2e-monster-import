@@ -1,15 +1,15 @@
-import { ItemPF2e } from "@item";
-import { RuleElementPF2e, RuleElementSource, RuleElementData, RuleElementOptions, RuleValue } from "./";
+import type { BooleanField, StringField } from "types/foundry/common/data/fields.d.ts";
+import type { DataModelValidationFailure } from "types/foundry/common/data/validation-failure.d.ts";
+import { RuleElementPF2e } from "./base.ts";
+import { ModelPropsFromRESchema, ResolvableValueField, RuleElementSchema, RuleElementSource } from "./data.ts";
 /**
  * Make a numeric modification to an arbitrary property in a similar way as `ActiveEffect`s
  * @category RuleElement
  */
-declare class AELikeRuleElement extends RuleElementPF2e {
-    mode: AELikeChangeMode;
-    path: string;
-    phase: AELikeDataPrepPhase;
-    /** Change modes and their default priority orders */
-    static CHANGE_MODES: {
+declare class AELikeRuleElement<TSchema extends AELikeSchema> extends RuleElementPF2e<TSchema> {
+    #private;
+    static defineSchema(): AELikeSchema;
+    static CHANGE_MODE_DEFAULT_PRIORITIES: {
         multiply: number;
         add: number;
         subtract: number;
@@ -19,14 +19,9 @@ declare class AELikeRuleElement extends RuleElementPF2e {
         override: number;
     };
     static PHASES: readonly ["applyAEs", "beforeDerived", "afterDerived", "beforeRoll"];
-    /**
-     * Pattern to match system.skills.${longForm} paths for replacement
-     * Temporary solution until skill data is represented in long form
-     */
-    static SKILL_LONG_FORM_PATH: RegExp;
-    constructor(data: AELikeSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
-    protected validateData(): void;
-    get value(): RuleValue;
+    static validateJoint(data: SourceFromSchema<AELikeSchema>): void;
+    /** Process this rule element during item pre-creation to inform subsequent choice sets. */
+    preCreate(): Promise<void>;
     /** Apply the modifications immediately after proper ActiveEffects are applied */
     onApplyActiveEffects(): void;
     /** Apply the modifications near the beginning of the actor's derived-data preparation */
@@ -35,35 +30,36 @@ declare class AELikeRuleElement extends RuleElementPF2e {
     afterPrepareData(): void;
     /** Apply the modifications prior to a Check (roll) */
     beforeRoll(_domains: string[], rollOptions: Set<string>): void;
-    protected applyAELike(rollOptions?: Set<string>): void;
-    protected getNewValue(current: number | undefined, change: number): number;
-    protected getNewValue(current: string | number | undefined, change: string | number): string | number;
-    protected getNewValue(current: unknown, change: unknown): unknown;
-    /** Log the numeric change of an actor data property */
-    private logChange;
-    protected warn(property: string): void;
+    static getNewValue(mode: AELikeChangeMode, current: number, change: number, merge?: boolean): number;
+    static getNewValue<TCurrent>(mode: AELikeChangeMode, current: TCurrent, change: TCurrent extends (infer TValue)[] ? TValue : TCurrent, merge?: boolean): (TCurrent extends (infer TValue)[] ? TValue : TCurrent) | DataModelValidationFailure;
+}
+interface AELikeRuleElement<TSchema extends AELikeSchema> extends RuleElementPF2e<TSchema>, ModelPropsFromRESchema<AELikeSchema> {
 }
 interface AutoChangeEntry {
     source: string;
     level: number | null;
-    value: number | string;
+    value: boolean | number | string | null;
     mode: AELikeChangeMode;
 }
-interface AELikeRuleElement extends RuleElementPF2e {
-    data: AELikeData;
-}
-type AELikeChangeMode = "add" | "subtract" | "remove" | "multiply" | "upgrade" | "downgrade" | "override";
-type AELikeDataPrepPhase = "applyAEs" | "beforeDerived" | "afterDerived" | "beforeRoll";
-interface AELikeData extends RuleElementData {
-    path: string;
-    value: RuleValue;
-    mode: AELikeChangeMode;
-    priority: number;
-    phase: AELikeDataPrepPhase;
-}
+type AELikeSchema = RuleElementSchema & {
+    /** How to apply the `value` at the `path` */
+    mode: StringField<AELikeChangeMode, AELikeChangeMode, true, false, false>;
+    /** The data property path to modify on the parent item's actor */
+    path: StringField<string, string, true, false, false>;
+    /** Which phase of data preparation to run in */
+    phase: StringField<AELikeDataPrepPhase, AELikeDataPrepPhase, false, false, true>;
+    /** The value to applied at the `path` */
+    value: ResolvableValueField<true, boolean, boolean>;
+    /** Whether to merge two objects given a `mode` of "override" */
+    merge: BooleanField<boolean, boolean, false, false, false>;
+};
+type AELikeChangeMode = keyof typeof AELikeRuleElement.CHANGE_MODE_DEFAULT_PRIORITIES;
+type AELikeDataPrepPhase = (typeof AELikeRuleElement.PHASES)[number];
 interface AELikeSource extends RuleElementSource {
-    mode?: unknown;
-    path?: unknown;
-    phase?: unknown;
+    mode?: JSONValue;
+    path?: JSONValue;
+    phase?: JSONValue;
+    value?: JSONValue;
 }
-export { AELikeData, AELikeRuleElement, AELikeSource, AutoChangeEntry };
+export { AELikeRuleElement };
+export type { AELikeChangeMode, AELikeDataPrepPhase, AELikeSchema, AELikeSource, AutoChangeEntry };

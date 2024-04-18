@@ -14,14 +14,14 @@ declare global {
      * @param socket    The open web-socket which should be used to transact game-state data
      */
     class Game<
-        TActor extends Actor = Actor,
-        TActors extends Actors<TActor> = Actors<TActor>,
-        TChatMessage extends ChatMessage<TActor> = ChatMessage<TActor>,
-        TCombat extends Combat = Combat,
-        TItem extends Item<TActor> = Item<TActor>,
-        TMacro extends Macro = Macro,
-        TScene extends Scene = Scene,
-        TUser extends User<TActor> = User<TActor>
+        TActor extends Actor<null>,
+        TActors extends Actors<TActor>,
+        TChatMessage extends ChatMessage,
+        TCombat extends Combat,
+        TItem extends Item<null>,
+        TMacro extends Macro,
+        TScene extends Scene,
+        TUser extends User<TActor>,
     > {
         /**
          * The named view which is currently active.
@@ -36,11 +36,11 @@ declare global {
         data: {
             actors: TActor["_source"][];
             items: TItem["_source"][];
-            macros: foundry.data.MacroSource[];
-            messages: foundry.data.ChatMessageSource[];
+            macros: TMacro["_source"][];
+            messages: TChatMessage["_source"][];
             packs: CompendiumMetadata[];
-            tables: foundry.data.RollTableSource[];
-            users: foundry.data.UserSource[];
+            tables: foundry.documents.RollTableSource[];
+            users: TUser["_source"][];
             version: string;
         };
 
@@ -54,22 +54,7 @@ declare global {
         keyboard: KeyboardManager;
 
         /** A mapping of installed modules */
-        modules: Map<
-            string,
-            {
-                id: string;
-                active: boolean;
-                esmodules: Set<string>;
-                scripts: Set<string>;
-                flags: Record<string, Record<string, unknown>>;
-                title: string;
-                compatibility: {
-                    minimum?: string;
-                    verified?: string;
-                    maximum?: string;
-                };
-            }
-        >;
+        modules: Collection<Module>;
 
         /** The user role permissions setting */
         permissions: Record<string, number[]>;
@@ -109,6 +94,8 @@ declare global {
 
         /** The global document index. */
         documentIndex: DocumentIndex;
+
+        documentTypes: Record<string, string[]>;
 
         /** Whether the Game is running in debug mode */
         debug: boolean;
@@ -154,7 +141,7 @@ declare global {
         tables: RollTables;
         users: Users<TUser>;
 
-        constructor(view: string, worldData: {}, sessionId: string, socket: io.Socket);
+        constructor(view: string, worldData: object, sessionId: string, socket: io.Socket);
 
         /** Returns the current version of the Release, usable for comparisons using isNewerVersion */
         get version(): string;
@@ -163,7 +150,9 @@ declare global {
          * Fetch World data and return a Game instance
          * @return A Promise which resolves to the created Game instance
          */
-        static create(): Promise<Game>;
+        static create(): Promise<
+            Game<Actor<null>, Actors<Actor<null>>, ChatMessage, Combat, Item<null>, Macro, Scene, User>
+        >;
 
         /** Request World data from server and return it */
         static getWorldData(socket: io.Socket): Promise<object>;
@@ -181,7 +170,7 @@ declare global {
         initializeEntities(): void;
 
         /** Initialization actions for compendium packs */
-        initializePacks(config: any): Promise<void>;
+        initializePacks(config: object): Promise<void>;
 
         /** Initialize the WebRTC implementation */
         initializeRTC(): void;
@@ -198,90 +187,22 @@ declare global {
         /** Initialize Mouse controls */
         initializeMouse(): void;
 
-        /**
-         * Register core game settings
-         */
+        /** Register core game settings */
         registerSettings(): void;
 
         /** The currently connected User */
         get user(): Active<TUser>;
 
-        /**
-         * Metadata regarding the game System which powers this World
-         */
-        get system(): {
-            id: string;
-            version: string;
-            gridUnits: string;
-            data: {
-                authors: string[];
-                availability: number;
-                bugs: string;
-                changelog: string;
-                compatibleCoreVersion: string;
-                description: string;
-                download: string;
-                esmodules: string[];
-                gridDistance: number;
-                initiative: string;
-                keywords: string[];
-                languages: {
-                    lang: string;
-                    name: string;
-                    path: string;
-                }[];
-                license: string;
-                manifest: string;
-                minimumCoreVersion: string;
-                name: string;
-                packs: {
-                    entity: CompendiumDocumentType;
-                    label: string;
-                    module: string;
-                    name: string;
-                    path: string;
-                    system: string;
-                }[];
-                readme: string;
-                schema: number;
-                scripts: string[];
-                socket: boolean;
-                styles: string[];
-                templateVersion: number;
-                title: string;
-                unavailable: boolean;
-                url: string;
-            };
-            documentTypes: {
-                Actor: string[];
-                ChatMessage: string[];
-                Combat: string[];
-                Folder: string[];
-                Item: string[];
-                JournalEntry: string[];
-                Macro: ["chat", "script"];
-                Playlist: string[];
-                RollTable: string[];
-                Scene: string[];
-                User: string[];
-            };
-            model: {
-                Actor: Record<string, object>;
-                Item: Record<string, object>;
-            };
-        };
+        /** Metadata regarding the game System which powers this World */
+        get system(): System;
 
         /** A convenience accessor for the currently active Combat encounter */
         get combat(): TCombat | null;
 
-        /**
-         * A state variable which tracks whether or not the game session is currently paused
-         */
+        /** A state variable which tracks whether or not the game session is currently paused */
         get paused(): boolean;
 
-        /**
-         * A convenient reference to the currently active canvas tool
-         */
+        /** A convenient reference to the currently active canvas tool */
         get activeTool(): string;
 
         /**
@@ -296,19 +217,13 @@ declare global {
 
         static clearCookies(): boolean;
 
-        /**
-         * Open socket listeners which transact game state data
-         */
+        /** Open socket listeners which transact game state data */
         openSockets(): void;
 
-        /**
-         * General game-state socket listeners and event handlers
-         */
+        /** General game-state socket listeners and event handlers */
         static socketListeners(socket: io.Socket): void;
 
-        /**
-         * Activate Event Listeners which apply to every Game View
-         */
+        /** Activate Event Listeners which apply to every Game View */
         activateListeners(): void;
     }
 }

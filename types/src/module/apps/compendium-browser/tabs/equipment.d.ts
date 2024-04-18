@@ -1,7 +1,10 @@
-import { CompendiumBrowser } from "..";
-import { CompendiumBrowserTab } from "./base";
-import { CompendiumBrowserIndexData, EquipmentFilters, RangesData } from "./data";
+import { ContentTabName } from "../data.ts";
+import { CompendiumBrowser } from "../index.ts";
+import { CompendiumBrowserTab } from "./base.ts";
+import { CompendiumBrowserIndexData, EquipmentFilters, RangesInputData } from "./data.ts";
 export declare class CompendiumBrowserEquipmentTab extends CompendiumBrowserTab {
+    #private;
+    tabName: ContentTabName;
     filterData: EquipmentFilters;
     templatePath: string;
     searchFields: string[];
@@ -9,6 +12,6 @@ export declare class CompendiumBrowserEquipmentTab extends CompendiumBrowserTab 
     constructor(browser: CompendiumBrowser);
     protected loadData(): Promise<void>;
     protected filterIndexData(entry: CompendiumBrowserIndexData): boolean;
-    parseRangeFilterInput(name: string, lower: string, upper: string): RangesData["values"];
-    protected prepareFilterData(): void;
+    parseRangeFilterInput(name: string, lower: string, upper: string): RangesInputData["values"];
+    protected prepareFilterData(): EquipmentFilters;
 }

@@ -1,62 +1,24 @@
-import { ActorSheetDataPF2e } from "@actor/sheet/data-types";
-import { MeleePF2e, WeaponPF2e } from "@item";
-import { SpellcastingEntryData } from "@item/data";
-import { SpellcastingAbilityData } from "@item/spellcasting-entry/data";
-import { CreaturePF2e } from ".";
-import { SheetOptions } from "@module/sheet/helpers";
-import { ALIGNMENTS, ALIGNMENT_TRAITS } from "./values";
-import { FlattenedCondition } from "@system/conditions";
-import { ActorUpdateContext } from "@actor/base";
-import { AbilityData, CreatureSystemData, SaveData, SkillData } from "./data";
-import { ZeroToFour } from "@module/data";
-import { AbilityString, SaveType } from "@actor/types";
-type Alignment = SetElement<typeof ALIGNMENTS>;
-type AlignmentTrait = SetElement<typeof ALIGNMENT_TRAITS>;
+import type { ActorPF2e, ActorUpdateContext } from "@actor/base.ts";
+import type { CREATURE_ACTOR_TYPES } from "@actor/values.ts";
+import type { AbilityItemPF2e, MeleePF2e, WeaponPF2e } from "@item";
+import type { TokenDocumentPF2e } from "@scene/index.ts";
+import type { LANGUAGES_BY_RARITY, SENSE_TYPES } from "./values.ts";
+/** A `CreaturePF2e` subtype string */
+type CreatureActorType = (typeof CREATURE_ACTOR_TYPES)[number];
+type CreatureTrait = keyof typeof CONFIG.PF2E.creatureTraits;
+/** One of the major creature types given in the Pathfinder bestiaries */
+type CreatureType = keyof typeof CONFIG.PF2E.creatureTypes;
+type Language = "common" | (typeof LANGUAGES_BY_RARITY.common)[number] | (typeof LANGUAGES_BY_RARITY.uncommon)[number] | (typeof LANGUAGES_BY_RARITY.rare)[number] | (typeof LANGUAGES_BY_RARITY.secret)[number];
+type Attitude = keyof typeof CONFIG.PF2E.attitude;
 type ModeOfBeing = "living" | "undead" | "construct" | "object";
+type SenseAcuity = "precise" | "imprecise" | "vague";
+type SenseType = SetElement<typeof SENSE_TYPES>;
+type SpecialVisionType = Extract<SenseType, "low-light-vision" | "darkvision" | "greater-darkvision" | "see-invisibility">;
 interface GetReachParameters {
     action?: "interact" | "attack";
-    weapon?: WeaponPF2e | MeleePF2e | null;
+    weapon?: Maybe<AbilityItemPF2e<ActorPF2e> | WeaponPF2e<ActorPF2e> | MeleePF2e<ActorPF2e>>;
 }
-interface IsFlatFootedParams {
-    /** The circumstance potentially imposing the flat-footed condition */
-    dueTo: "flanking" | "surprise" | "hidden" | "undetected";
-}
-interface CreatureUpdateContext<T extends CreaturePF2e> extends ActorUpdateContext<T> {
+interface CreatureUpdateContext<TParent extends TokenDocumentPF2e | null> extends ActorUpdateContext<TParent> {
     allowHPOverage?: boolean;
 }
-type WithRank = {
-    icon?: string;
-    hover?: string;
-    rank: ZeroToFour;
-};
-interface CreatureSheetData<TActor extends CreaturePF2e = CreaturePF2e> extends ActorSheetDataPF2e<TActor> {
-    data: CreatureSystemData & {
-        abilities: Record<AbilityString, AbilityData & {
-            label?: string;
-        }>;
-        attributes: {
-            perception: CreatureSystemData["attributes"]["perception"] & WithRank;
-        };
-        saves: Record<SaveType, SaveData & WithRank>;
-        skills: Record<string, SkillData & WithRank>;
-    };
-    languages: SheetOptions;
-    abilities: ConfigPF2e["PF2E"]["abilities"];
-    skills: ConfigPF2e["PF2E"]["skills"];
-    actorSizes: ConfigPF2e["PF2E"]["actorSizes"];
-    alignments: {
-        [K in Alignment]?: string;
-    };
-    rarity: ConfigPF2e["PF2E"]["rarityTraits"];
-    frequencies: ConfigPF2e["PF2E"]["frequencies"];
-    attitude: ConfigPF2e["PF2E"]["attitude"];
-    pfsFactions: ConfigPF2e["PF2E"]["pfsFactions"];
-    conditions: FlattenedCondition[];
-    dying: {
-        maxed: boolean;
-        remainingDying: number;
-        remainingWounded: number;
-    };
-}
-type SpellcastingSheetData = RawObject<SpellcastingEntryData> & SpellcastingAbilityData;
-export { Alignment, AlignmentTrait, CreatureSheetData, CreatureUpdateContext, GetReachParameters, IsFlatFootedParams, ModeOfBeing, SpellcastingSheetData, };
+export type { Attitude, CreatureActorType, CreatureTrait, CreatureType, CreatureUpdateContext, GetReachParameters, Language, ModeOfBeing, SenseAcuity, SenseType, SpecialVisionType, };

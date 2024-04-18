@@ -1,24 +1,47 @@
-import { ActorAttributes, ActorSystemData, ActorSystemSource, BaseActorDataPF2e, BaseActorSourcePF2e } from "@actor/data/base";
-import { PartyPF2e } from "./document";
+import { ActorAttributes, ActorAttributesSource, ActorDetails, ActorDetailsSource, ActorSystemData, ActorSystemSource, BaseActorSourcePF2e } from "@actor/data/base.ts";
+import { PartyCampaign } from "./types.ts";
 type PartySource = BaseActorSourcePF2e<"party", PartySystemSource>;
-type PartyData = Omit<PartySource, "effects" | "flags" | "items" | "prototypeToken"> & BaseActorDataPF2e<PartyPF2e, "party", PartySystemData, PartySource>;
 interface PartySystemSource extends ActorSystemSource {
     attributes: PartyAttributesSource;
     details: PartyDetailsSource;
+    traits?: never;
+    campaign?: PartyCampaignSource;
 }
-interface PartyAttributesSource extends ActorAttributes {
+interface PartyAttributesSource extends ActorAttributesSource {
     hp?: never;
     ac?: never;
+    immunities?: never;
+    weaknesses?: never;
+    resistances?: never;
+}
+interface PartyDetailsSource extends ActorDetailsSource {
+    description: string;
+    members: MemberData[];
+    readonly alliance?: never;
+    readonly level?: never;
+}
+interface MemberData {
+    uuid: ActorUUID;
+}
+interface PartySystemData extends Omit<PartySystemSource, "attributes" | "campaign" | "details">, Omit<ActorSystemData, "traits"> {
+    attributes: PartyAttributes;
+    details: PartyDetails;
+    campaign: PartyCampaign;
+}
+interface PartyAttributes extends Omit<PartyAttributesSource, "immunities" | "weaknesses" | "resistances">, Omit<ActorAttributes, "initiative" | "ac" | "hp"> {
     immunities: never[];
     weaknesses: never[];
     resistances: never[];
+    speed: {
+        total: number;
+    };
 }
-interface PartyDetailsSource {
-    description: string;
+interface PartyDetails extends Omit<PartyDetailsSource, "alliance" | "level">, ActorDetails {
     level: {
         value: number;
     };
-    members: ActorUUID[];
 }
-type PartySystemData = PartySystemSource & ActorSystemData;
-export { PartyData };
+type PartyCampaignSource = {
+    type: string;
+} & Record<string, JSONValue>;
+export type { MemberData, PartyCampaignSource, PartySource, PartySystemData };

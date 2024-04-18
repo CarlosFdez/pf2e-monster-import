@@ -1,16 +1,17 @@
-import { ItemPF2e } from "@item";
-import { RuleElementOptions } from "./";
-import { RuleElementPF2e } from "./";
-import { RuleElementSource } from "./data";
+import type { StringField } from "types/foundry/common/data/fields.d.ts";
+import { RuleElementPF2e } from "./base.ts";
+import { ModelPropsFromRESchema, ResolvableValueField, RuleElementSchema } from "./data.ts";
 /**
  * @category RuleElement
  */
-export declare class MultipleAttackPenaltyRuleElement extends RuleElementPF2e {
-    private selector;
-    constructor(data: MAPSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions);
+declare class MultipleAttackPenaltyRuleElement extends RuleElementPF2e<MAPRuleSchema> {
+    static defineSchema(): MAPRuleSchema;
     beforePrepareData(): void;
 }
-interface MAPSource extends RuleElementSource {
-    selector?: unknown;
+interface MultipleAttackPenaltyRuleElement extends RuleElementPF2e<MAPRuleSchema>, ModelPropsFromRESchema<MAPRuleSchema> {
 }
-export {};
+type MAPRuleSchema = RuleElementSchema & {
+    selector: StringField<string, string, true, false, false>;
+    value: ResolvableValueField<true, false, false>;
+};
+export { MultipleAttackPenaltyRuleElement };

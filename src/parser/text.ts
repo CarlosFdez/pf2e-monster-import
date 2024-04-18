@@ -1,6 +1,6 @@
 import { sluggify } from "../util";
 
-export function parseDescription(text: string) {
+export function parseDescription(text: string): string {
     let string = text
         .replaceAll("’", "'")
         .replaceAll("Trigger", "<p><strong>Trigger</strong>")
@@ -64,7 +64,7 @@ export function parseDescription(text: string) {
     return string;
 }
 
-function handleInlineChecks(string: string) {
+function handleInlineChecks(string: string): string {
     // Basic saves
     string = string.replaceAll(/DC (\d+) basic (\w+) save/gi, "@Check[type:$2|dc:$1|basic:true]");
     string = string.replaceAll(/basic (\w+) save DC (\d+)/gi, "@Check[type:$1|dc:$2|basic:true]");

@@ -1,2 +1,5 @@
-import { SkillActionOptions } from "..";
-export declare function demoralize(options: SkillActionOptions): void;
+import { SingleCheckAction } from "@actor/actions/index.ts";
+import { SkillActionOptions } from "../index.ts";
+declare function demoralize(options: SkillActionOptions): void;
+declare const action: SingleCheckAction;
+export { action, demoralize as legacy };

@@ -1,10 +1,11 @@
-import { DamageInstance } from "./roll";
+import { DamageInstance } from "./roll.ts";
 declare class ArithmeticExpression extends RollTerm<ArithmeticExpressionData> {
     operator: ArithmeticOperator;
-    operands: RollTerm[];
+    operands: [RollTerm, RollTerm];
     constructor(termData: ArithmeticExpressionData);
     static SERIALIZE_ATTRIBUTES: string[];
     static fromData<TTerm extends RollTerm>(this: ConstructorOf<TTerm>, data: TermDataOf<TTerm>): TTerm;
+    static totalOf(operator: ArithmeticOperator, left: number, right: number): number;
     static totalOf(operator: ArithmeticOperator, left: number | undefined, right: number | undefined): number | undefined;
     get dice(): DiceTerm[];
     /**
@@ -15,7 +16,7 @@ declare class ArithmeticExpression extends RollTerm<ArithmeticExpressionData> {
     /** Preserve flavor of inner terms */
     get formula(): string;
     get total(): number | undefined;
-    get critImmuneTotal(): number | undefined;
+    get critImmuneTotal(): this["total"];
     get isDeterministic(): boolean;
     get minimumValue(): number;
     get expectedValue(): number;
@@ -28,6 +29,9 @@ declare class ArithmeticExpression extends RollTerm<ArithmeticExpressionData> {
     }): Promise<Evaluated<this>>;
     toJSON(): ArithmeticExpressionData;
 }
+interface ArithmeticExpression extends RollTerm<ArithmeticExpressionData> {
+    constructor: typeof ArithmeticExpression;
+}
 interface ArithmeticExpressionData extends RollTermData {
     class?: "ArithmeticExpression";
     operator: ArithmeticOperator;
@@ -36,11 +40,13 @@ interface ArithmeticExpressionData extends RollTermData {
 type ArithmeticOperator = "+" | "-" | "*" | "/" | "%";
 /** A parenthetically-exclosed expression as a single arithmetic term or number */
 declare class Grouping extends RollTerm<GroupingData> {
+    #private;
     term: RollTerm;
     constructor(termData: GroupingData);
     static SERIALIZE_ATTRIBUTES: string[];
     static fromData<TTerm extends RollTerm>(this: ConstructorOf<TTerm>, data: TermDataOf<TTerm>): TTerm;
     get dice(): DiceTerm[];
+    /** Show a simplified expression if it is known that order of operations won't be lost */
     get expression(): string;
     /** Preserve flavor of inner terms */
     get formula(): string;
@@ -62,28 +68,31 @@ interface GroupingData extends RollTermData {
     class?: "Grouping";
     term: RollTermData;
 }
+/**
+ * A `Die` surrogate where the `number` or `faces` were not resolvable to numbers at parse time: serializes itself as a
+ * `Die` as soon it is able (guaranteed after evaluation)
+ */
 declare class IntermediateDie extends RollTerm<IntermediateDieData> {
-    number: NumericTerm | MathTerm | Grouping;
-    faces: NumericTerm | MathTerm | Grouping;
-    die: Evaluated<Die> | null;
+    number: number | MathTerm | Grouping;
+    faces: number | MathTerm | Grouping;
+    die: Die | null;
     constructor(data: IntermediateDieData);
     static SERIALIZE_ATTRIBUTES: string[];
     get expression(): string;
     get total(): number | undefined;
-    get dice(): [Evaluated<Die>] | never[];
-    /** `MathTerm` incorrectly reports as being deterministic, so consider them to always not be so */
+    get dice(): Die[];
     get isDeterministic(): boolean;
     get minimumValue(): number;
     /** Not able to get an expected value from a Math term */
     get expectedValue(): number;
     get maximumValue(): number;
     protected _evaluate(): Promise<Evaluated<this>>;
-    toJSON(): IntermediateDieData;
+    toJSON(): DieData | IntermediateDieData;
 }
 interface IntermediateDieData extends RollTermData {
-    class?: "IntermediateDie";
-    number: NumericTermData | MathTermData | GroupingData;
-    faces: NumericTermData | MathTermData | GroupingData;
+    class?: string;
+    number: number | NumericTermData | MathTermData | GroupingData;
+    faces: number | NumericTermData | MathTermData | GroupingData;
     die?: DieData | null;
 }
 declare class InstancePool extends PoolTerm {
@@ -93,4 +102,5 @@ declare class InstancePool extends PoolTerm {
 interface InstancePool extends PoolTerm {
     rolls: DamageInstance[];
 }
-export { ArithmeticExpression, Grouping, GroupingData, InstancePool, IntermediateDie };
+export { ArithmeticExpression, Grouping, InstancePool, IntermediateDie };
+export type { GroupingData };

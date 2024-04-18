@@ -1,8 +1,6 @@
-import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemSystemSource } from "@item/data/base";
-import { PhysicalItemTraits, PartialPrice } from "@item/physical/data";
-import type { KitPF2e } from ".";
+import type { BaseItemSourcePF2e, ItemSystemData, ItemSystemSource } from "@item/base/data/system.ts";
+import type { PartialPrice, PhysicalItemTrait, PhysicalItemTraits } from "@item/physical/data.ts";
 type KitSource = BaseItemSourcePF2e<"kit", KitSystemSource>;
-type KitData = Omit<KitSource, "system" | "effects" | "flags"> & BaseItemDataPF2e<KitPF2e, "kit", KitSystemData, KitSource>;
 interface KitEntryData {
     uuid: ItemUUID;
     img: ImageFilePath;
@@ -12,9 +10,11 @@ interface KitEntryData {
     items?: Record<string, KitEntryData>;
 }
 interface KitSystemSource extends ItemSystemSource {
-    traits: PhysicalItemTraits;
+    traits: PhysicalItemTraits<PhysicalItemTrait>;
     items: Record<string, KitEntryData>;
     price: PartialPrice;
+    level?: never;
 }
-type KitSystemData = KitSystemSource;
-export { KitData, KitEntryData, KitSource, KitSystemData, KitSystemSource };
+interface KitSystemData extends Omit<KitSystemSource, "description" | "traits">, Omit<ItemSystemData, "level"> {
+}
+export type { KitEntryData, KitSource, KitSystemData, KitSystemSource };

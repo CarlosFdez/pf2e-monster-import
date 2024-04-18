@@ -1,48 +1,65 @@
-/// <reference types="jquery" />
-/// <reference types="jquery" />
+/// <reference types="jquery" resolution-mode="require"/>
+/// <reference types="jquery" resolution-mode="require"/>
 /// <reference types="tooltipster" />
-import { PartialSettingsData, SettingsMenuPF2e } from "../menu";
 import "@yaireo/tagify/src/tagify.scss";
-import { CustomDamageData, HomebrewElementsSheetData, HomebrewKey, HomebrewTag, HomebrewTraitKey } from "./data";
+import { PartialSettingsData, SettingsMenuPF2e } from "../menu.ts";
+import { CustomDamageData, HomebrewElementsSheetData, HomebrewKey, HomebrewTag, HomebrewTraitKey, LanguageNotCommon, LanguageSettings, LanguageSettingsSheetData } from "./data.ts";
+import { ReservedTermsRecord } from "./helpers.ts";
 declare class HomebrewElements extends SettingsMenuPF2e {
     #private;
     static readonly namespace = "homebrew";
-    /** Whether this is the first time the homebrew tags will have been injected into CONFIG and actor derived data */
-    private initialRefresh;
-    private damageManager;
+    languagesManager: LanguagesManager;
+    static get reservedTerms(): ReservedTermsRecord;
     static get SETTINGS(): string[];
-    static get defaultOptions(): FormApplicationOptions & {
-        title: string;
-        id: string;
-        template: string;
-        width: number;
-        height: string;
-        tabs: {
-            navSelector: string;
-            contentSelector: string;
-        }[];
-        closeOnSubmit: boolean;
-        submitOnChange: boolean;
-    } & {
-        template: string;
+    static get defaultOptions(): FormApplicationOptions;
+    protected static campaignSettings: {
+        campaignFeats: {
+            name: string;
+            hint: string;
+            default: false;
+            type: BooleanConstructor;
+            onChange: (value: unknown) => void;
+        };
+        campaignType: {
+            name: string;
+            hint: string;
+            default: string;
+            choices: Record<string, string>;
+            type: StringConstructor;
+            onChange: () => Promise<void>;
+        };
     };
-    protected static get traitSettings(): Record<"languages" | "equipmentTraits" | "weaponTraits" | "creatureTraits" | "featTraits" | "magicSchools" | "spellTraits" | "weaponCategories" | "weaponGroups" | "baseWeapons", PartialSettingsData>;
+    protected static get traitSettings(): Record<HomebrewTraitKey, PartialSettingsData>;
     protected static get settings(): Record<HomebrewKey, PartialSettingsData>;
-    activateListeners($form: JQuery<HTMLFormElement>): void;
+    activateListeners($html: JQuery): void;
     getData(): Promise<HomebrewElementsSheetData>;
     /** Tagify sets an empty input field to "" instead of "[]", which later causes the JSON parse to throw an error */
-    protected _onSubmit(event: Event, { updateData, preventClose, preventRender }?: OnSubmitFormOptions): Promise<Record<string, unknown>>;
+    protected _onSubmit(event: Event, options?: OnSubmitFormOptions): Promise<Record<string, unknown> | false>;
     protected _getSubmitData(updateData?: Record<string, unknown> | undefined): Record<string, unknown>;
     protected _updateObject(event: Event, data: Record<HomebrewTraitKey, HomebrewTag[]>): Promise<void>;
-    /** Prepare and run a migration for each set of tag deletions from a tag map */
-    private processDeletions;
-    onSetup(): void;
-    private getConfigRecord;
-    private updateConfigRecords;
+    onInit(): void;
+}
+/** A helper class for managing languages and their rarities */
+declare class LanguagesManager {
+    #private;
+    /** The parent settings menu */
+    menu: HomebrewElements;
+    /** A separate list of module-provided languages */
+    moduleLanguages: LanguageNotCommon[];
+    constructor(menu: HomebrewElements);
+    get data(): LanguageSettings;
+    getSheetData(): LanguageSettingsSheetData;
+    activateListeners(html: HTMLElement): void;
+    /** Update the language rarities cache, adding and deleting from sets as necessary. */
+    onChangeHomebrewLanguages(languages: HomebrewTag<"languages">[]): void;
 }
 type HomebrewSubmitData = {
     damageTypes: CustomDamageData[];
-} & Record<string, unknown>;
+    languages: HomebrewTag<"languages">[];
+    languageRarities: LanguageSettings;
+} & Record<string, unknown> & {
+    clear(): void;
+};
 interface HomebrewElements extends SettingsMenuPF2e {
     constructor: typeof HomebrewElements;
     cache: HomebrewSubmitData;

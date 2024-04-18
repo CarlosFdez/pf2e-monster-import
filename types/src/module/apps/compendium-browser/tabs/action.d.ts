@@ -1,14 +1,15 @@
-import { CompendiumBrowser } from "..";
-import { CompendiumBrowserTab } from "./base";
-import { ActionFilters, CompendiumBrowserIndexData } from "./data";
+import { ContentTabName } from "../data.ts";
+import { CompendiumBrowser } from "../index.ts";
+import { CompendiumBrowserTab } from "./base.ts";
+import { ActionFilters, CompendiumBrowserIndexData } from "./data.ts";
 export declare class CompendiumBrowserActionTab extends CompendiumBrowserTab {
+    tabName: ContentTabName;
     filterData: ActionFilters;
     templatePath: string;
     searchFields: string[];
     storeFields: string[];
-    protected index: string[];
     constructor(browser: CompendiumBrowser);
     protected loadData(): Promise<void>;
     protected filterIndexData(entry: CompendiumBrowserIndexData): boolean;
-    protected prepareFilterData(): void;
+    protected prepareFilterData(): ActionFilters;
 }

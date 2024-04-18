@@ -1,29 +1,29 @@
-import { SkillAbbreviation } from "@actor/creature/data";
-import { Alignment } from "@actor/creature/types";
-import { AbilityString } from "@actor/types";
-import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemSystemSource } from "@item/data/base";
-import { BaseWeaponType } from "@item/weapon/types";
-import type { DeityPF2e } from "./document";
-import { DeityDomain } from "./types";
+import { SkillLongForm } from "@actor/types.ts";
+import { AttributeString } from "@actor/types.ts";
+import { BaseItemSourcePF2e, ItemSystemData, ItemSystemSource, OtherTagsOnly } from "@item/base/data/system.ts";
+import { BaseWeaponType } from "@item/weapon/types.ts";
+import { DeityDomain, Sanctification } from "./types.ts";
 type DeitySource = BaseItemSourcePF2e<"deity", DeitySystemSource>;
-type DeityData = Omit<DeitySource, "system" | "effects" | "flags"> & BaseItemDataPF2e<DeityPF2e, "deity", DeitySystemData, DeitySource>;
-interface DeitySystemSource extends ItemSystemSource {
+type DeitySystemSource = ItemSystemSource & {
     category: "deity" | "pantheon" | "philosophy";
-    alignment: {
-        own: Alignment | null;
-        follower: Alignment[];
-    };
+    sanctification: DeitySanctification | null;
     domains: {
         primary: DeityDomain[];
         alternate: DeityDomain[];
     };
     font: DivineFonts;
-    ability: AbilityString[];
-    skill: SkillAbbreviation | null;
+    attribute: AttributeString[];
+    skill: SkillLongForm[] | null;
     weapons: BaseWeaponType[];
     spells: Record<number, ItemUUID>;
-    traits?: never;
-}
+    level?: never;
+    traits: OtherTagsOnly;
+};
+type DeitySanctification = {
+    modal: "can" | "must";
+    what: Sanctification[];
+};
 type DivineFonts = ["harm"] | ["heal"] | ["harm", "heal"] | never[];
-type DeitySystemData = DeitySystemSource;
-export { DeityData, DeitySource, DeitySystemData, DeitySystemSource };
+interface DeitySystemData extends Omit<DeitySystemSource, "description">, Omit<ItemSystemData, "level" | "traits"> {
+}
+export type { DeitySanctification, DeitySource, DeitySystemData, DeitySystemSource };

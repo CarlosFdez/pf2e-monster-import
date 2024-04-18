@@ -1,12 +1,49 @@
-export {};
+import type { DataModel, Document } from "./abstract/module.d.ts";
 
 declare global {
+    interface DocumentConstructionContext<TParent extends Document | null>
+        extends DataModelConstructionOptions<TParent> {
+        pack?: string | null;
+    }
+
+    interface DocumentModificationContext<TParent extends Document | null> {
+        /** A parent Document within which these Documents should be embedded */
+        parent?: TParent;
+        /** Block the dispatch of preCreate hooks for this operation */
+        noHook?: boolean;
+        /** A Compendium pack identifier within which the Documents should be modified */
+        pack?: string | null;
+        /** Return an index of the Document collection, used only during a get operation. */
+        index?: boolean;
+        /** When performing a creation operation, keep the provided _id instead of clearing it. */
+        keepId?: boolean;
+        /** When performing a creation operation, keep existing _id values of documents embedded within the one being created instead of generating new ones. */
+        keepEmbeddedIds?: boolean;
+        /** Create a temporary document which is not saved to the database. Only used during creation. */
+        temporary?: boolean;
+        /** Automatically re-render existing applications associated with the document. */
+        render?: boolean;
+        /** Automatically create and render the Document sheet when the Document is first created. */
+        renderSheet?: boolean;
+        /** Difference each update object against current Document data to reduce the size of the transferred data. Only used during update. */
+        diff?: boolean;
+        /** Merge objects recursively. If false, inner objects will be replaced explicitly. Use with caution! */
+        recursive?: boolean;
+        /** Whether to delete all documents of a given type, regardless of the array of ids provided. Only used during a delete operation. */
+        deleteAll?: boolean;
+    }
+
+    type DocumentUpdateContext<TParent extends Document | null> = Omit<
+        DocumentModificationContext<TParent>,
+        "deleteAll" | "index" | "keepId" | "keepEmbeddedIds" | "temporary"
+    >;
+
     /* ----------------------------------------- */
     /*  Reusable Type Definitions                */
     /* ----------------------------------------- */
 
     /** A single point, expressed as an object {x, y} */
-    type Point = PIXI.Point | { x: number; y: number };
+    type Point = { x: number; y: number };
 
     /** A single point, expressed as an array [x,y] */
     type PointArray = [number, number];
@@ -20,7 +57,7 @@ declare global {
 
     /** A Client Setting */
     interface SettingConfig<
-        TChoices extends Record<string, unknown> | undefined = Record<string, unknown> | undefined
+        TChoices extends Record<string, unknown> | undefined = Record<string, unknown> | undefined,
     > {
         /** A unique machine-readable id for the setting */
         key: string;
@@ -43,18 +80,16 @@ declare global {
             | BooleanConstructor
             | ObjectConstructor
             | ArrayConstructor
-            | FunctionConstructor;
+            | ConstructorOf<DataModel>
+            | Function;
         /** For string Types, defines the allowable values */
         choices?: TChoices;
         /** For numeric Types, defines the allowable range */
         range?: this["type"] extends NumberConstructor ? { min: number; max: number; step: number } : never;
         /** The default value */
-        default: number | string | boolean | object | Function;
+        default: number | string | boolean | object | (() => number | string | boolean | object);
         /** Executes when the value of this Setting changes */
-        onChange?: (
-            choice: TChoices extends Record<string, unknown> ? keyof TChoices : undefined
-        ) => void | Promise<void>;
-        requireReload?: boolean; //xdy add to pf2e
+        onChange?: (choice: TChoices extends object ? keyof TChoices : unknown) => void | Promise<void>;
     }
 
     interface SettingSubmenuConfig {
@@ -73,7 +108,7 @@ declare global {
     }
 
     interface SettingsMenuConstructor {
-        new (object?: {}, options?: FormApplicationOptions): FormApplication;
+        new (object?: object, options?: Partial<FormApplicationOptions>): FormApplication;
         registerSettings(): void;
     }
 
@@ -90,9 +125,9 @@ declare global {
         /** The default bindings that can be changed by the user. */
         editable?: KeybindingActionBinding[];
         /** A function to execute when a key down event occurs. If True is returned, the event is consumed and no further keybinds execute. */
-        onDown?: (context: KeyboardEventContext) => boolean | void;
+        onDown?: (context: KeyboardEventContext) => unknown;
         /** A function to execute when a key up event occurs. If True is returned, the event is consumed and no further keybinds execute. */
-        onUp?: (context: KeyboardEventContext) => boolean | void;
+        onUp?: (context: KeyboardEventContext) => unknown;
         /** If True, allows Repeat events to execute the Action's onDown. Defaults to false. */
         repeat?: boolean;
         /** If true, only a GM can edit and execute this Action */
@@ -199,6 +234,6 @@ declare global {
         /** The ID of the requesting User */
         userId?: string;
         /** Data returned as a result of the request */
-        data?: RequestData;
+        result: Record<string, unknown>[];
     }
 }

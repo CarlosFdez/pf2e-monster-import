@@ -1,6 +1,6 @@
-/// <reference types="jquery" />
-import { ActorPF2e } from "@actor";
-import { ItemPF2e } from "@item";
+/// <reference types="jquery" resolution-mode="require"/>
+import type { ActorPF2e } from "@actor";
+import type { ItemPF2e } from "@item";
 /**
  * @category Other
  */
@@ -28,14 +28,14 @@ declare class DicePF2e {
      * @param dialogOptions Modal dialog options
      */
     static d20Roll({ event, item, parts, data, template, title, speaker, flavor, onClose, dialogOptions, rollMode, rollType, }: {
-        event: JQuery.Event;
-        item?: Embedded<ItemPF2e> | null;
+        event: MouseEvent | JQuery.TriggeredEvent;
+        item?: ItemPF2e<ActorPF2e> | null;
         parts: (string | number)[];
         actor?: ActorPF2e;
         data: Record<string, unknown>;
         template?: string;
         title: string;
-        speaker: foundry.data.ChatSpeakerSource;
+        speaker: foundry.documents.ChatSpeakerData;
         flavor?: Function;
         onClose?: Function;
         dialogOptions?: Partial<ApplicationOptions>;
@@ -48,5 +48,5 @@ declare class DicePF2e {
  * Combines dice and flat values together in a condensed expression. Also repairs any + - and "- 3" errors.
  * For example, 3d4 + 2d4 + 3d6 + 5 + 2 is combined into 5d4 + 3d6 + 7. - 4 is corrected to -4.
  */
-declare function combineTerms(formula: string): string;
-export { DicePF2e, combineTerms };
+declare function simplifyFormula(formula: string): string;
+export { DicePF2e, simplifyFormula };

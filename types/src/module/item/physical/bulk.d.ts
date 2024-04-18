@@ -1,5 +1,4 @@
-import { Size } from "@module/data";
-import { Optional } from "@util";
+import { Size } from "@module/data.ts";
 interface StackDefinition {
     size: number;
     lightBulk: number;
@@ -12,26 +11,22 @@ type StackDefinitions = Record<string, StackDefinition | undefined>;
  * included because coins don't add light bulk below 1000, just 1
  * bulk per 1000 coins
  */
-export declare const stackDefinitions: StackDefinitions;
-export declare class Bulk {
-    normal: number;
-    light: number;
-    constructor({ normal, light }?: {
-        normal?: number;
-        light?: number;
-    });
+declare const STACK_DEFINITIONS: StackDefinitions;
+declare class Bulk {
+    /** The bulk value as a number, with negligible being 0, light being 0.1, and bulk (the unit) as an integer */
+    readonly value: number;
+    constructor(value?: number);
+    get normal(): number;
+    get light(): number;
     get isNegligible(): boolean;
     get isLight(): boolean;
-    toLightBulk(): number;
-    plus(bulk: Bulk): Bulk;
-    minus(bulk: Bulk): Bulk;
-    _toSingleNumber(bulk: Bulk): [number, number];
+    toLightUnits(): number;
+    /** Increase the bulk by one step: negligible becomes light, light becomes 1 bulk, and 1+ bulk increases by 1 */
+    increment(): Bulk;
+    plus(other: number | Bulk): Bulk;
+    minus(other: number | Bulk): Bulk;
     times(factor: number): Bulk;
-    isSmallerThan(bulk: Bulk): boolean;
-    isBiggerThan(bulk: Bulk): boolean;
-    isEqualTo(bulk: Bulk): boolean;
-    isPositive(): boolean;
-    /** Produces strings like: "-", "L", "2L", "3", "3; L", "4; 3L" to display bulk in the frontend bulk column */
+    /** Produce strings like "—", "L", "2L", "3", "3; L", "4; 3L" to display bulk in the frontend bulk column */
     toString(): string;
     double(): Bulk;
     halve(): Bulk;
@@ -63,43 +58,4 @@ export declare class Bulk {
      */
     convertToSize(itemSize: Size, actorSize: Size): Bulk;
 }
-export declare class BulkItem {
-    id: string;
-    bulk: Bulk;
-    size: Size;
-    quantity: number;
-    stackGroup: string | null;
-    isEquipped: boolean;
-    unequippedBulk?: Bulk | null;
-    equippedBulk?: Bulk | null;
-    holdsItems: BulkItem[];
-    negateBulk: Bulk;
-    extraDimensionalContainer: boolean;
-    constructor({ id, bulk, quantity, stackGroup, isEquipped, unequippedBulk, equippedBulk, holdsItems, negateBulk, extraDimensionalContainer, size, }?: {
-        id?: string;
-        bulk?: Bulk;
-        quantity?: number;
-        stackGroup?: string | null;
-        isEquipped?: boolean;
-        unequippedBulk?: Bulk | null;
-        equippedBulk?: Bulk | null;
-        holdsItems?: BulkItem[];
-        negateBulk?: Bulk;
-        extraDimensionalContainer?: boolean;
-        size?: Size;
-    });
-    get reducesBulk(): boolean;
-}
-/**
- * Accepted formats:
- * "l", "1", "L", "1; L", "2; 3L", "2;3L"
- * @param weight if not parseable will return null or undefined
- */
-export declare function weightToBulk(weight: Optional<string | number>): Bulk | null;
-type BrokenBulk = Optional<string> | Optional<number>;
-/**
- * Needed because some weight is either null, undefined, a number or a string :(
- * @param weight
- */
-export declare function normalizeWeight(weight: BrokenBulk): string | undefined;
-export {};
+export { Bulk, STACK_DEFINITIONS };

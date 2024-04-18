@@ -1,16 +1,16 @@
-/// <reference types="jquery" />
-/// <reference types="jquery" />
+/// <reference types="jquery" resolution-mode="require"/>
+/// <reference types="jquery" resolution-mode="require"/>
 /// <reference types="tooltipster" />
-import { ActorPF2e } from "@actor";
-import { ItemPF2e } from "@item";
-import { PredicatePF2e } from "@system/predication";
+import type { ItemPF2e } from "@item";
+import type { UserPF2e } from "@module/user/document.ts";
+import { PredicatePF2e } from "@system/predication.ts";
 import Tagify from "@yaireo/tagify";
 /** Prompt the user to pick from a number of options */
-declare abstract class PickAThingPrompt<T> extends Application {
-    protected item: Embedded<ItemPF2e>;
-    private resolve?;
-    protected selection: PickableThing<T> | null;
-    protected choices: PickableThing<T>[];
+declare abstract class PickAThingPrompt<TItem extends ItemPF2e, TThing extends string | number | object> extends Application {
+    #private;
+    protected item: TItem;
+    protected selection: PickableThing<TThing> | null;
+    protected choices: PickableThing<TThing>[];
     /** If the number of choices is beyond a certain length, a select menu is presented instead of a list of buttons */
     protected selectMenu?: Tagify<{
         value: string;
@@ -18,31 +18,28 @@ declare abstract class PickAThingPrompt<T> extends Application {
     }>;
     protected predicate: PredicatePF2e;
     protected allowNoSelection: boolean;
-    constructor(data: PickAThingConstructorArgs<T>);
-    get actor(): ActorPF2e;
+    constructor(data: PickAThingConstructorArgs<TItem, TThing>);
+    get actor(): TItem["parent"];
     static get defaultOptions(): ApplicationOptions;
-    /** Collect all options within the specified scope and then eliminate any that fail the predicate test */
-    protected getChoices(): PickableThing<T>[];
-    protected getSelection(event: MouseEvent): PickableThing<T> | null;
-    abstract get template(): string;
+    protected getSelection(event: MouseEvent): PickableThing<TThing> | null;
     /** Return a promise containing the user's item selection, or `null` if no selection was made */
-    resolveSelection(): Promise<PickableThing<T> | null>;
-    getData(options?: Partial<ApplicationOptions>): Promise<PromptTemplateData>;
+    resolveSelection(): Promise<PickableThing<TThing> | null>;
+    getData(): Promise<PromptTemplateData>;
     activateListeners($html: JQuery): void;
     /** Close the dialog, applying the effect with configured target or warning the user that something went wrong. */
-    close({ force }?: {
-        force?: boolean | undefined;
+    close(options?: {
+        force?: boolean;
     }): Promise<void>;
 }
-interface PickAThingConstructorArgs<T> {
+interface PickAThingConstructorArgs<TItem extends ItemPF2e, TThing extends string | number | object> {
     title?: string;
     prompt?: string;
-    choices?: PickableThing<T>[];
-    item: Embedded<ItemPF2e>;
+    choices: PickableThing<TThing>[];
+    item: TItem;
     predicate?: PredicatePF2e;
     allowNoSelection?: boolean;
 }
-interface PickableThing<T = string | number | object> {
+interface PickableThing<T extends string | number | object = string | number | object> {
     value: T;
     label: string;
     img?: string;
@@ -51,7 +48,9 @@ interface PickableThing<T = string | number | object> {
 }
 interface PromptTemplateData {
     choices: PickableThing[];
-    /** Whether to use a select menu instead of a column of buttons */
-    selectMenu: boolean;
+    /** An item pertinent to the selection being made */
+    item: ItemPF2e;
+    user: UserPF2e;
 }
-export { PickAThingConstructorArgs, PickAThingPrompt, PickableThing, PromptTemplateData };
+export { PickAThingPrompt };
+export type { PickAThingConstructorArgs, PickableThing, PromptTemplateData };

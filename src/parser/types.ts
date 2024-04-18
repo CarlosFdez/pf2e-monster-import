@@ -2,8 +2,7 @@ import example from "../examples/monstrous-dandelion.json";
 import malfunctioningRepairDrone from "../examples/malfunctioning-repair-drone.json";
 import cillianCreed from "../examples/CillianCreed1646282563.json";
 import kateGlenn from "../examples/KateGlenn1645159516.json";
-import { NPCPF2e } from "@actor";
-import { ItemSourcePF2e } from "@item/data";
+import { ItemSourcePF2e } from "@item/base/data";
 
 export type MonsterDataExample = typeof malfunctioningRepairDrone & typeof example & typeof cillianCreed;
 
@@ -21,7 +20,7 @@ interface MonsterDataGood {
         type: SpecialType;
         description: string;
     }[];
-    morespells?: typeof kateGlenn["morespells"];
+    morespells?: (typeof kateGlenn)["morespells"];
     strikes: {
         id: string;
         name: string;
@@ -39,15 +38,15 @@ export interface MonsterSpellStats {
         benchmark: string;
         note: string;
     };
-    spelldc: typeof kateGlenn["spelldc"];
-    spells: typeof kateGlenn["spells"];
-    focuspoints: typeof kateGlenn["focuspoints"];
+    spelldc: (typeof kateGlenn)["spelldc"];
+    spells: (typeof kateGlenn)["spells"];
+    focuspoints: (typeof kateGlenn)["focuspoints"];
 }
 
 export type MonsterData = MonsterDataGood & MonsterSpellStats & Omit<MonsterDataExample, keyof MonsterDataGood>;
 
 export interface MonsterParseResults {
-    updates: DocumentUpdateData<NPCPF2e>;
+    updates: Record<string, unknown>;
     items: DeepPartial<ItemSourcePF2e>[];
     parsedSpells: DeepPartial<ItemSourcePF2e>[];
 }

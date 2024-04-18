@@ -1,158 +1,43 @@
-/// <reference types="jquery" />
-/// <reference types="jquery" />
+/// <reference types="jquery" resolution-mode="require"/>
+/// <reference types="jquery" resolution-mode="require"/>
 /// <reference types="tooltipster" />
-import { SpellPF2e } from "@item/spell";
-import { ItemSheetPF2e } from "../sheet/base";
-import { ItemSheetDataPF2e } from "../sheet/data-types";
-import { SpellSystemData } from "./data";
-import { DamageCategoryUnique } from "@system/damage";
+import { ItemSheetDataPF2e, ItemSheetOptions, ItemSheetPF2e } from "@item/base/sheet/sheet.ts";
+import { TraitTagifyEntry } from "@module/sheet/helpers.ts";
+import { DamageCategoryUnique, DamageType } from "@system/damage/types.ts";
+import type { EffectAreaShape, SpellPF2e, SpellSystemData, SpellSystemSource } from "./index.ts";
 export declare class SpellSheetPF2e extends ItemSheetPF2e<SpellPF2e> {
+    #private;
+    static get defaultOptions(): ItemSheetOptions;
     get id(): string;
-    getData(options?: Partial<DocumentSheetOptions>): Promise<SpellSheetData>;
-    static get defaultOptions(): DocumentSheetOptions;
+    protected get validTraits(): Record<string, string>;
+    getData(options?: Partial<ItemSheetOptions>): Promise<SpellSheetData>;
     get title(): string;
-    get validTraits(): {
-        amp: string;
-        attack: string;
-        auditory: string;
-        aura: string;
-        beast: string;
-        cantrip: string;
-        composition: string;
-        concentrate: string;
-        consecration: string;
-        contingency: string;
-        curse: string;
-        cursebound: string;
-        darkness: string;
-        death: string;
-        detection: string;
-        disease: string;
-        dream: string;
-        eidolon: string;
-        emotion: string;
-        extradimensional: string;
-        fear: string;
-        fortune: string;
-        fungus: string;
-        healing: string;
-        hex: string;
-        incapacitation: string;
-        incarnate: string;
-        incorporeal: string;
-        inhaled: string;
-        light: string;
-        linguistic: string;
-        litany: string;
-        metamagic: string;
-        mindless: string;
-        misfortune: string;
-        morph: string;
-        move: string;
-        nonlethal: string;
-        olfactory: string;
-        plant: string;
-        poison: string;
-        polymorph: string;
-        possession: string;
-        prediction: string;
-        psyche: string;
-        revelation: string;
-        scrying: string;
-        shadow: string;
-        sleep: string;
-        stance: string;
-        summoned: string;
-        teleportation: string;
-        "true-name": string;
-        visual: string;
-        arcane: string;
-        divine: string;
-        occult: string;
-        primal: string;
-        abjuration: string;
-        conjuration: string;
-        divination: string;
-        enchantment: string;
-        evocation: string;
-        illusion: string;
-        necromancy: string;
-        transmutation: string;
-        air: string;
-        earth: string;
-        fire: string;
-        metal: string;
-        water: string;
-        magical: string;
-        mental: string;
-        radiation: string;
-        acid: string;
-        cold: string;
-        electricity: string;
-        force: string;
-        negative: string;
-        positive: string;
-        sonic: string;
-        chaotic: string;
-        evil: string;
-        good: string;
-        lawful: string;
-        alchemist: string;
-        barbarian: string;
-        bard: string;
-        champion: string;
-        cleric: string;
-        druid: string;
-        fighter: string;
-        gunslinger: string;
-        inventor: string;
-        investigator: string;
-        magus: string;
-        monk: string;
-        oracle: string;
-        psychic: string;
-        ranger: string;
-        rogue: string;
-        sorcerer: string;
-        summoner: string;
-        swashbuckler: string;
-        thaumaturge: string;
-        witch: string;
-        wizard: string;
-    };
     activateListeners($html: JQuery): void;
     protected _updateObject(event: Event, formData: Record<string, unknown>): Promise<void>;
-    protected _onDragStart(event: ElementDragEvent): void;
-    protected _onDrop(event: ElementDragEvent): Promise<void>;
-    private formatSpellComponents;
+    protected _onDragStart(event: DragEvent): void;
+    protected _onDrop(event: DragEvent): Promise<void>;
     private getAvailableHeightenLevels;
-    private getOverlayFromEvent;
-    prepareHeighteningLevels(): SpellSheetOverlayData[];
 }
 interface SpellSheetData extends ItemSheetDataPF2e<SpellPF2e> {
-    isCantrip: boolean;
-    isFocusSpell: boolean;
-    isRitual: boolean;
     isVariant: boolean;
     variants: {
         name: string;
-        id: string;
+        variantId: string | null;
         sort: number;
         actions: string;
     }[];
-    magicSchools: ConfigPF2e["PF2E"]["magicSchools"];
-    spellCategories: ConfigPF2e["PF2E"]["spellCategories"];
-    spellLevels: ConfigPF2e["PF2E"]["spellLevels"];
-    spellTypes: ConfigPF2e["PF2E"]["spellTypes"];
-    saves: ConfigPF2e["PF2E"]["saves"];
-    damageCategories: ConfigPF2e["PF2E"]["damageCategories"];
-    damageTypes: Record<string, string>;
-    damageSubtypes: Pick<ConfigPF2e["PF2E"]["damageCategories"], DamageCategoryUnique>;
-    spellComponents: string[];
-    areaSizes: ConfigPF2e["PF2E"]["areaSizes"];
-    areaTypes: ConfigPF2e["PF2E"]["areaTypes"];
+    materials: typeof CONFIG.PF2E.materialDamageEffects;
+    damageTypes: Record<DamageType, string>;
+    damageSubtypes: Pick<typeof CONFIG.PF2E.damageCategories, DamageCategoryUnique>;
+    damageKinds: Record<string, {
+        value: string[];
+        label: string;
+        selected: boolean;
+        disabled: boolean;
+    }[]>;
+    areaShapes: Record<EffectAreaShape, string>;
     heightenIntervals: number[];
-    heightenOverlays: SpellSheetOverlayData[];
+    heightenOverlays: SpellSheetHeightenOverlayData[];
     canHeighten: boolean;
 }
 interface SpellSheetOverlayData {
@@ -161,13 +46,17 @@ interface SpellSheetOverlayData {
     base: string;
     /** Base path to the spell override data, dot delimited. Currently this is the same as base */
     dataPath: string;
-    level: number;
-    system: Partial<SpellSystemData>;
-    type: "heighten";
+    level: number | null;
+    type: "heighten" | "variant";
+    system: Partial<SpellSystemSource> | null;
+}
+interface SpellSheetHeightenOverlayData extends SpellSheetOverlayData {
+    system: Partial<SpellSystemSource>;
     heightenLevels: number[];
     missing: {
         key: keyof SpellSystemData;
         label: string;
     }[];
+    traits?: TraitTagifyEntry[] | null;
 }
 export {};

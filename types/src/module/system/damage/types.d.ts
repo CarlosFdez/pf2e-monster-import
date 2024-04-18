@@ -1,15 +1,18 @@
-import { DamageDicePF2e, ModifierPF2e } from "@actor/modifiers";
-import { AttackTarget, ResistanceType, StrikeSelf } from "@actor/types";
-import { RollNotePF2e } from "@module/notes";
-import { DegreeOfSuccessString } from "@system/degree-of-success";
-import { BaseRollContext } from "@system/rolls";
-import { DamageRoll } from "./roll";
-import { DAMAGE_CATEGORIES_UNIQUE, DAMAGE_DIE_FACES, DAMAGE_TYPES } from "./values";
+import type { DamageDicePF2e, ModifierPF2e } from "@actor/modifiers.ts";
+import type { RollOrigin, RollTarget } from "@actor/roll-context/types.ts";
+import type { ResistanceType } from "@actor/types.ts";
+import type { ZeroToTwo } from "@module/data.ts";
+import type { DegreeOfSuccessString } from "@system/degree-of-success.ts";
+import type { BaseRollContext } from "@system/rolls.ts";
+import type { DamageRoll } from "./roll.ts";
+import type { DAMAGE_CATEGORIES_UNIQUE, DAMAGE_DICE_FACES, DAMAGE_DIE_SIZES, DAMAGE_TYPES } from "./values.ts";
 type DamageCategoryUnique = SetElement<typeof DAMAGE_CATEGORIES_UNIQUE>;
-type MaterialDamageEffect = keyof ConfigPF2e["PF2E"]["materialDamageEffects"];
-type DamageCategory = keyof ConfigPF2e["PF2E"]["damageCategories"];
-type DamageDieSize = SetElement<typeof DAMAGE_DIE_FACES>;
+type DamageCategory = keyof typeof CONFIG.PF2E.damageCategories;
+type DamageDiceFaces = (typeof DAMAGE_DICE_FACES)[number];
+type DamageDieSize = (typeof DAMAGE_DIE_SIZES)[number];
 type DamageType = SetElement<typeof DAMAGE_TYPES>;
+type DamageKind = "damage" | "healing";
+type MaterialDamageEffect = keyof typeof CONFIG.PF2E.materialDamageEffects;
 /**
  * `null`: double on crit (includes most damage)
  * `true`: critical only, don't double
@@ -33,58 +36,72 @@ interface DamageTypeRenderData {
 interface DamageRollRenderData {
     damageTypes: Record<string, DamageTypeRenderData>;
 }
-interface DamageRollContext extends BaseRollContext {
+interface DamageDamageContext extends BaseRollContext {
     type: "damage-roll";
-    sourceType: "attack" | "save";
-    outcome?: DegreeOfSuccessString;
-    self?: StrikeSelf | null;
-    target?: AttackTarget | null;
+    sourceType: "attack" | "check" | "save";
+    outcome?: DegreeOfSuccessString | null;
+    self?: RollOrigin | null;
+    target?: RollTarget | null;
     options: Set<string>;
     secret?: boolean;
     /** The domains this roll had, for reporting purposes */
-    domains?: string[];
+    domains: string[];
+    /** The number of MAP increases from the preceding check */
+    mapIncreases?: ZeroToTwo;
 }
 interface DamageFormulaData {
-    base: BasicDamageData;
+    base: BaseDamageData[];
     dice: DamageDicePF2e[];
     modifiers: ModifierPF2e[];
+    /** Maximum number of die increases. Weapons should be set to 1 */
+    maxIncreases?: number;
     ignoredResistances: {
         type: ResistanceType;
         max: number | null;
     }[];
+    kinds?: Set<DamageKind>;
 }
 interface ResolvedDamageFormulaData extends DamageFormulaData {
-    formula: {
-        criticalFailure: null;
-        failure: string | null;
-        success: string;
-        criticalSuccess: string;
-    };
+    roll?: never;
+    formula: Record<DegreeOfSuccessString, string | null>;
+    breakdown: Record<DegreeOfSuccessString, string[]>;
 }
-interface BasicDamageData {
-    damageType: DamageType;
-    diceNumber: number;
-    dieSize: DamageDieSize | null;
+interface DamagePartialTerm {
+    /** The static amount of damage of the current damage type and category. */
     modifier: number;
-    category: DamageCategory | null;
+    /** Maps the die face ("d4", "d6", "d8", "d10", "d12") to the number of dice of that type. */
+    dice: {
+        number: number;
+        faces: DamageDiceFaces;
+    } | null;
+}
+interface BaseDamageData {
+    terms?: DamagePartialTerm[];
+    damageType: DamageType;
+    diceNumber?: number;
+    dieSize?: DamageDieSize | null;
+    modifier?: number;
+    category: DamageCategoryUnique | null;
     materials?: MaterialDamageEffect[];
+}
+interface WeaponBaseDamageData extends BaseDamageData {
+    terms?: never;
 }
 interface BaseDamageTemplate {
     name: string;
-    notes: RollNotePF2e[];
-    traits: string[];
     materials: MaterialDamageEffect[];
     modifiers?: (ModifierPF2e | DamageDicePF2e)[];
 }
 interface WeaponDamageTemplate extends BaseDamageTemplate {
     damage: ResolvedDamageFormulaData;
-    domains: string[];
 }
 interface SpellDamageTemplate extends BaseDamageTemplate {
     damage: {
         roll: DamageRoll;
-        breakdownTags: string[];
+        breakdown: string[];
     };
 }
-type DamageTemplate = WeaponDamageTemplate | SpellDamageTemplate;
-export { CriticalInclusion, DamageCategory, DamageCategoryRenderData, DamageCategoryUnique, DamageDieSize, DamageFormulaData, DamageRollContext, DamageRollRenderData, DamageTemplate, DamageType, DamageTypeRenderData, MaterialDamageEffect, SpellDamageTemplate, WeaponDamageTemplate, };
+type AfflictionDamageTemplate = SpellDamageTemplate;
+type SimpleDamageTemplate = SpellDamageTemplate;
+type DamageTemplate = WeaponDamageTemplate | SpellDamageTemplate | AfflictionDamageTemplate | SimpleDamageTemplate;
+export type { AfflictionDamageTemplate, BaseDamageData, CriticalInclusion, DamageCategory, DamageCategoryRenderData, DamageCategoryUnique, DamageDamageContext, DamageDiceFaces, DamageDieSize, DamageFormulaData, DamageKind, DamagePartialTerm, DamageRollRenderData, DamageTemplate, DamageType, DamageTypeRenderData, MaterialDamageEffect, SimpleDamageTemplate, SpellDamageTemplate, WeaponBaseDamageData, WeaponDamageTemplate, };

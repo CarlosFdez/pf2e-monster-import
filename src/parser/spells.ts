@@ -1,15 +1,11 @@
 import { SpellPF2e } from "@item";
-import { ItemSourcePF2e, SpellSource } from "@item/data";
+import { ItemSourcePF2e, SpellSource } from "@item/base/data";
 import { MagicTradition } from "@item/spell/types";
-import {
-    PreparationType,
-    SlotKey,
-    SpellcastingEntrySource,
-    SpellcastingEntrySystemData,
-} from "@item/spellcasting-entry/data";
+import { SlotKey, SpellcastingEntrySource, SpellcastingEntrySystemData } from "@item/spellcasting-entry/data";
 import { OneToTen } from "@module/data";
 import { capitalizeWords, objectHasKey } from "../util";
 import { MonsterData, MonsterSpellStats } from "./types";
+import { SpellcastingCategory } from "@item/spellcasting-entry";
 
 interface SpellMetadata {
     id: string;
@@ -19,7 +15,7 @@ interface SpellMetadata {
     spellData: SpellSource;
 }
 
-function isSpell(document: unknown): document is SpellPF2e {
+function isSpell(document: unknown): document is SpellPF2e<null> {
     return document instanceof Item && document?.type === "spell";
 }
 
@@ -53,7 +49,7 @@ export class SpellParser {
 
     private async parseTradition(name: string, data: MonsterSpellStats): Promise<DeepPartial<ItemSourcePF2e>[]> {
         const cha = "cha";
-        const traditionId = randomID();
+        const traditionId = foundry.utils.randomID();
         const spellType = name.split(" ");
 
         const traditionName = this.parseTraditionName(spellType[0]);
@@ -72,15 +68,15 @@ export class SpellParser {
                     continue;
                 }
 
-                const prepared: { id: string }[] = [];
+                const prepared: { id: string | null; expended: boolean }[] = [];
                 for (const spell of parsedSpells[i]) {
                     for (let j = spell.preparedNumber; j > 0; j--) {
-                        prepared.push({ id: spell.id });
+                        prepared.push({ id: spell.id, expended: false });
                     }
                 }
 
                 const total = parsedSpells[i].reduce((total, current) => total + current.preparedNumber, 0);
-                slots[slotKey] = { prepared: { ...prepared }, value: total, max: total };
+                slots[slotKey] = { prepared, value: total, max: total };
             }
 
             return slots;
@@ -102,7 +98,7 @@ export class SpellParser {
                     value: traditionName as MagicTradition,
                 },
                 prepared: {
-                    value: preparedType as PreparationType,
+                    value: preparedType,
                 },
                 proficiency: {
                     value: 1,
@@ -119,7 +115,7 @@ export class SpellParser {
     private async parseSpells(
         spellLevels: string[],
         preparedType: string,
-        traditionId: string
+        traditionId: string,
     ): Promise<SpellMetadata[][]> {
         const compendium = await this.getCompendium();
         if (!compendium) {
@@ -156,7 +152,7 @@ export class SpellParser {
 
                     if (indexData) {
                         const spellEntry = await compendium.getDocument(indexData._id);
-                        const spellID = randomID();
+                        const spellID = foundry.utils.randomID();
                         if (isSpell(spellEntry)) {
                             const spellData = spellEntry.toObject();
 
@@ -196,7 +192,7 @@ export class SpellParser {
         }
     }
 
-    private parsePreparationType(preparation: string): PreparationType {
+    private parsePreparationType(preparation: string): SpellcastingCategory {
         if (!preparation) return "innate";
         preparation = preparation.toLowerCase().trim();
 

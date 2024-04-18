@@ -1,33 +1,14 @@
 export {};
 
 declare global {
-    interface ActorSheetOptions extends DocumentSheetOptions {
-        token: TokenDocument | null;
-    }
-
-    interface ActorSheetData<A extends Actor> extends DocumentSheetData<A> {
-        actor: any;
-        data: any;
-        items: any;
-        cssClass: "editable" | "locked";
-        effects: RawObject<foundry.data.ActiveEffectData>[];
-        limited: boolean;
-        options: ActorSheetOptions;
-    }
-
     /**
-     * The Actor configuration sheet.
+     * The Application responsible for displaying and editing a single Actor document.
      * This Application is responsible for rendering an actor's attributes and allowing the actor to be edited.
-     * System modifications may elect to override this class to better suit their own game system by re-defining the value
-     * CONFIG.Actor.sheetClass.
-
-     * @param actor                   The Actor instance being displayed within the sheet.
-     * @param options    Additional application configuration options.
+     * @category - Applications
+     * @param actor     The Actor instance being displayed within the sheet.
+     * @param [options] Additional application configuration options.
      */
-    class ActorSheet<TActor extends Actor = Actor, TItem extends Item = Item> extends DocumentSheet<
-        TActor,
-        ActorSheetOptions
-    > {
+    class ActorSheet<TActor extends Actor, TItem extends Item = Item> extends DocumentSheet<TActor, ActorSheetOptions> {
         static override get defaultOptions(): ActorSheetOptions;
 
         override get id(): string;
@@ -50,7 +31,7 @@ declare global {
 
         protected override _getHeaderButtons(): ApplicationHeaderButton[];
 
-        protected override _getSubmitData(updateData?: DocumentUpdateData<TActor>): Record<string, unknown>;
+        protected override _getSubmitData(updateData?: Record<string, unknown>): Record<string, unknown>;
 
         /* -------------------------------------------- */
         /*  Event Listeners                             */
@@ -77,11 +58,11 @@ declare global {
 
         protected override _canDragDrop(selector: string): boolean;
 
-        protected override _onDragStart(event: ElementDragEvent): void;
+        protected override _onDragStart(event: DragEvent): void;
 
-        protected override _onDrop(event: ElementDragEvent): Promise<boolean | void>;
+        protected override _onDrop(event: DragEvent): Promise<boolean | void>;
 
-        protected override _onDragOver(event: ElementDragEvent): boolean;
+        protected override _onDragOver(event: DragEvent): boolean;
 
         /**
          * Handle dropping of an Actor data onto another Actor sheet
@@ -89,10 +70,10 @@ declare global {
          * @param data The data transfer extracted from the event
          * @return A data object which describes the result of the drop
          */
-        protected _onDropActiveEffect<D extends ActiveEffect>(
-            event: ElementDragEvent,
-            data?: DropCanvasData<"ActiveEffect", D>
-        ): Promise<D | void>;
+        protected _onDropActiveEffect<TDocument extends ActiveEffect<TActor>>(
+            event: DragEvent,
+            data?: DropCanvasData<"ActiveEffect", TDocument>,
+        ): Promise<TDocument | void>;
 
         /**
          * Handle dropping of an Actor data onto another Actor sheet
@@ -100,7 +81,7 @@ declare global {
          * @param data  The data transfer extracted from the event
          * @return A data object which describes the result of the drop
          */
-        protected _onDropActor(event: ElementDragEvent, data: DropCanvasData<"Actor", TActor>): Promise<false | void>;
+        protected _onDropActor(event: DragEvent, data: DropCanvasData<"Actor", TActor>): Promise<false | void>;
 
         /**
          * Handle dropping of an item reference or item data onto an Actor Sheet
@@ -108,7 +89,7 @@ declare global {
          * @param data  The data transfer extracted from the event
          * @return A data object which describes the result of the drop
          */
-        protected _onDropItem(event: ElementDragEvent, data: DropCanvasData<"Item", TItem>): Promise<TItem[]>;
+        protected _onDropItem(event: DragEvent, data: DropCanvasData<"Item", TItem>): Promise<TItem[]>;
 
         /**
          * Handle dropping of a Folder on an Actor Sheet.
@@ -117,20 +98,35 @@ declare global {
          * @param data  The data transfer extracted from the event
          * @return A data object which describes the result of the drop
          */
-        protected _onDropFolder(event: ElementDragEvent, data: DropCanvasData<"Folder", Folder>): Promise<TItem[]>;
+        protected _onDropFolder(event: DragEvent, data: DropCanvasData<"Folder", Folder>): Promise<TItem[]>;
 
         /**
          * Handle the final creation of dropped Item data on the Actor.
          * This method is factored out to allow downstream classes the opportunity to override item creation behavior.
          * @param itemData The item data requested for creation
          */
-        protected _onDropItemCreate(itemData: TItem["_source"] | TItem["_source"][]): Promise<TItem[]>;
+        protected _onDropItemCreate(
+            itemData: foundry.documents.ItemSource | foundry.documents.ItemSource[],
+        ): Promise<Item<TActor>[]>;
 
-        /**
-         * Handle a drop event for an existing embedded Item to sort that Item relative to its siblings
-         * @param  event
-         * @param itemData
-         */
-        protected _onSortItem(event: ElementDragEvent, itemData: TItem["_source"]): Promise<TItem[]>;
+        /** Handle a drop event for an existing embedded Item to sort that Item relative to its siblings */
+        protected _onSortItem(event: DragEvent, itemData: TItem["_source"]): Promise<TItem[]>;
+    }
+
+    interface ActorSheetOptions extends DocumentSheetOptions {
+        token: TokenDocument | null;
+    }
+
+    interface ActorSheetData<TActor extends Actor> extends DocumentSheetData<TActor> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        actor: any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        items: any;
+        cssClass: "editable" | "locked";
+        effects: RawObject<ActiveEffect<TActor>>[];
+        limited: boolean;
+        options: Partial<ActorSheetOptions>;
     }
 }

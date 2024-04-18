@@ -156,8 +156,8 @@ declare global {
          */
         private static _onToggleCharacterSheet(
             event: KeyboardEvent,
-            context: KeyboardEventContext
-        ): ActorSheet | Promise<ActorSheet>;
+            context: KeyboardEventContext,
+        ): ActorSheet<Actor> | Promise<ActorSheet<Actor>>;
 
         /**
          * Handle action to target the currently hovered token.
@@ -177,7 +177,7 @@ declare global {
          * @param context The context data of the event
          * @param layer   The Placeables layer
          */
-        private _handleMovement(context: KeyboardEventContext, layer: TokenLayer | BackgroundLayer): void;
+        private _handleMovement(context: KeyboardEventContext, layer: TokenLayer<Token> | TilesLayer<Tile>): void;
 
         /** Handle panning the canvas using CTRL + directional keys */
         private _handleCanvasPan(): Promise<void>;

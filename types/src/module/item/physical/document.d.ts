@@ -1,22 +1,42 @@
-import { type ContainerPF2e, ItemPF2e } from "@item";
-import { ItemSummaryData, PhysicalItemData, TraitChatData } from "@item/data";
-import { CoinsPF2e } from "@item/physical/helpers";
-import { Rarity, Size } from "@module/data";
-import { UserPF2e } from "@module/user";
-import { Bulk } from "./bulk";
-import { IdentificationStatus, ItemCarryType, MystifiedData, PhysicalItemTrait, Price } from "./data";
-import { PreciousMaterialGrade, PreciousMaterialType } from "./types";
-declare abstract class PhysicalItemPF2e extends ItemPF2e {
+import type { ActorPF2e } from "@actor";
+import { ItemPF2e, type ContainerPF2e } from "@item";
+import type { ItemSourcePF2e, PhysicalItemSource, RawItemChatData, TraitChatData } from "@item/base/data/index.ts";
+import type { Rarity, Size, ZeroToTwo } from "@module/data.ts";
+import type { EffectSpinoff } from "@module/rules/rule-element/effect-spinoff/spinoff.ts";
+import type { UserPF2e } from "@module/user/document.ts";
+import { Bulk } from "./bulk.ts";
+import type { IdentificationStatus, ItemActivation, ItemCarryType, ItemMaterialData, MystifiedData, PhysicalItemHitPoints, PhysicalItemTrait, PhysicalSystemData, Price } from "./data.ts";
+import { CoinsPF2e } from "./helpers.ts";
+declare abstract class PhysicalItemPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends ItemPF2e<TParent> {
+    /** The item in which this item is embedded */
+    parentItem: PhysicalItemPF2e | null;
+    /**
+     * The cached container of this item, if in a container, or null
+     * @ignore
+     */
     private _container;
+    /** Doubly-embedded adjustments, attachments, talismans etc. */
+    subitems: Collection<PhysicalItemPF2e<TParent>>;
+    /** A map of effect spinoff objects, which can be used to create new effects from using certain items */
+    effectSpinoffs: Map<string, EffectSpinoff>;
+    constructor(data: PreCreate<ItemSourcePF2e>, context?: PhysicalItemConstructionContext<TParent>);
     get level(): number;
     get rarity(): Rarity;
     get traits(): Set<PhysicalItemTrait>;
     get quantity(): number;
     get size(): Size;
+    get hitPoints(): PhysicalItemHitPoints;
+    get hardness(): number;
     get isEquipped(): boolean;
     get carryType(): ItemCarryType;
-    get handsHeld(): number;
+    /** Whether the item is currently being held */
     get isHeld(): boolean;
+    /** The number of hands being used to hold this item */
+    get handsHeld(): ZeroToTwo;
+    /** Whether the item is currently being worn */
+    get isWorn(): boolean;
+    /** Whether the item has an attached (or affixed, applied, etc.) usage */
+    get isAttachable(): boolean;
     get price(): Price;
     /** The monetary value of the entire item stack */
     get assetValue(): CoinsPF2e;
@@ -29,56 +49,79 @@ declare abstract class PhysicalItemPF2e extends ItemPF2e {
     get isTemporary(): boolean;
     get isShoddy(): boolean;
     get isDamaged(): boolean;
-    get material(): {
-        precious: {
-            type: PreciousMaterialType;
-            grade: PreciousMaterialGrade;
-        } | null;
-    };
+    get isBroken(): boolean;
+    get isDestroyed(): boolean;
+    get material(): ItemMaterialData;
+    /** Whether this is a specific magic item: applicable to armor, shields, and weapons */
+    get isSpecific(): boolean;
     get isInContainer(): boolean;
     get isStowed(): boolean;
     /** Get this item's container, returning null if it is not in a container */
-    get container(): Embedded<ContainerPF2e> | null;
+    get container(): ContainerPF2e<ActorPF2e> | null;
     /** Returns the bulk of this item and all sub-containers */
     get bulk(): Bulk;
-    get activations(): {
-        id: string;
-        description: {
-            value: string;
-        };
-        actionCost: import("../data/base").ActionCost;
-        components: {
-            command: boolean;
-            envision: boolean;
-            interact: boolean;
-            cast: boolean;
-        };
-        frequency?: import("../data/base").Frequency | undefined;
-        traits: import("@module/data").ValuesList<"attack" | "open" | "secret" | "move" | "time" | "scroll" | "hex" | "android" | "force" | "class" | "consumable" | "light" | "chaotic" | "evil" | "good" | "lawful" | "acid" | "cold" | "electricity" | "fire" | "sonic" | "positive" | "negative" | "mental" | "poison" | "splash" | "abjuration" | "auditory" | "conjuration" | "curse" | "disease" | "divination" | "emotion" | "enchantment" | "evocation" | "healing" | "illusion" | "inhaled" | "magical" | "necromancy" | "nonlethal" | "olfactory" | "plant" | "polymorph" | "possession" | "radiation" | "scrying" | "sleep" | "transmutation" | "visual" | "water" | "air" | "earth" | "metal" | "arcane" | "divine" | "occult" | "primal" | "alchemist" | "barbarian" | "bard" | "champion" | "cleric" | "druid" | "fighter" | "gunslinger" | "inventor" | "investigator" | "magus" | "monk" | "oracle" | "psychic" | "ranger" | "rogue" | "sorcerer" | "summoner" | "swashbuckler" | "thaumaturge" | "witch" | "wizard" | "darkness" | "death" | "skill" | "general" | "archetype" | "clockwork" | "cursed" | "extradimensional" | "additive1" | "additive2" | "additive3" | "alchemical" | "aura" | "catalyst" | "contact" | "drug" | "elixir" | "fear" | "fey" | "fortune" | "fulu" | "gadget" | "incapacitation" | "infused" | "ingested" | "injury" | "kobold" | "mechanical" | "misfortune" | "morph" | "mutagen" | "oil" | "potion" | "precious" | "snare" | "structure" | "talisman" | "teleportation" | "trap" | "virulent" | "wand" | "consecration" | "detection" | "eidolon" | "revelation" | "half-elf" | "half-orc" | "aasimar" | "aberration" | "anadi" | "aphorite" | "automaton" | "azarketi" | "beastkin" | "catfolk" | "changeling" | "conrasu" | "dhampir" | "duskwalker" | "dwarf" | "elf" | "fetchling" | "fleshwarp" | "ganzi" | "geniekin" | "ghoran" | "gnoll" | "gnome" | "goblin" | "goloma" | "grippli" | "halfling" | "hobgoblin" | "human" | "ifrit" | "kashrishi" | "kitsune" | "leshy" | "lizardfolk" | "nagaji" | "orc" | "oread" | "poppet" | "ratfolk" | "shisk" | "shoony" | "skeleton" | "sprite" | "strix" | "suli" | "sylph" | "tengu" | "tiefling" | "undine" | "vanara" | "vishkanya" | "fungus" | "shadow" | "aftermath" | "concentrate" | "dedication" | "deviant" | "downtime" | "evolution" | "esoterica" | "exploration" | "finisher" | "flourish" | "lineage" | "manipulate" | "metamagic" | "mindshift" | "modification" | "multiclass" | "oath" | "pervasive-magic" | "press" | "rage" | "reckless" | "reflection" | "social" | "spellshot" | "stamina" | "stance" | "tandem" | "true-name" | "unstable" | "vigilante" | "amp" | "beast" | "cantrip" | "composition" | "contingency" | "cursebound" | "dream" | "incarnate" | "incorporeal" | "linguistic" | "litany" | "mindless" | "prediction" | "psyche" | "summoned" | "circus" | "summon">;
+    get activations(): (ItemActivation & {
         componentsLabel: string;
-    }[];
+    })[];
+    /** Whether other items can be attached (or affixed, applied, etc.) to this item */
+    acceptsSubitem(candidate: PhysicalItemPF2e): boolean;
     /** Generate a list of strings for use in predication */
-    getRollOptions(prefix?: string): string[];
+    getRollOptions(prefix: string, options?: {
+        includeGranter?: boolean;
+    }): string[];
+    protected _initialize(options?: Record<string, unknown>): void;
     prepareBaseData(): void;
     /** Refresh certain derived properties in case of special data preparation from subclasses */
     prepareDerivedData(): void;
-    prepareSiblingData(this: Embedded<PhysicalItemPF2e>): void;
+    prepareSiblingData(): void;
+    /** After item alterations have occurred, ensure that this item's hit points are no higher than its maximum */
+    onPrepareSynthetics(): void;
+    prepareActorData(): void;
     /** Can the provided item stack with this item? */
     isStackableWith(item: PhysicalItemPF2e): boolean;
+    /** Combine this item with a target item if possible */
+    stackWith(targetItem: PhysicalItemPF2e): Promise<void>;
+    /**
+     * Move this item somewhere else in the inventory, possibly before or after another item or in or out of a container.
+     * If this item and the target item are stackable they will be stacked automatically
+     * @param options Options to control where this item is moved to
+     * @param options.relativeTo An optional target item to sort this item relative to
+     * @param options.sortBefore Should this item be sorted before or after the target item?
+     * @param options.toContainer An optional container to move this item into. If the target item is in a container this can be omitted
+     * @param options.render Render the update? Overridden by moving the item in or out of a container. Defaults to true
+     * @returns
+     */
+    move({ relativeTo, sortBefore, toContainer, toStack, render, }: {
+        relativeTo?: PhysicalItemPF2e;
+        sortBefore?: boolean;
+        toContainer?: ContainerPF2e<ActorPF2e> | null;
+        toStack?: PhysicalItemPF2e;
+        render?: boolean;
+    }): Promise<void>;
     getMystifiedData(status: IdentificationStatus, _options?: Record<string, boolean>): MystifiedData;
-    getChatData(): Promise<ItemSummaryData>;
+    getChatData(): Promise<RawItemChatData>;
     setIdentificationStatus(status: IdentificationStatus): Promise<void>;
     generateUnidentifiedName({ typeOnly }?: {
         typeOnly?: boolean;
     }): string;
     /** Include mystification-related rendering instructions for views that will display this data. */
     protected traitChatData(dictionary: Record<string, string>): TraitChatData[];
+    /** Redirect subitem updates to the parent item */
+    update(data: Record<string, unknown>, context?: DocumentModificationContext<TParent>): Promise<this | undefined>;
+    /** Redirect subitem deletes to parent-item updates */
+    delete(context?: DocumentModificationContext<TParent>): Promise<this | undefined>;
     /** Set to unequipped upon acquiring */
-    protected _preCreate(data: PreDocumentId<this["_source"]>, options: DocumentModificationContext<this>, user: UserPF2e): Promise<void>;
-    protected _preUpdate(changed: DeepPartial<this["_source"]>, options: DocumentModificationContext<this>, user: UserPF2e): Promise<void>;
+    protected _preCreate(data: this["_source"], options: DocumentModificationContext<TParent>, user: UserPF2e): Promise<boolean | void>;
+    protected _preUpdate(changed: DeepPartial<this["_source"]>, options: PhysicalItemUpdateContext<TParent>, user: UserPF2e): Promise<boolean | void>;
 }
-interface PhysicalItemPF2e {
-    readonly data: PhysicalItemData;
-    computeAdjustedPrice?(): CoinsPF2e | null;
+interface PhysicalItemPF2e<TParent extends ActorPF2e | null = ActorPF2e | null> extends ItemPF2e<TParent> {
+    readonly _source: PhysicalItemSource;
+    system: PhysicalSystemData;
 }
-export { PhysicalItemPF2e };
+interface PhysicalItemConstructionContext<TParent extends ActorPF2e | null> extends DocumentConstructionContext<TParent> {
+    parentItem?: PhysicalItemPF2e<TParent>;
+}
+interface PhysicalItemUpdateContext<TParent extends ActorPF2e | null> extends DocumentUpdateContext<TParent> {
+    checkHP?: boolean;
+}
+export { PhysicalItemPF2e, type PhysicalItemConstructionContext };

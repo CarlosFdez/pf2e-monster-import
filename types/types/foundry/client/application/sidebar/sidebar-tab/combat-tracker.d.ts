@@ -34,7 +34,7 @@ declare interface CombatTrackerData {
 /** The combat and turn order tracker tab */
 declare class CombatTracker<
     TCombat extends Combat | null,
-    TOptions extends CombatTrackerOptions = CombatTrackerOptions
+    TOptions extends CombatTrackerOptions = CombatTrackerOptions,
 > extends SidebarTab<TOptions> {
     static override get defaultOptions(): CombatTrackerOptions;
 
@@ -105,7 +105,7 @@ declare class CombatTracker<
      * @param combatant The combatant data being modified
      * @return A Promise that resolves after all operations are complete
      */
-    protected _onToggleDefeatedStatus(combatant: Combatant): Promise<void>;
+    protected _onToggleDefeatedStatus(combatant: Combatant<TCombat>): Promise<void>;
 
     /**
      * Handle mouse-down event on a combatant name in the tracker

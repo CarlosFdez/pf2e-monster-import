@@ -1,9 +1,17 @@
-import { ZeroToTwo } from "@module/data";
-import type { AmbientLightDocumentPF2e, MeasuredTemplateDocumentPF2e, ScenePF2e, TileDocumentPF2e, TokenDocumentPF2e } from ".";
-type SceneDataPF2e<T extends ScenePF2e> = foundry.data.SceneData<T, TokenDocumentPF2e, AmbientLightDocumentPF2e, AmbientSoundDocument, DrawingDocument, MeasuredTemplateDocumentPF2e, NoteDocument, TileDocumentPF2e, WallDocument>;
+import { ZeroToTwo } from "@module/data.ts";
+interface SceneFlagsPF2e extends DocumentFlags {
+    pf2e: {
+        [key: string]: unknown;
+        hearingRange: number | null;
+        /** Rules-based vision override for the scene: `null` indicates the world setting is used. */
+        rulesBasedVision: boolean | null;
+        syncDarkness: "enabled" | "disabled" | "default";
+    };
+}
 declare enum LightLevels {
     DARKNESS = 0.25,
     BRIGHT_LIGHT = 0.75
 }
 type LightLevel = ZeroToTwo;
-export { SceneDataPF2e, LightLevel, LightLevels };
+export { LightLevels };
+export type { LightLevel, SceneFlagsPF2e };

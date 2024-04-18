@@ -20,13 +20,13 @@
       "outDir": "dist",
       "paths": {
         "@actor": [
-          "types/src/module/actor"
+          "types/src/module/actor/index.js"
         ],
         "@actor/*": [
           "types/src/module/actor/*"
         ],
         "@item": [
-          "types/src/module/item"
+          "types/src/module/item/index.js"
         ],
         "@item/*": [
           "types/src/module/item/*"
@@ -35,7 +35,7 @@
           "types/src/module/*"
         ],
         "@scene": [
-          "types/src/module/scene"
+          "types/src/module/scene/index.js"
         ],
         "@scene/*": [
           "types/src/module/scene/*"
@@ -47,14 +47,10 @@
           "types/src/module/system/*"
         ],
         "@util": [
-          "types/src/util"
+          "types/src/util/index.js"
         ],
         "@util/*": [
           "types/src/util/*"
-        ],
-        // https://github.com/Hypercubed/mini-signals/issues/20
-        "mini-signals": [
-          "node_modules/resource-loader/typings/mini-signals.d.ts"
         ]
       },
       "removeComments": false,
@@ -66,18 +62,15 @@
       //Gives tons of errors, take a look later.
       "strictNullChecks": true,
       "strictPropertyInitialization": true,
-      "target": "es2018",
+      "target": "ES2022",
       "typeRoots": [
         "node_modules/@types",
-        "node_modules/handlebars",
         "types/types/foundry"
       ],
       "types": [
-        "handlebars",
         "jquery",
         "node",
         "tooltipster",
-        "webpack-env"
       ]
     },
     "ts-node": {

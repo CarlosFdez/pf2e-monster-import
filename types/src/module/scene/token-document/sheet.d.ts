@@ -1,13 +1,14 @@
-/// <reference types="jquery" />
-/// <reference types="jquery" />
+/// <reference types="jquery" resolution-mode="require"/>
+/// <reference types="jquery" resolution-mode="require"/>
 /// <reference types="tooltipster" />
-import { TokenDocumentPF2e } from ".";
+import type { TokenDocumentPF2e } from "./index.ts";
 declare class TokenConfigPF2e<TDocument extends TokenDocumentPF2e> extends TokenConfig<TDocument> {
     #private;
-    get template(): string;
+    static get defaultOptions(): DocumentSheetOptions;
     /** Get this token's dimensions were they linked to its actor's size */
     get dimensionsFromActorSize(): number;
     getData(options?: DocumentSheetOptions): Promise<TokenConfigDataPF2e<TDocument>>;
+    protected _getFilePickerOptions(event: PointerEvent): FilePickerOptions;
     /** Hide token-sight settings when rules-based vision is enabled */
     activateListeners($html: JQuery): void;
     /** Readd scale property to form data if input is disabled: necessary for mirroring checkboxes to function */

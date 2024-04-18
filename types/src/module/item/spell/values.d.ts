@@ -1,4 +1,3 @@
-declare const MAGIC_SCHOOLS: Set<"abjuration" | "conjuration" | "divination" | "enchantment" | "evocation" | "illusion" | "necromancy" | "transmutation">;
+declare const EFFECT_AREA_SHAPES: readonly ["burst", "cone", "cube", "cylinder", "emanation", "line", "square"];
 declare const MAGIC_TRADITIONS: Set<"arcane" | "divine" | "occult" | "primal">;
-declare const SPELL_COMPONENTS: readonly ["focus", "material", "somatic", "verbal"];
-export { MAGIC_SCHOOLS, MAGIC_TRADITIONS, SPELL_COMPONENTS };
+export { EFFECT_AREA_SHAPES, MAGIC_TRADITIONS };

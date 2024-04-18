@@ -1,114 +1,70 @@
-/// <reference types="jquery" />
-/// <reference types="jquery" />
+/// <reference types="jquery" resolution-mode="require"/>
+/// <reference types="jquery" resolution-mode="require"/>
 /// <reference types="tooltipster" />
-import { TabData, PackInfo, TabName, BrowserTab } from "./data";
-import { InitialActionFilters, InitialBestiaryFilters, InitialEquipmentFilters, InitialFeatFilters, InitialHazardFilters, InitialSpellFilters } from "./tabs/data";
-import { SpellcastingEntryPF2e } from "@item";
-declare class PackLoader {
-    loadedPacks: {
-        Actor: Record<string, {
-            pack: CompendiumCollection;
-            index: CompendiumIndex;
-        } | undefined>;
-        Item: Record<string, {
-            pack: CompendiumCollection;
-            index: CompendiumIndex;
-        } | undefined>;
-    };
-    loadPacks(documentType: "Actor" | "Item", packs: string[], indexFields: string[]): AsyncGenerator<{
-        pack: CompendiumCollection<CompendiumDocument>;
-        index: CompendiumIndex;
-    } | {
-        pack: CompendiumCollection<CompendiumDocument>;
-        index: CompendiumIndex;
-    }, void, unknown>;
-    /** Set art provided by a module if any is available */
-    private setModuleArt;
-}
+import { ActionCategory, ActionTrait } from "@item/ability/index.ts";
+import { ActionType } from "@item/base/data/index.ts";
+import { BaseSpellcastingEntry } from "@item/spellcasting-entry/index.ts";
+import type { UserPF2e } from "@module/user/document.ts";
+import { BrowserTabs, PackInfo, SourceInfo, TabData, TabName } from "./data.ts";
+import { PackLoader } from "./loader.ts";
+import { ActionFilters, BestiaryFilters, EquipmentFilters, FeatFilters, HazardFilters, SpellFilters } from "./tabs/data.ts";
 declare class CompendiumBrowser extends Application {
     #private;
     settings: CompendiumBrowserSettings;
-    dataTabsList: readonly ["action", "bestiary", "equipment", "feat", "hazard", "spell"];
-    tabs: Record<Exclude<TabName, "settings">, BrowserTab>;
+    dataTabsList: readonly ["action", "bestiary", "campaignFeature", "equipment", "feat", "hazard", "spell"];
+    navigationTab: Tabs;
+    tabs: BrowserTabs;
     packLoader: PackLoader;
     activeTab: TabName;
-    navigationTab: Tabs;
-    /** An initial filter to be applied upon loading a tab */
-    private initialFilter;
     constructor(options?: {});
     get title(): string;
-    static get defaultOptions(): ApplicationOptions & {
-        id: string;
-        classes: never[];
-        template: string;
-        width: number;
-        height: number;
-        resizable: boolean;
-        dragDrop: {
-            dragSelector: string;
-        }[];
-        tabs: {
-            navSelector: string;
-            contentSelector: string;
-            initial: string;
-        }[];
-        scrollY: string[];
-    };
+    static get defaultOptions(): ApplicationOptions;
     /** Reset initial filtering */
     close(options?: {
         force?: boolean;
     }): Promise<void>;
+    hookTab(): Tabs;
     initCompendiumList(): void;
-    hookTab(): void;
-    openTab(tab: "action", filter?: InitialActionFilters): Promise<void>;
-    openTab(tab: "bestiary", filter?: InitialBestiaryFilters): Promise<void>;
-    openTab(tab: "equipment", filter?: InitialEquipmentFilters): Promise<void>;
-    openTab(tab: "feat", filter?: InitialFeatFilters): Promise<void>;
-    openTab(tab: "hazard", filter?: InitialHazardFilters): Promise<void>;
-    openTab(tab: "spell", filter?: InitialSpellFilters): Promise<void>;
-    openTab(tab: "settings"): Promise<void>;
-    openSpellTab(entry: SpellcastingEntryPF2e, level?: number): Promise<void>;
-    loadTab(tab: TabName): Promise<void>;
-    private processInitialFilters;
+    openTab(name: "action", filter?: ActionFilters): Promise<void>;
+    openTab(name: "bestiary", filter?: BestiaryFilters): Promise<void>;
+    openTab(name: "equipment", filter?: EquipmentFilters): Promise<void>;
+    openTab(name: "feat", filter?: FeatFilters): Promise<void>;
+    openTab(name: "hazard", filter?: HazardFilters): Promise<void>;
+    openTab(name: "spell", filter?: SpellFilters): Promise<void>;
+    openTab(name: "settings"): Promise<void>;
+    openActionTab(options: {
+        types?: ActionType[];
+        categories?: ActionCategory[];
+        traits?: ActionTrait[];
+    }): Promise<void>;
+    openSpellTab(entry: BaseSpellcastingEntry, maxRank?: number, category?: string | null): Promise<void>;
+    loadTab(tabName: TabName): Promise<void>;
     loadedPacks(tab: TabName): string[];
+    loadedPacksAll(): string[];
     activateListeners($html: JQuery): void;
-    /**
-     * Append new results to the result list
-     * @param options Render options
-     * @param options.list The result list HTML element
-     * @param options.start The index position to start from
-     * @param options.replace Replace the current list with the new results?
-     */
-    private renderResultList;
-    /** Activate click listeners on loaded actors and items */
-    private activateResultListeners;
-    private takePhysicalItem;
-    private buyPhysicalItem;
-    private getPhysicalItem;
     protected _canDragStart(): boolean;
     protected _canDragDrop(): boolean;
     /** Set drag data and lower opacity of the application window to reveal any tokens */
-    protected _onDragStart(event: ElementDragEvent): void;
-    protected _onDragOver(event: ElementDragEvent): void;
-    injectActorDirectory(): void;
-    getData(): {
-        user: Active<import("../../user/document").UserPF2e>;
-        settings: CompendiumBrowserSettings;
-        scrollLimit?: undefined;
-    } | {
-        [x: string]: number | Active<import("../../user/document").UserPF2e> | {
-            filterData: import("./tabs/data").ActionFilters | import("./tabs/data").BestiaryFilters | import("./tabs/data").EquipmentFilters | import("./tabs/data").FeatFilters | import("./tabs/data").HazardFilters | import("./tabs/data").SpellFilters;
-        };
-        user: Active<import("../../user/document").UserPF2e>;
-        scrollLimit: number;
-        settings?: undefined;
-    } | {
-        user: Active<import("../../user/document").UserPF2e>;
-        settings?: undefined;
-        scrollLimit?: undefined;
-    };
-    private resetFilters;
-    private clearScrollLimit;
+    protected _onDragStart(event: DragEvent): void;
+    protected _onDragOver(event: DragEvent): void;
+    getData(): CompendiumBrowserSheetData;
 }
 type CompendiumBrowserSettings = Omit<TabData<Record<string, PackInfo | undefined>>, "settings">;
-export { CompendiumBrowser, CompendiumBrowserSettings };
+type CompendiumBrowserSourcesList = Record<string, SourceInfo | undefined>;
+interface CompendiumBrowserSources {
+    ignoreAsGM: boolean;
+    showEmptySources: boolean;
+    showUnknownSources: boolean;
+    sources: CompendiumBrowserSourcesList;
+}
+interface CompendiumBrowserSheetData {
+    user: Active<UserPF2e>;
+    settings?: {
+        settings: CompendiumBrowserSettings;
+        sources: CompendiumBrowserSources;
+    };
+    scrollLimit?: number;
+    showCampaign: boolean;
+}
+export { CompendiumBrowser };
+export type { CompendiumBrowserSettings, CompendiumBrowserSources };

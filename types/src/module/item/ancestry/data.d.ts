@@ -1,40 +1,40 @@
-import { CreatureTrait, Language } from "@actor/creature/data";
-import { AbilityString } from "@actor/types";
-import { ABCSystemData, ABCSystemSource } from "@item/abc/data";
-import { BaseItemDataPF2e, BaseItemSourcePF2e, ItemTraits } from "@item/data/base";
-import { Size, ValuesList } from "@module/data";
-import type { AncestryPF2e } from ".";
+import { CreatureTrait, Language } from "@actor/creature/index.ts";
+import { AttributeString } from "@actor/types.ts";
+import { ABCSystemData, ABCSystemSource } from "@item/abc/index.ts";
+import { BaseItemSourcePF2e, ItemTraits } from "@item/base/data/system.ts";
+import { Size, TraitsWithRarity, ValuesList } from "@module/data.ts";
 type AncestrySource = BaseItemSourcePF2e<"ancestry", AncestrySystemSource>;
-type AncestryData = Omit<AncestrySource, "system" | "effects" | "flags"> & BaseItemDataPF2e<AncestryPF2e, "ancestry", AncestrySystemData, AncestrySource>;
-export type CreatureTraits = ItemTraits<CreatureTrait>;
+type CreatureTraits = TraitsWithRarity<CreatureTrait>;
+type AncestryTraits = ItemTraits<CreatureTrait>;
 interface AncestrySystemSource extends ABCSystemSource {
-    traits: CreatureTraits;
+    traits: AncestryTraits;
     additionalLanguages: {
         count: number;
         value: string[];
         custom: string;
     };
     /** If present, use the alternate ancestry boosts, which are two free */
-    alternateAncestryBoosts?: AbilityString[];
+    alternateAncestryBoosts?: AttributeString[];
     boosts: Record<string, {
-        value: AbilityString[];
-        selected: AbilityString | null;
+        value: AttributeString[];
+        selected: AttributeString | null;
     }>;
     flaws: Record<string, {
-        value: AbilityString[];
-        selected: AbilityString | null;
+        value: AttributeString[];
+        selected: AttributeString | null;
     }>;
     voluntary?: {
-        boost?: AbilityString | null;
-        flaws: AbilityString[];
+        boost?: AttributeString | null;
+        flaws: AttributeString[];
     };
     hp: number;
     languages: ValuesList<Language>;
     speed: number;
     size: Size;
     reach: number;
-    vision: "normal" | "darkvision" | "lowLightVision";
+    vision: "normal" | "darkvision" | "low-light-vision";
+    level?: never;
 }
-interface AncestrySystemData extends Omit<AncestrySystemSource, "items">, Omit<ABCSystemData, "traits"> {
+interface AncestrySystemData extends Omit<AncestrySystemSource, "description" | "items">, Omit<ABCSystemData, "level" | "traits"> {
 }
-export { AncestrySource, AncestryData, AncestrySystemData };
+export type { AncestrySource, AncestrySystemData, AncestrySystemSource, AncestryTraits, CreatureTraits };

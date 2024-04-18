@@ -1,7 +1,9 @@
 import { PhysicalItemPF2e } from "@item";
-import { Coins, Price } from "@item/physical/data";
-import { Rarity } from "@module/data";
-export declare class CraftingFormula implements CraftingFormulaData {
+import { Coins, Price } from "@item/physical/data.ts";
+import { Rarity } from "@module/data.ts";
+declare class CraftingFormula implements CraftingFormulaData {
+    #private;
+    /** The item to craft */
     item: PhysicalItemPF2e;
     /** The difficulty class to craft this item */
     dc: number;
@@ -14,6 +16,7 @@ export declare class CraftingFormula implements CraftingFormulaData {
         batchSize?: number;
         deletable?: boolean;
     });
+    get options(): Set<string>;
     get uuid(): ItemUUID;
     get img(): ImageFilePath;
     get name(): string;
@@ -25,9 +28,11 @@ export declare class CraftingFormula implements CraftingFormulaData {
     get defaultBatchSize(): number;
     get description(): string;
 }
-export interface CraftingFormulaData {
+interface CraftingFormulaData {
     uuid: ItemUUID;
+    sort?: number;
     dc?: number;
     batchSize?: number;
     deletable?: boolean;
 }
+export { CraftingFormula, type CraftingFormulaData };

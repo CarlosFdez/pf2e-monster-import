@@ -1,11 +1,12 @@
-import { AuraData } from "@actor/types";
-import { TokenPF2e } from "..";
-import { EffectAreaSquare } from "../../effect-area-square";
-import { ItemTrait } from "@item/data/base";
-import { TokenAuraData } from "@scene/token-document/aura";
-/** Visual and statial facilities for auras emanated by a token's actor */
+import { AuraAppearanceData, AuraData } from "@actor/types.ts";
+import { ItemTrait } from "@item/base/data/system.ts";
+import { TokenAuraData } from "@scene/token-document/aura/index.ts";
+import type { EffectAreaSquare } from "../../effect-area-square.ts";
+import type { TokenPF2e } from "../index.ts";
+/** Visual rendering of auras emanated by a token's actor */
 declare class AuraRenderer extends PIXI.Graphics implements TokenAuraData {
     #private;
+    slug: string;
     /** The token associated with this aura */
     token: TokenPF2e;
     /** The radius of the aura in feet */
@@ -13,35 +14,30 @@ declare class AuraRenderer extends PIXI.Graphics implements TokenAuraData {
     /** The aura radius from the center in pixels */
     radiusPixels: number;
     /** Traits associated with this aura: used to configure collision detection */
-    traits: Set<ItemTrait>;
-    /** Border and fill colors in hexadecimal */
-    private colors;
+    traits: ItemTrait[];
+    /** Border, highlight, and texture data */
+    appearance: AuraAppearanceData;
     /** Standard line thickness for circle shape and label markers */
     static readonly LINE_THICKNESS = 3;
+    border: import("pixi.js").Graphics;
+    textureContainer: PIXI.Graphics | null;
     constructor(params: AuraRendererParams);
     get bounds(): PIXI.Rectangle;
-    /** The center of an aura is the center of its originating token */
-    get center(): Point;
     /** ID of `GridHighlight` container for this aura's token */
-    private get highlightId();
+    get highlightLayer(): GridHighlight | null;
     /** The squares covered by this aura */
     get squares(): EffectAreaSquare[];
-    /**
-     * Whether this aura should be rendered to the user:
-     * The scene must be active, have an active combat, or a GM must be the only user logged in.
-     */
-    get shouldRender(): boolean;
-    /** Draw the aura's circular emanation */
-    draw(): void;
+    /** Draw the aura's border and texture */
+    draw(showBorder: boolean): Promise<void>;
+    /** Reposition this aura's texture after the token has moved. */
+    repositionTexture(): void;
     /** Highlight the affected grid squares of this aura and indicate the radius */
     highlight(): void;
-}
-interface TokenAuraColors {
-    border: number;
-    fill: number;
+    destroy(options?: boolean | PIXI.IDestroyOptions): void;
 }
 interface AuraRendererParams extends Omit<AuraData, "effects" | "traits"> {
+    slug: string;
     token: TokenPF2e;
-    traits: Set<ItemTrait>;
+    traits: ItemTrait[];
 }
-export { AuraRenderer, TokenAuraColors };
+export { AuraRenderer };

@@ -75,7 +75,7 @@ declare global {
         register<TChoices extends Record<string, unknown> | undefined>(
             module: string,
             key: string,
-            data: SettingRegistration<TChoices>
+            data: SettingRegistration<TChoices>,
         ): void;
 
         /**
@@ -105,6 +105,8 @@ declare global {
          */
         get(module: "core", key: "compendiumConfiguration"): Record<string, { private: boolean; locked: boolean }>;
         get(module: "core", key: "defaultToken"): Partial<foundry.data.PrototypeTokenSource>;
+        get(module: "core", key: "fontSize"): number;
+        get(module: "core", key: "noCanvas"): boolean;
         get(module: "core", key: "rollMode"): RollMode;
         get(module: string, key: string): unknown;
 
@@ -118,11 +120,11 @@ declare global {
     }
 
     interface SettingRegistration<
-        TChoices extends Record<string, unknown> | undefined = Record<string, unknown> | undefined
+        TChoices extends Record<string, unknown> | undefined = Record<string, unknown> | undefined,
     > extends Omit<SettingConfig<TChoices>, "config" | "key" | "namespace" | "scope"> {
         config?: boolean;
         scope?: "client" | "world";
-        filePicker?: true | 'audio' | 'image' | 'video' | 'imagevideo' | 'folder'; //TODO XDY Add to pf2e
+        filePicker?: true | "audio" | "image" | "video" | "imagevideo" | "folder"; // TODO XDY Add to pf2e
     }
 
     interface ClientSettingsMap extends Map<string, SettingConfig> {
@@ -132,7 +134,7 @@ declare global {
     }
 
     /** A simple interface for World settings storage which imitates the API provided by localStorage */
-    class WorldSettingsStorage extends Map<string, unknown> {
+    class WorldSettingsStorage extends Collection<Setting> {
         constructor(settings: object);
 
         getItem(key: string): string | null;
