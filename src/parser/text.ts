@@ -78,7 +78,7 @@ function handleInlineChecks(string: string): string {
 
     // Skills
     const skills = Object.values(CONFIG.PF2E.skills)
-        .map((s) => game.i18n.localize(s))
+        .map((s) => game.i18n.localize(s.label))
         .join("|");
     string = string.replaceAll(/DC (\d+) (\w+)/gi, "@Check[type:$2|dc:$1]");
     string = string.replaceAll(new RegExp(String.raw`/(${skills}) DC (\d+)`, "gi"), "@Check[type:$1|dc:$2]");
